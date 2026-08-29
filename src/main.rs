@@ -26,7 +26,6 @@ type Result<T, E = AppError> = std::result::Result<T, E>;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum WantedType {
-    Any,
     File,
     Dir,
     Symlink,
@@ -53,7 +52,7 @@ impl Default for Options {
             positive: Vec::new(),
             negative: Vec::new(),
             extensions: Vec::new(),
-            wanted_type: WantedType::Any,
+            wanted_type: WantedType::File,
             hidden: false,
             limit: None,
             sort: false,
@@ -546,6 +545,9 @@ impl<'a> Runner<'a> {
     }
 
     fn run(&mut self) -> io::Result<()> {
+        if !self.plan.hidden && path_has_hidden_component(&self.plan.root_relative) {
+            return Ok(());
+        }
         let root_metadata = match fs::symlink_metadata(&self.plan.root) {
             Ok(metadata) => metadata,
             Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
@@ -556,7 +558,6 @@ impl<'a> Runner<'a> {
         if !root_type.is_dir() {
             let relative = self.plan.root_relative.clone();
             let type_matches = match self.plan.wanted_type {
-                WantedType::Any => true,
                 WantedType::File => root_type.is_file(),
                 WantedType::Dir => false,
                 WantedType::Symlink => root_type.is_symlink(),
@@ -572,7 +573,7 @@ impl<'a> Runner<'a> {
             return Ok(());
         }
         if !self.plan.root_relative.as_os_str().is_empty()
-            && matches!(self.plan.wanted_type, WantedType::Any | WantedType::Dir)
+            && self.plan.wanted_type == WantedType::Dir
             && self.plan.path_matches(&self.plan.root_relative)
         {
             self.emit(self.plan.root_relative.clone())?;
@@ -655,7 +656,6 @@ impl<'a> Runner<'a> {
             } else {
                 self.stats.candidate_files += 1;
                 let type_matches = match self.plan.wanted_type {
-                    WantedType::Any => true,
                     WantedType::File => file_type.is_file(),
                     WantedType::Dir => false,
                     WantedType::Symlink => file_type.is_symlink(),
@@ -693,6 +693,10 @@ fn is_hidden(name: &OsStr) -> bool {
     with_os_bytes(name, |bytes| {
         bytes.first() == Some(&b'.') && bytes != b"." && bytes != b".."
     })
+}
+
+fn path_has_hidden_component(path: &Path) -> bool {
+    normal_components(path).into_iter().any(is_hidden)
 }
 
 fn display_path(path: &Path) -> String {
@@ -1021,5 +1025,42 @@ mod tests {
         assert_eq!(runner.output.len(), 1);
         assert_eq!(runner.stats.matches, 1);
         assert!(runner.stopped);
+    }
+
+    #[test]
+    fn literal_root_preserves_type_and_hidden_semantics() {
+        let fixture = Fixture::new();
+
+        let default_dir = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["src".to_owned()],
+            sort: true,
+            ..Options::default()
+        };
+        let default_plan = QueryPlan::compile(&default_dir).unwrap();
+        let mut default_runner = Runner::new(&default_plan);
+        default_runner.run().unwrap();
+        assert!(default_runner.output.is_empty());
+
+        let explicit_dir = Options {
+            wanted_type: WantedType::Dir,
+            ..default_dir
+        };
+        let explicit_plan = QueryPlan::compile(&explicit_dir).unwrap();
+        let mut explicit_runner = Runner::new(&explicit_plan);
+        explicit_runner.run().unwrap();
+        assert_eq!(explicit_runner.output, [PathBuf::from("src")]);
+
+        let hidden = Options {
+            cwd: fixture.0.clone(),
+            positive: vec![".hidden/**/*.rs".to_owned()],
+            sort: true,
+            ..Options::default()
+        };
+        let hidden_plan = QueryPlan::compile(&hidden).unwrap();
+        let mut hidden_runner = Runner::new(&hidden_plan);
+        hidden_runner.run().unwrap();
+        assert!(hidden_runner.output.is_empty());
+        assert_eq!(hidden_runner.stats.dirs_opened, 0);
     }
 }
