@@ -1155,4 +1155,90 @@ mod tests {
         let error = runner.run().unwrap_err();
         assert_eq!(error.kind(), io::ErrorKind::BrokenPipe);
     }
+
+    #[test]
+    fn traverses_deep_trees_without_losing_matches() {
+        let fixture = Fixture::new();
+        let mut directory = fixture.0.clone();
+        let mut relative = PathBuf::new();
+        for _ in 0..64 {
+            directory.push("d");
+            relative.push("d");
+        }
+        fs::create_dir_all(&directory).unwrap();
+        fs::write(directory.join("leaf.rs"), b"").unwrap();
+        relative.push("leaf.rs");
+
+        let options = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/leaf.rs".to_owned()],
+            sort: true,
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut runner = Runner::new(&plan, Vec::new());
+        runner.run().unwrap();
+
+        assert_eq!(runner.output, [relative]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn reports_symlinks_without_following_directory_links() {
+        use std::os::unix::fs::symlink;
+
+        let fixture = Fixture::new();
+        symlink(fixture.0.join("src/lib.rs"), fixture.0.join("lib-link")).unwrap();
+        symlink(fixture.0.join("src"), fixture.0.join("src-link")).unwrap();
+
+        let links = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/*".to_owned()],
+            wanted_type: WantedType::Symlink,
+            sort: true,
+            ..Options::default()
+        };
+        let link_plan = QueryPlan::compile(&links).unwrap();
+        let mut link_runner = Runner::new(&link_plan, Vec::new());
+        link_runner.run().unwrap();
+        assert_eq!(
+            link_runner.output,
+            [PathBuf::from("lib-link"), PathBuf::from("src-link")]
+        );
+
+        let files = Options {
+            wanted_type: WantedType::File,
+            ..links
+        };
+        let file_plan = QueryPlan::compile(&files).unwrap();
+        let mut file_runner = Runner::new(&file_plan, Vec::new());
+        file_runner.run().unwrap();
+        assert!(
+            file_runner
+                .output
+                .iter()
+                .all(|path| !path.starts_with("src-link"))
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn preserves_non_utf8_unix_paths() {
+        use std::os::unix::ffi::OsStringExt;
+
+        let fixture = Fixture::new();
+        let name = OsString::from_vec(b"invalid-\\xff.rs".to_vec());
+        fs::write(fixture.0.join(&name), b"").unwrap();
+        let options = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/*.rs".to_owned()],
+            sort: true,
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut runner = Runner::new(&plan, Vec::new());
+        runner.run().unwrap();
+
+        assert!(runner.output.contains(&PathBuf::from(name)));
+    }
 }
