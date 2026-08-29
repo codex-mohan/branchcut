@@ -206,33 +206,18 @@ impl PatternProgram {
         next
     }
 
-    fn states_for_path(&self, components: &[&OsStr]) -> Vec<usize> {
-        let mut states = self.initial_states();
-        for component in components {
-            states = self.advance(&states, component);
-            if states.is_empty() {
-                break;
-            }
-        }
+    fn states_match(&self, states: &[usize]) -> bool {
+        states.iter().any(|node| self.nodes[*node].terminal)
+    }
+
+    fn states_descendant_possible(&self, states: &[usize]) -> bool {
         states
-    }
-
-    fn matches(&self, components: &[&OsStr]) -> bool {
-        self.states_for_path(components)
-            .iter()
-            .any(|node| self.nodes[*node].terminal)
-    }
-
-    fn descendant_possible(&self, components: &[&OsStr]) -> bool {
-        self.states_for_path(components)
             .iter()
             .any(|node| !self.nodes[*node].edges.is_empty())
     }
 
-    fn excludes_subtree(&self, components: &[&OsStr]) -> bool {
-        self.states_for_path(components)
-            .iter()
-            .any(|node| self.nodes[*node].subtree_terminal)
+    fn states_exclude_subtree(&self, states: &[usize]) -> bool {
+        states.iter().any(|node| self.nodes[*node].subtree_terminal)
     }
 
     fn add_epsilon_closure(&self, states: &mut Vec<usize>) {
@@ -344,39 +329,50 @@ fn parse_class(bytes: &[u8], whole_pattern: &str) -> Result<(Token, usize)> {
 
 fn segment_matches(tokens: &[Token], name: &OsStr) -> bool {
     with_os_bytes(name, |bytes| {
-        let mut current = vec![false; bytes.len() + 1];
-        current[0] = true;
-        for token in tokens {
-            let mut next = vec![false; bytes.len() + 1];
-            match token {
-                Token::Star => {
-                    let mut reachable = false;
-                    for position in 0..=bytes.len() {
-                        reachable |= current[position];
-                        next[position] = reachable;
-                    }
+        let mut token_index = 0;
+        let mut byte_index = 0;
+        let mut star_token = None;
+        let mut star_byte = 0;
+
+        while byte_index < bytes.len() {
+            match tokens.get(token_index) {
+                Some(Token::Star) => {
+                    star_token = Some(token_index);
+                    star_byte = byte_index;
+                    token_index += 1;
                 }
-                Token::Question => {
-                    next[1..].copy_from_slice(&current[..bytes.len()]);
+                Some(token) if token_matches_byte(token, bytes[byte_index]) => {
+                    token_index += 1;
+                    byte_index += 1;
                 }
-                Token::Literal(expected) => {
-                    for position in 0..bytes.len() {
-                        next[position + 1] = current[position] && bytes[position] == *expected;
-                    }
-                }
-                Token::Class { negated, ranges } => {
-                    for position in 0..bytes.len() {
-                        let contained = ranges.iter().any(|(start, end)| {
-                            *start <= bytes[position] && bytes[position] <= *end
-                        });
-                        next[position + 1] = current[position] && (contained != *negated);
-                    }
+                _ => {
+                    let Some(star) = star_token else {
+                        return false;
+                    };
+                    star_byte += 1;
+                    byte_index = star_byte;
+                    token_index = star + 1;
                 }
             }
-            current = next;
         }
-        current[bytes.len()]
+        tokens[token_index..]
+            .iter()
+            .all(|token| matches!(token, Token::Star))
     })
+}
+
+fn token_matches_byte(token: &Token, byte: u8) -> bool {
+    match token {
+        Token::Literal(expected) => byte == *expected,
+        Token::Question => true,
+        Token::Class { negated, ranges } => {
+            let contained = ranges
+                .iter()
+                .any(|(start, end)| *start <= byte && byte <= *end);
+            contained != *negated
+        }
+        Token::Star => false,
+    }
 }
 
 #[cfg(unix)]
@@ -492,28 +488,32 @@ impl QueryPlan {
         })
     }
 
-    fn path_matches(&self, relative: &Path) -> bool {
-        let components = normal_components(relative);
-        self.positive_program.matches(&components)
-            && !self.negative_program.matches(&components)
-            && (self.simple_terms.is_empty()
-                || relative.file_name().is_some_and(|name| {
-                    with_os_bytes(name, |bytes| {
-                        self.simple_terms
-                            .iter()
-                            .any(|term| contains_bytes(bytes, term))
-                    })
-                }))
+    fn root_states(&self) -> (Vec<usize>, Vec<usize>) {
+        let mut positive = self.positive_program.initial_states();
+        let mut negative = self.negative_program.initial_states();
+        for component in self.root_relative.components() {
+            let Component::Normal(name) = component else {
+                continue;
+            };
+            positive = self.positive_program.advance(&positive, name);
+            negative = self.negative_program.advance(&negative, name);
+        }
+        (positive, negative)
     }
 
-    fn directory_possible(&self, relative: &Path) -> bool {
-        self.positive_program
-            .descendant_possible(&normal_components(relative))
+    fn states_match(&self, positive: &[usize], negative: &[usize], name: &OsStr) -> bool {
+        self.positive_program.states_match(positive)
+            && !self.negative_program.states_match(negative)
+            && self.simple_matches(name)
     }
 
-    fn directory_excluded(&self, relative: &Path) -> bool {
-        self.negative_program
-            .excludes_subtree(&normal_components(relative))
+    fn simple_matches(&self, name: &OsStr) -> bool {
+        self.simple_terms.is_empty()
+            || with_os_bytes(name, |bytes| {
+                self.simple_terms
+                    .iter()
+                    .any(|term| contains_bytes(bytes, term))
+            })
     }
 
     fn extension_matches(&self, name: &OsStr) -> bool {
@@ -610,30 +610,38 @@ impl<'a, W: Write> Runner<'a, W> {
         };
         self.stats.metadata_calls += 1;
         let root_type = root_metadata.file_type();
+        let (positive_states, negative_states) = self.plan.root_states();
+        let root_name = self.plan.root.file_name().unwrap_or_default();
         if !root_type.is_dir() {
-            let relative = self.plan.root_relative.clone();
             let type_matches = match self.plan.wanted_type {
                 WantedType::File => root_type.is_file(),
                 WantedType::Dir => false,
                 WantedType::Symlink => root_type.is_symlink(),
             };
             if type_matches
-                && self.plan.path_matches(&relative)
                 && self
                     .plan
-                    .extension_matches(self.plan.root.file_name().unwrap_or_default())
+                    .states_match(&positive_states, &negative_states, root_name)
+                && self.plan.extension_matches(root_name)
             {
-                self.emit(relative)?;
+                self.emit(self.plan.root_relative.clone())?;
             }
             return self.finish();
         }
         if !self.plan.root_relative.as_os_str().is_empty()
             && self.plan.wanted_type == WantedType::Dir
-            && self.plan.path_matches(&self.plan.root_relative)
+            && self
+                .plan
+                .states_match(&positive_states, &negative_states, root_name)
         {
             self.emit(self.plan.root_relative.clone())?;
         }
-        self.visit_directory(self.plan.root.clone(), self.plan.root_relative.clone())?;
+        self.visit_directory(
+            self.plan.root.clone(),
+            self.plan.root_relative.clone(),
+            positive_states,
+            negative_states,
+        )?;
         self.finish()
     }
 
@@ -654,20 +662,32 @@ impl<'a, W: Write> Runner<'a, W> {
         self.writer.flush()
     }
 
-    fn visit_directory(&mut self, absolute: PathBuf, relative: PathBuf) -> io::Result<()> {
+    fn visit_directory(
+        &mut self,
+        absolute: PathBuf,
+        relative: PathBuf,
+        positive_states: Vec<usize>,
+        negative_states: Vec<usize>,
+    ) -> io::Result<()> {
         if self.stopped {
             return Ok(());
         }
         self.stats.dirs_seen += 1;
-        if !relative.as_os_str().is_empty() {
-            if self.plan.directory_excluded(&relative) {
-                self.stats.dirs_pruned_exclude += 1;
-                return Ok(());
-            }
-            if !self.plan.directory_possible(&relative) {
-                self.stats.dirs_pruned_positive += 1;
-                return Ok(());
-            }
+        if self
+            .plan
+            .negative_program
+            .states_exclude_subtree(&negative_states)
+        {
+            self.stats.dirs_pruned_exclude += 1;
+            return Ok(());
+        }
+        if !self
+            .plan
+            .positive_program
+            .states_descendant_possible(&positive_states)
+        {
+            self.stats.dirs_pruned_positive += 1;
+            return Ok(());
         }
         let entries = match fs::read_dir(&absolute) {
             Ok(entries) => entries,
@@ -698,7 +718,6 @@ impl<'a, W: Write> Runner<'a, W> {
             if !self.plan.hidden && is_hidden(&name) {
                 continue;
             }
-            let child_relative = relative.join(&name);
             let file_type = match entry.file_type() {
                 Ok(file_type) => file_type,
                 Err(error) => {
@@ -710,13 +729,18 @@ impl<'a, W: Write> Runner<'a, W> {
                     continue;
                 }
             };
+            let child_positive = self.plan.positive_program.advance(&positive_states, &name);
+            let child_negative = self.plan.negative_program.advance(&negative_states, &name);
+            let child_relative = relative.join(&name);
             if file_type.is_dir() {
                 if self.plan.wanted_type == WantedType::Dir
-                    && self.plan.path_matches(&child_relative)
+                    && self
+                        .plan
+                        .states_match(&child_positive, &child_negative, &name)
                 {
                     self.emit(child_relative.clone())?;
                 }
-                self.visit_directory(entry.path(), child_relative)?;
+                self.visit_directory(entry.path(), child_relative, child_positive, child_negative)?;
             } else {
                 self.stats.candidate_files += 1;
                 let type_matches = match self.plan.wanted_type {
@@ -726,7 +750,9 @@ impl<'a, W: Write> Runner<'a, W> {
                 };
                 if type_matches
                     && self.plan.extension_matches(&name)
-                    && self.plan.path_matches(&child_relative)
+                    && self
+                        .plan
+                        .states_match(&child_positive, &child_negative, &name)
                 {
                     self.emit(child_relative)?;
                 }
@@ -986,9 +1012,18 @@ mod tests {
         normal_components(path)
     }
 
+    fn program_states(program: &PatternProgram, path: &Path) -> Vec<usize> {
+        parts(path)
+            .into_iter()
+            .fold(program.initial_states(), |states, component| {
+                program.advance(&states, component)
+            })
+    }
+
     fn matches(pattern: &str, path: &str) -> bool {
         let patterns = [Pattern::compile(pattern.to_owned()).unwrap()];
-        PatternProgram::compile(&patterns).matches(&parts(Path::new(path)))
+        let program = PatternProgram::compile(&patterns);
+        program.states_match(&program_states(&program, Path::new(path)))
     }
 
     #[test]
@@ -1022,9 +1057,17 @@ mod tests {
     fn prefix_viability_prunes_impossible_directories() {
         let patterns = [Pattern::compile("packages/*/src/**/*.rs".to_owned()).unwrap()];
         let program = PatternProgram::compile(&patterns);
-        assert!(program.descendant_possible(&parts(Path::new("packages/core"))));
-        assert!(program.descendant_possible(&parts(Path::new("packages/core/src/deep"))));
-        assert!(!program.descendant_possible(&parts(Path::new("unrelated"))));
+        assert!(
+            program
+                .states_descendant_possible(&program_states(&program, Path::new("packages/core")))
+        );
+        assert!(program.states_descendant_possible(&program_states(
+            &program,
+            Path::new("packages/core/src/deep")
+        )));
+        assert!(
+            !program.states_descendant_possible(&program_states(&program, Path::new("unrelated")))
+        );
     }
 
     #[test]
@@ -1041,8 +1084,8 @@ mod tests {
         let program = PatternProgram::compile(&patterns);
 
         assert!(program.nodes.len() < independent_nodes);
-        assert!(program.matches(&parts(Path::new("src/deep/lib.rs"))));
-        assert!(program.matches(&parts(Path::new("src/Cargo.toml"))));
+        assert!(program.states_match(&program_states(&program, Path::new("src/deep/lib.rs"))));
+        assert!(program.states_match(&program_states(&program, Path::new("src/Cargo.toml"))));
     }
 
     #[test]
