@@ -357,6 +357,13 @@ Open `STDLIB.md` and connect the custom parser, shared state program, `read_dir`
 
 State the unsupported extglobs, lack of `.gitignore` parsing, byte-oriented wildcard semantics, sequential traversal, and workload-specific rather than universal performance claims.
 
+## Future Enhancements
+
+- **Bounded parallel traversal:** add a fixed-size `std::thread` worker pool after differential testing against the sequential engine. Required invariants: no thread per directory, atomic cancellation for `--first`/`--limit`, synchronized streaming output, deterministic `--sort`, and benchmarked worker counts of 1/2/4/8/logical cores.
+- **Hierarchical `.gitignore`:** compile nested ignore state and prune ignored subtrees while preserving re-inclusion semantics.
+- **Metadata predicates:** add size and modification-time filters without introducing metadata calls for queries that do not require them.
+- **Broader syntax:** consider extglobs and richer brace forms only after the current compatibility surface remains regression-free.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
