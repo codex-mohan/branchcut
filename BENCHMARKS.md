@@ -9,9 +9,8 @@ These are initial Branchcut-only measurements, retained as a baseline. They are 
 - Rust compiler: `rustc 1.96.0 (ac68faa20 2026-05-25)`
 - Build: `cargo build --release`
 - Artifact: 236,544 bytes
-- Artifact SHA-256: `971f67964b7daf9e58511ca78aa5f71ae5b4c30983115abcbdbbf6367a17273a`
 - Dataset: generated temporary corpus, 16,000 files
-- Repetitions: 12 process launches per workload
+- Artifact SHA-256: `4feccbc68617b55d8a23082db7c4bc21c6b234e2b32795c4a4ac2b33961c5b14`
 - Timing: parent-process wall-clock duration, including process startup
 
 ## Dataset shape
