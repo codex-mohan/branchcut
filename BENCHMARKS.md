@@ -72,7 +72,7 @@ Keep the query, dataset, output requirements, runtime versions, and commit hash 
 
 ## zlob hot-engine comparison
 
-The official zlob repository was built with Zig `0.16.0` using `zig build -Doptimize=ReleaseFast`. A temporary in-process Zig harness called zlob's public filesystem API repeatedly after a warmup. Branchcut used `--count --stats`; its reported `elapsed` value begins after argument parsing and planning, so process startup and output serialization are excluded.
+The official zlob release tag `v1.6.3` was built with Zig `0.16.0` using `zig build -Doptimize=ReleaseFast`. A temporary in-process Zig harness called zlob's public `match` filesystem API with `std.heap.c_allocator`, 3 warmups, and 10 measured iterations. Branchcut used `--count --stats`; its reported `elapsed` value begins after argument parsing and planning, so process startup and output serialization are excluded.
 
 Workload:
 
@@ -88,15 +88,15 @@ count-only output
 | Engine | Median / average per query | Matches |
 |---|---:|---:|
 | Branchcut traversal (`--count --stats`) | 18.393 ms | 13,000 |
-| zlob direct filesystem API | 116.104 ms | 13,000 |
+| zlob v1.6.3 public `match` API | 120.090 ms average | 13,000 |
 
 Observed startup-excluded ratio:
 
 ```text
-116.104 / 18.393 = 6.31x
+120.090 / 18.393 = 6.53x
 ```
 
-This is a narrow Windows workload. zlob's official README describes additional SIMD, platform-specific, and parallel walker paths that were not exercised by this direct single-threaded `match` API harness. It is therefore evidence for this workload, not a universal zlob ranking.
+This is a narrow Windows workload. zlob's official README describes additional SIMD, platform-specific, and parallel walker paths that were not exercised by this direct single-threaded `match` API harness. Its official C-compatible benchmark path returned zero matches for the Windows drive-letter path, and the official tree-size benchmark is disabled on Windows because it requires libc glob; neither invalid result was used.
 
 ## Reproducibility note
 

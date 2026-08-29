@@ -290,7 +290,7 @@ The inline Rust suite covers matcher syntax, globstar zero-component behavior, b
 - Traversal is sequential. No worker pool or async runtime is included.
 - Filesystem iteration order is platform- and filesystem-dependent unless `--sort` is selected.
 - Permission behavior varies by platform and account privileges.
-- Current published measurements are Branchcut-only cold process measurements, not competitor results.
+- Published comparisons include fast-glob, tinyglobby, and zlob; accuracy and methodology are documented in `COMPARISON.md`. Claims are workload-specific, not universal.
 
 See [COMPATIBILITY.md](COMPATIBILITY.md) for the exact supported surface and [BENCHMARKS.md](BENCHMARKS.md) for methodology and raw measurements.
 
@@ -347,9 +347,7 @@ Run the Rust suite and show representative differential-corpus cases:
 cargo test
 ```
 
-### 3:30–4:30 — Performance
-
-Show the 16,000-file synthetic corpus methodology and raw medians in `BENCHMARKS.md`. Label these as repeated cold process invocations. Do not present them as competitor or hot-engine results.
+Show the 16,000-file corpus, result-set equality checks, and raw hot-engine medians in `COMPARISON.md`. State explicitly that the hot comparison excludes startup and serialization, while the separate cold section includes process startup.
 
 ### 4:30–4:50 — Standard-library craft
 
@@ -357,7 +355,7 @@ Open `STDLIB.md` and connect the custom parser, shared state program, `read_dir`
 
 ### 4:50–5:00 — Limits
 
-State the unsupported extglobs, lack of `.gitignore` parsing, byte-oriented wildcard semantics, sequential traversal, and absence of competitor benchmark claims.
+State the unsupported extglobs, lack of `.gitignore` parsing, byte-oriented wildcard semantics, sequential traversal, and workload-specific rather than universal performance claims.
 
 ## License
 

@@ -921,6 +921,7 @@ fn parse_args() -> Result<Options> {
                 }
                 options.limit = Some(limit);
             }
+            "--sort" => options.sort = true,
             "--stats" => options.stats = true,
             "--explain" => options.explain = true,
             "--strict" => options.strict = true,
