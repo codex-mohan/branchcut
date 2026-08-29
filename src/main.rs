@@ -36,6 +36,7 @@ struct Options {
     cwd: PathBuf,
     positive: Vec<String>,
     negative: Vec<String>,
+    simple_terms: Vec<Vec<u8>>,
     extensions: Vec<Vec<u8>>,
     wanted_type: WantedType,
     hidden: bool,
@@ -51,6 +52,7 @@ impl Default for Options {
             cwd: PathBuf::from("."),
             positive: Vec::new(),
             negative: Vec::new(),
+            simple_terms: Vec::new(),
             extensions: Vec::new(),
             wanted_type: WantedType::File,
             hidden: false,
@@ -394,6 +396,7 @@ struct QueryPlan {
     root_relative: PathBuf,
     positives: Vec<Pattern>,
     negatives: Vec<Pattern>,
+    simple_terms: Vec<Vec<u8>>,
     extensions: Vec<Vec<u8>>,
     wanted_type: WantedType,
     hidden: bool,
@@ -430,6 +433,7 @@ impl QueryPlan {
             root_relative,
             positives,
             negatives,
+            simple_terms: options.simple_terms.clone(),
             extensions: options.extensions.clone(),
             wanted_type: options.wanted_type,
             hidden: options.hidden,
@@ -447,6 +451,14 @@ impl QueryPlan {
                 .negatives
                 .iter()
                 .any(|pattern| pattern.matches(&components))
+            && (self.simple_terms.is_empty()
+                || relative.file_name().is_some_and(|name| {
+                    with_os_bytes(name, |bytes| {
+                        self.simple_terms
+                            .iter()
+                            .any(|term| contains_bytes(bytes, term))
+                    })
+                }))
     }
 
     fn directory_possible(&self, relative: &Path) -> bool {
@@ -699,6 +711,13 @@ fn path_has_hidden_component(path: &Path) -> bool {
     normal_components(path).into_iter().any(is_hidden)
 }
 
+fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
+    !needle.is_empty()
+        && haystack
+            .windows(needle.len())
+            .any(|window| window == needle)
+}
+
 fn display_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
@@ -770,9 +789,10 @@ fn parse_args() -> Result<Options> {
                 "positional search terms cannot be combined with --glob".to_owned(),
             ));
         }
-        options
-            .positive
-            .extend(simple.into_iter().map(|term| format!("**/*{term}*")));
+        if simple.iter().any(String::is_empty) {
+            return Err(AppError("search terms cannot be empty".to_owned()));
+        }
+        options.simple_terms = simple.into_iter().map(|term| term.into_bytes()).collect();
     }
     let mut seen = HashSet::new();
     options
@@ -1062,5 +1082,22 @@ mod tests {
         hidden_runner.run().unwrap();
         assert!(hidden_runner.output.is_empty());
         assert_eq!(hidden_runner.stats.dirs_opened, 0);
+    }
+
+    #[test]
+    fn simple_search_treats_glob_metacharacters_literally() {
+        let fixture = Fixture::new();
+        fs::write(fixture.0.join("src/config[1].rs"), b"").unwrap();
+        let options = Options {
+            cwd: fixture.0.clone(),
+            simple_terms: vec![b"config[1]".to_vec()],
+            sort: true,
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut runner = Runner::new(&plan);
+        runner.run().unwrap();
+
+        assert_eq!(runner.output, [PathBuf::from("src/config[1].rs")]);
     }
 }
