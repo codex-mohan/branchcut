@@ -954,4 +954,72 @@ mod tests {
         assert!(Pattern::compile("../*.rs".to_owned()).is_err());
         assert!(Pattern::compile("/tmp/*.rs".to_owned()).is_err());
     }
+
+    struct Fixture(PathBuf);
+
+    impl Fixture {
+        fn new() -> Self {
+            use std::time::{SystemTime, UNIX_EPOCH};
+            let nonce = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let root = env::temp_dir().join(format!("branchcut-{}-{nonce}", std::process::id()));
+            fs::create_dir_all(root.join("src/nested")).unwrap();
+            fs::create_dir_all(root.join("target/debug")).unwrap();
+            fs::create_dir_all(root.join(".hidden")).unwrap();
+            fs::write(root.join("src/lib.rs"), b"").unwrap();
+            fs::write(root.join("src/nested/config.toml"), b"").unwrap();
+            fs::write(root.join("target/debug/generated.rs"), b"").unwrap();
+            fs::write(root.join(".hidden/secret.rs"), b"").unwrap();
+            Self(root)
+        }
+    }
+
+    impl Drop for Fixture {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn traversal_filters_extensions_hidden_paths_and_excluded_subtrees() {
+        let fixture = Fixture::new();
+        let options = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/*.{rs,toml}".to_owned()],
+            negative: vec!["**/target/**".to_owned()],
+            extensions: vec![b"rs".to_vec()],
+            sort: true,
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut runner = Runner::new(&plan);
+        runner.run().unwrap();
+
+        assert_eq!(runner.output, [PathBuf::from("src/lib.rs")]);
+        assert_eq!(runner.stats.matches, 1);
+        assert_eq!(runner.stats.dirs_pruned_exclude, 1);
+        assert_eq!(runner.stats.metadata_calls, 1);
+    }
+
+    #[test]
+    fn traversal_honors_early_limit() {
+        let fixture = Fixture::new();
+        let options = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/*.rs".to_owned()],
+            hidden: true,
+            limit: Some(1),
+            sort: true,
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut runner = Runner::new(&plan);
+        runner.run().unwrap();
+
+        assert_eq!(runner.output.len(), 1);
+        assert_eq!(runner.stats.matches, 1);
+        assert!(runner.stopped);
+    }
 }
