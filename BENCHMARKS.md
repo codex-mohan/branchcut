@@ -62,24 +62,41 @@ The observed cold-process ratio for this workload was:
 148.53 ms / 24.99 ms = 5.94x Branchcut advantage
 ```
 
-This is one workload on one Windows machine, not a universal performance claim. The Node oracle was launched as a separate process for every sample, so this is explicitly a cold comparison. A fair hot-engine comparison requires a persistent Node process and a persistent Branchcut benchmark harness.
+This is one workload on one Windows machine, not a universal performance claim. The Node oracle was launched as a separate process for every sample, so this is explicitly a cold comparison.
 
 ## Interpretation
 
-The result set comparison passed for this workload and the four previously recorded fixture cases. The benchmark does **not** prove superiority over `tinyglobby`, `globset + walkdir`, or `zlob`.
+The result set comparison passed for this workload and the four previously recorded fixture cases. The benchmark does **not** prove superiority over `tinyglobby` or `globset + walkdir`.
 
 Keep the query, dataset, output requirements, runtime versions, and commit hash with any future benchmark snapshot. Retain losing results.
 
-## zlob comparison
+## zlob hot-engine comparison
 
-The official zlob repository was cloned at its current shallow-checkout revision and built with Zig `0.16.0` using `zig build -Doptimize=ReleaseFast`. Its CLI was benchmarked with the same 16,000-file corpus and the equivalent query `**/*.{rs,toml}` with sorted complete output. This raw workload intentionally does not use exclusions because the zlob CLI invocation tested here has no exclusion option.
+The official zlob repository was built with Zig `0.16.0` using `zig build -Doptimize=ReleaseFast`. A temporary in-process Zig harness called zlob's public filesystem API repeatedly after a warmup. Branchcut used `--count --stats`; its reported `elapsed` value begins after argument parsing and planning, so process startup and output serialization are excluded.
 
-| Tool | Median | Matches |
+Workload:
+
+```text
+16,000-file corpus
+pattern: **/*.{rs,toml}
+13,000 matches
+3 warmup iterations
+10 measured iterations
+count-only output
+```
+
+| Engine | Median / average per query | Matches |
 |---|---:|---:|
-| Branchcut release | 37.51 ms | 13,000 |
-| zlob ReleaseFast CLI | 130.11 ms | 13,000 |
+| Branchcut traversal (`--count --stats`) | 18.393 ms | 13,000 |
+| zlob direct filesystem API | 116.104 ms | 13,000 |
 
-Ten cold Windows process launches per tool produced an observed `3.47x` zlob/Branchcut ratio in this workload. This is not a claim that Branchcut is universally faster: zlob supports a broader feature set, has a separate walker API, and its published benchmarks use different workloads and hardware. The zlob CLI was the artifact actually exercised here.
+Observed startup-excluded ratio:
+
+```text
+116.104 / 18.393 = 6.31x
+```
+
+This is a narrow Windows workload. zlob's official README describes additional SIMD, platform-specific, and parallel walker paths that were not exercised by this direct single-threaded `match` API harness. It is therefore evidence for this workload, not a universal zlob ranking.
 
 ## Reproducibility note
 

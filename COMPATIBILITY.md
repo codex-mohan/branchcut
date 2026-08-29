@@ -27,6 +27,7 @@ Branchcut intentionally supports a focused filesystem-query surface rather than 
 | `--explain` | Supported | Planner decisions and strategy |
 | Positional search | Supported | Literal, case-sensitive filename containment |
 | `--strict` | Supported | Exit code 2 on filesystem errors |
+| `--count` | Supported | Emits the match count without path serialization |
 
 ## Deliberate gaps
 

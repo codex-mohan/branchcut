@@ -161,6 +161,12 @@ branchcut --glob '**/*.rs' --sort --limit 100
 
 Sorting necessarily collects all matching paths before truncation. Without `--sort`, output streams and the limit stops traversal immediately.
 
+Count matches without serializing paths:
+
+```bash
+branchcut --glob '**/*.rs' --count
+```
+
 Include hidden paths:
 
 ```bash
