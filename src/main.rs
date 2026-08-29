@@ -78,9 +78,70 @@ enum Token {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+enum SegmentMatcher {
+    Literal(Vec<u8>),
+    Prefix(Vec<u8>),
+    Suffix(Vec<u8>),
+    General(Vec<Token>),
+}
+
+impl SegmentMatcher {
+    fn compile(tokens: Vec<Token>) -> Self {
+        if let Some(literal) = tokens_as_literal(&tokens) {
+            return Self::Literal(literal);
+        }
+        if matches!(tokens.last(), Some(Token::Star))
+            && let Some(prefix) = tokens_as_literal(&tokens[..tokens.len() - 1])
+        {
+            return Self::Prefix(prefix);
+        }
+        if matches!(tokens.first(), Some(Token::Star))
+            && let Some(suffix) = tokens_as_literal(&tokens[1..])
+        {
+            return Self::Suffix(suffix);
+        }
+        Self::General(tokens)
+    }
+
+    fn literal(&self) -> Option<&[u8]> {
+        match self {
+            Self::Literal(literal) => Some(literal),
+            _ => None,
+        }
+    }
+
+    fn matches(&self, name: &OsStr) -> bool {
+        with_os_bytes(name, |bytes| match self {
+            Self::Literal(literal) => bytes == literal,
+            Self::Prefix(prefix) => bytes.starts_with(prefix),
+            Self::Suffix(suffix) => bytes.ends_with(suffix),
+            Self::General(tokens) => segment_matches(tokens, bytes),
+        })
+    }
+}
+
+fn tokens_as_literal(tokens: &[Token]) -> Option<Vec<u8>> {
+    tokens
+        .iter()
+        .map(|token| match token {
+            Token::Literal(byte) => Some(*byte),
+            _ => None,
+        })
+        .collect()
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum PatternClass {
+    Literal,
+    SingleDirectory,
+    FixedPrefixRecursive,
+    UnboundedRecursive,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 enum Segment {
     GlobStar,
-    Match(Vec<Token>),
+    Match(SegmentMatcher),
 }
 
 #[derive(Clone, Debug)]
@@ -88,6 +149,7 @@ struct Pattern {
     source: String,
     segments: Vec<Segment>,
     literal_prefix: Vec<Vec<u8>>,
+    class: PatternClass,
 }
 
 impl Pattern {
@@ -113,23 +175,38 @@ impl Pattern {
                     segments.push(Segment::GlobStar);
                 }
             } else {
-                segments.push(Segment::Match(parse_segment(raw, &source)?));
+                segments.push(Segment::Match(SegmentMatcher::compile(parse_segment(
+                    raw, &source,
+                )?)));
             }
         }
         if segments.is_empty() {
             return Err(AppError(format!("empty pattern: {source}")));
         }
-        let literal_prefix = segments
+        let literal_prefix: Vec<Vec<u8>> = segments
             .iter()
             .map_while(|segment| match segment {
-                Segment::Match(tokens) => literal_segment(tokens),
+                Segment::Match(matcher) => matcher.literal().map(<[u8]>::to_vec),
                 Segment::GlobStar => None,
             })
             .collect();
+        let class = if literal_prefix.len() == segments.len() {
+            PatternClass::Literal
+        } else if !segments
+            .iter()
+            .any(|segment| matches!(segment, Segment::GlobStar))
+        {
+            PatternClass::SingleDirectory
+        } else if literal_prefix.is_empty() {
+            PatternClass::UnboundedRecursive
+        } else {
+            PatternClass::FixedPrefixRecursive
+        };
         Ok(Self {
             source,
             segments,
             literal_prefix,
+            class,
         })
     }
 }
@@ -195,7 +272,7 @@ impl PatternProgram {
             for (segment, child) in &self.nodes[node].edges {
                 match segment {
                     Segment::GlobStar => push_unique(&mut next, node),
-                    Segment::Match(tokens) if segment_matches(tokens, component) => {
+                    Segment::Match(matcher) if matcher.matches(component) => {
                         push_unique(&mut next, *child);
                     }
                     Segment::Match(_) => {}
@@ -238,16 +315,6 @@ fn push_unique(states: &mut Vec<usize>, node: usize) {
     if !states.contains(&node) {
         states.push(node);
     }
-}
-
-fn literal_segment(tokens: &[Token]) -> Option<Vec<u8>> {
-    tokens
-        .iter()
-        .map(|token| match token {
-            Token::Literal(byte) => Some(*byte),
-            _ => None,
-        })
-        .collect()
 }
 
 fn parse_segment(raw: &str, whole_pattern: &str) -> Result<Vec<Token>> {
@@ -327,38 +394,36 @@ fn parse_class(bytes: &[u8], whole_pattern: &str) -> Result<(Token, usize)> {
     )))
 }
 
-fn segment_matches(tokens: &[Token], name: &OsStr) -> bool {
-    with_os_bytes(name, |bytes| {
-        let mut token_index = 0;
-        let mut byte_index = 0;
-        let mut star_token = None;
-        let mut star_byte = 0;
+fn segment_matches(tokens: &[Token], bytes: &[u8]) -> bool {
+    let mut token_index = 0;
+    let mut byte_index = 0;
+    let mut star_token = None;
+    let mut star_byte = 0;
 
-        while byte_index < bytes.len() {
-            match tokens.get(token_index) {
-                Some(Token::Star) => {
-                    star_token = Some(token_index);
-                    star_byte = byte_index;
-                    token_index += 1;
-                }
-                Some(token) if token_matches_byte(token, bytes[byte_index]) => {
-                    token_index += 1;
-                    byte_index += 1;
-                }
-                _ => {
-                    let Some(star) = star_token else {
-                        return false;
-                    };
-                    star_byte += 1;
-                    byte_index = star_byte;
-                    token_index = star + 1;
-                }
+    while byte_index < bytes.len() {
+        match tokens.get(token_index) {
+            Some(Token::Star) => {
+                star_token = Some(token_index);
+                star_byte = byte_index;
+                token_index += 1;
+            }
+            Some(token) if token_matches_byte(token, bytes[byte_index]) => {
+                token_index += 1;
+                byte_index += 1;
+            }
+            _ => {
+                let Some(star) = star_token else {
+                    return false;
+                };
+                star_byte += 1;
+                byte_index = star_byte;
+                token_index = star + 1;
             }
         }
-        tokens[token_index..]
-            .iter()
-            .all(|token| matches!(token, Token::Star))
-    })
+    }
+    tokens[token_index..]
+        .iter()
+        .all(|token| matches!(token, Token::Star))
 }
 
 fn token_matches_byte(token: &Token, byte: u8) -> bool {
@@ -911,14 +976,14 @@ fn print_explain(plan: &QueryPlan) {
     );
     println!("\nPOSITIVE PATTERNS");
     for pattern in &plan.positives {
-        println!("  {}", pattern.source);
+        println!("  {} [{:?}]", pattern.source, pattern.class);
     }
     println!("\nEXCLUSIONS");
     if plan.negatives.is_empty() {
         println!("  (none)");
     } else {
         for pattern in &plan.negatives {
-            println!("  {}", pattern.source);
+            println!("  {} [{:?}]", pattern.source, pattern.class);
         }
     }
     println!("\nLEAF FILTERS");
@@ -1034,6 +1099,28 @@ mod tests {
         assert!(matches("src/[!0-9]*.rs", "src/main.rs"));
         assert!(!matches("src/*.rs", "src/nested/main.rs"));
         assert!(!matches("src/[!a-z]*.rs", "src/main.rs"));
+    }
+
+    #[test]
+    fn classifies_patterns_and_specializes_common_segments() {
+        let literal = Pattern::compile("src/main.rs".to_owned()).unwrap();
+        let shallow = Pattern::compile("src/*.rs".to_owned()).unwrap();
+        let fixed = Pattern::compile("src/**/*.rs".to_owned()).unwrap();
+        let unbounded = Pattern::compile("**/*.rs".to_owned()).unwrap();
+        let prefix = Pattern::compile("src/test*".to_owned()).unwrap();
+
+        assert_eq!(literal.class, PatternClass::Literal);
+        assert_eq!(shallow.class, PatternClass::SingleDirectory);
+        assert_eq!(fixed.class, PatternClass::FixedPrefixRecursive);
+        assert_eq!(unbounded.class, PatternClass::UnboundedRecursive);
+        assert!(matches!(
+            shallow.segments.last(),
+            Some(Segment::Match(SegmentMatcher::Suffix(suffix))) if suffix == b".rs"
+        ));
+        assert!(matches!(
+            prefix.segments.last(),
+            Some(Segment::Match(SegmentMatcher::Prefix(value))) if value == b"test"
+        ));
     }
 
     #[test]
