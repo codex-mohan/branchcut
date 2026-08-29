@@ -4,17 +4,20 @@ Branchcut dependency proof
 Command:
   cargo metadata --no-deps --format-version 1
 
-Relevant output:
-  package: branchcut 0.1.0
-  dependencies: []
+Observed package dependency field:
+  "name": "branchcut"
+  "dependencies": []
 
 Manifest:
   [dependencies]
 
-Source-file proof:
+Source-file command:
+  file extension scan -> src/main.rs
+
+Observed source file:
   src/main.rs
 
-Release build:
+Release command:
   cargo build --release
 
 No third-party runtime package is declared, linked, vendored, or invoked by the binary.
