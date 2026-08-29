@@ -70,6 +70,17 @@ The result set comparison passed for this workload and the four previously recor
 
 Keep the query, dataset, output requirements, runtime versions, and commit hash with any future benchmark snapshot. Retain losing results.
 
+## zlob comparison
+
+The official zlob repository was cloned at its current shallow-checkout revision and built with Zig `0.16.0` using `zig build -Doptimize=ReleaseFast`. Its CLI was benchmarked with the same 16,000-file corpus and the equivalent query `**/*.{rs,toml}` with sorted complete output. This raw workload intentionally does not use exclusions because the zlob CLI invocation tested here has no exclusion option.
+
+| Tool | Median | Matches |
+|---|---:|---:|
+| Branchcut release | 37.51 ms | 13,000 |
+| zlob ReleaseFast CLI | 130.11 ms | 13,000 |
+
+Ten cold Windows process launches per tool produced an observed `3.47x` zlob/Branchcut ratio in this workload. This is not a claim that Branchcut is universally faster: zlob supports a broader feature set, has a separate walker API, and its published benchmarks use different workloads and hardware. The zlob CLI was the artifact actually exercised here.
+
 ## Reproducibility note
 
 Two clean Windows release builds were tested. Their SHA-256 hashes differed, so Branchcut does **not** claim the optional Reproducible Build bonus. The likely source is nondeterministic linker metadata in the Windows executable; this remains an explicit limitation rather than an unpublished claim.
