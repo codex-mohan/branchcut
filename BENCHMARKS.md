@@ -10,7 +10,7 @@ These measurements compare Branchcut against the pinned `fast-glob@3.3.3` oracle
 - Build: `cargo build --release`
 - Artifact: 236,544 bytes
 - Dataset: generated temporary corpus, 16,000 files
-- Artifact SHA-256: `4feccbc68617b55d8a23082db7c4bc21c6b234e2b32795c4a4ac2b33961c5b14`
+- Artifact SHA-256: `bf1747ad90e0b1f371a7930cdb663f5d4aa63fcc68c9893247f32e1babf62f64`
 - Node oracle runtime: `v25.2.1`
 - Timing: parent-process wall-clock duration, including process startup
 
