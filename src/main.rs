@@ -541,17 +541,19 @@ struct Stats {
     errors: u64,
 }
 
-struct Runner<'a> {
+struct Runner<'a, W: Write> {
     plan: &'a QueryPlan,
+    writer: W,
     stats: Stats,
     output: Vec<PathBuf>,
     stopped: bool,
 }
 
-impl<'a> Runner<'a> {
-    fn new(plan: &'a QueryPlan) -> Self {
+impl<'a, W: Write> Runner<'a, W> {
+    fn new(plan: &'a QueryPlan, writer: W) -> Self {
         Self {
             plan,
+            writer,
             stats: Stats::default(),
             output: Vec::new(),
             stopped: false,
@@ -606,13 +608,11 @@ impl<'a> Runner<'a> {
                 self.stopped = true;
             }
             self.stats.matches = self.output.len() as u64;
-            let stdout = io::stdout();
-            let mut lock = stdout.lock();
             for path in &self.output {
-                writeln!(lock, "{}", display_path(path))?;
+                writeln!(self.writer, "{}", display_path(path))?;
             }
         }
-        Ok(())
+        self.writer.flush()
     }
 
     fn visit_directory(&mut self, absolute: PathBuf, relative: PathBuf) -> io::Result<()> {
@@ -701,7 +701,7 @@ impl<'a> Runner<'a> {
         if self.plan.sort {
             self.output.push(path);
         } else {
-            println!("{}", display_path(&path));
+            writeln!(self.writer, "{}", display_path(&path))?;
         }
         if !self.plan.sort
             && self
@@ -906,10 +906,17 @@ fn real_main() -> Result<()> {
         return Ok(());
     }
     let started = Instant::now();
-    let mut runner = Runner::new(&plan);
-    runner
-        .run()
-        .map_err(|error| AppError(format!("query failed: {error}")))?;
+    let stdout = io::stdout();
+    let mut runner = Runner::new(
+        &plan,
+        io::BufWriter::with_capacity(64 * 1024, stdout.lock()),
+    );
+    if let Err(error) = runner.run() {
+        if error.kind() == io::ErrorKind::BrokenPipe {
+            return Ok(());
+        }
+        return Err(AppError(format!("query failed: {error}")));
+    }
     if options.strict && runner.stats.errors > 0 {
         return Err(AppError(format!(
             "query incomplete: {} filesystem error(s)",
@@ -1039,7 +1046,7 @@ mod tests {
             ..Options::default()
         };
         let plan = QueryPlan::compile(&options).unwrap();
-        let mut runner = Runner::new(&plan);
+        let mut runner = Runner::new(&plan, Vec::new());
         runner.run().unwrap();
 
         assert_eq!(runner.output, [PathBuf::from("src/lib.rs")]);
@@ -1060,7 +1067,7 @@ mod tests {
             ..Options::default()
         };
         let plan = QueryPlan::compile(&options).unwrap();
-        let mut runner = Runner::new(&plan);
+        let mut runner = Runner::new(&plan, Vec::new());
         runner.run().unwrap();
 
         assert_eq!(runner.output, [PathBuf::from(".hidden/secret.rs")]);
@@ -1079,7 +1086,7 @@ mod tests {
             ..Options::default()
         };
         let default_plan = QueryPlan::compile(&default_dir).unwrap();
-        let mut default_runner = Runner::new(&default_plan);
+        let mut default_runner = Runner::new(&default_plan, Vec::new());
         default_runner.run().unwrap();
         assert!(default_runner.output.is_empty());
 
@@ -1088,7 +1095,7 @@ mod tests {
             ..default_dir
         };
         let explicit_plan = QueryPlan::compile(&explicit_dir).unwrap();
-        let mut explicit_runner = Runner::new(&explicit_plan);
+        let mut explicit_runner = Runner::new(&explicit_plan, Vec::new());
         explicit_runner.run().unwrap();
         assert_eq!(explicit_runner.output, [PathBuf::from("src")]);
 
@@ -1099,7 +1106,7 @@ mod tests {
             ..Options::default()
         };
         let hidden_plan = QueryPlan::compile(&hidden).unwrap();
-        let mut hidden_runner = Runner::new(&hidden_plan);
+        let mut hidden_runner = Runner::new(&hidden_plan, Vec::new());
         hidden_runner.run().unwrap();
         assert!(hidden_runner.output.is_empty());
         assert_eq!(hidden_runner.stats.dirs_opened, 0);
@@ -1116,9 +1123,36 @@ mod tests {
             ..Options::default()
         };
         let plan = QueryPlan::compile(&options).unwrap();
-        let mut runner = Runner::new(&plan);
+        let mut runner = Runner::new(&plan, Vec::new());
         runner.run().unwrap();
 
         assert_eq!(runner.output, [PathBuf::from("src/config[1].rs")]);
+    }
+
+    struct BrokenWriter;
+
+    impl Write for BrokenWriter {
+        fn write(&mut self, _buffer: &[u8]) -> io::Result<usize> {
+            Err(io::Error::new(io::ErrorKind::BrokenPipe, "closed"))
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn streaming_propagates_broken_pipe_without_panicking() {
+        let fixture = Fixture::new();
+        let options = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/*.rs".to_owned()],
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut runner = Runner::new(&plan, BrokenWriter);
+
+        let error = runner.run().unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::BrokenPipe);
     }
 }
