@@ -44,6 +44,7 @@ struct Options {
     sort: bool,
     stats: bool,
     explain: bool,
+    strict: bool,
 }
 
 impl Default for Options {
@@ -60,6 +61,7 @@ impl Default for Options {
             sort: false,
             stats: false,
             explain: false,
+            strict: false,
         }
     }
 }
@@ -582,7 +584,7 @@ impl<'a> Runner<'a> {
             {
                 self.emit(relative)?;
             }
-            return Ok(());
+            return self.finish();
         }
         if !self.plan.root_relative.as_os_str().is_empty()
             && self.plan.wanted_type == WantedType::Dir
@@ -591,8 +593,19 @@ impl<'a> Runner<'a> {
             self.emit(self.plan.root_relative.clone())?;
         }
         self.visit_directory(self.plan.root.clone(), self.plan.root_relative.clone())?;
+        self.finish()
+    }
+
+    fn finish(&mut self) -> io::Result<()> {
         if self.plan.sort {
-            self.output.sort();
+            self.output.sort_unstable();
+            if let Some(limit) = self.plan.limit
+                && self.output.len() > limit
+            {
+                self.output.truncate(limit);
+                self.stopped = true;
+            }
+            self.stats.matches = self.output.len() as u64;
             let stdout = io::stdout();
             let mut lock = stdout.lock();
             for path in &self.output {
@@ -690,10 +703,11 @@ impl<'a> Runner<'a> {
         } else {
             println!("{}", display_path(&path));
         }
-        if self
-            .plan
-            .limit
-            .is_some_and(|limit| self.stats.matches as usize >= limit)
+        if !self.plan.sort
+            && self
+                .plan
+                .limit
+                .is_some_and(|limit| self.stats.matches as usize >= limit)
         {
             self.stopped = true;
         }
@@ -775,6 +789,7 @@ fn parse_args() -> Result<Options> {
             "--sort" => options.sort = true,
             "--stats" => options.stats = true,
             "--explain" => options.explain = true,
+            "--strict" => options.strict = true,
             "--" => {
                 simple.extend(args.map(|value| value.to_string_lossy().into_owned()));
                 break;
@@ -814,7 +829,7 @@ fn next_os(args: &mut impl Iterator<Item = OsString>, option: &str) -> Result<Os
 
 fn print_help() {
     println!(
-        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort output instead of streaming\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
+        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort all matches before applying limits\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
     );
 }
 
@@ -894,7 +909,13 @@ fn real_main() -> Result<()> {
     let mut runner = Runner::new(&plan);
     runner
         .run()
-        .map_err(|error| AppError(format!("output failed: {error}")))?;
+        .map_err(|error| AppError(format!("query failed: {error}")))?;
+    if options.strict && runner.stats.errors > 0 {
+        return Err(AppError(format!(
+            "query incomplete: {} filesystem error(s)",
+            runner.stats.errors
+        )));
+    }
     if options.stats {
         print_stats(&runner.stats, started.elapsed());
     }
@@ -1042,7 +1063,7 @@ mod tests {
         let mut runner = Runner::new(&plan);
         runner.run().unwrap();
 
-        assert_eq!(runner.output.len(), 1);
+        assert_eq!(runner.output, [PathBuf::from(".hidden/secret.rs")]);
         assert_eq!(runner.stats.matches, 1);
         assert!(runner.stopped);
     }
