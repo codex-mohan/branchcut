@@ -64,3 +64,7 @@ The first invocation in each set included one-time OS/filesystem/cache effects; 
 The current result proves that the release binary runs and reports planner counters. It does **not** prove superiority over `fast-glob`, `tinyglobby`, `globset + walkdir`, or `zlob`.
 
 Before publishing a speed claim, run equivalent result-set differential checks and report cold and hot measurements under identical output, query, dataset, and filesystem conditions. Keep losing results.
+
+## Reproducibility note
+
+Two clean Windows release builds were tested. Their SHA-256 hashes differed, so Branchcut does **not** claim the optional Reproducible Build bonus. The likely source is nondeterministic linker metadata in the Windows executable; this remains an explicit limitation rather than an unpublished claim.
