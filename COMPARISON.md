@@ -96,8 +96,7 @@ no output serialization
 Relative hot-path observations:
 
 ```text
-Branchcut vs tinyglobby: 1.48x lower median
-Branchcut vs fast-glob:  1.41x lower median
+Branchcut vs fast-glob:  1.56x lower median
 Branchcut vs zlob:       6.53x lower measured average
 ```
 
