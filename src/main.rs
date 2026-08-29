@@ -45,6 +45,7 @@ struct Options {
     stats: bool,
     explain: bool,
     strict: bool,
+    count: bool,
 }
 
 impl Default for Options {
@@ -62,6 +63,7 @@ impl Default for Options {
             stats: false,
             explain: false,
             strict: false,
+            count: false,
         }
     }
 }
@@ -509,6 +511,7 @@ struct QueryPlan {
     hidden: bool,
     limit: Option<usize>,
     sort: bool,
+    count: bool,
 }
 
 impl QueryPlan {
@@ -550,6 +553,7 @@ impl QueryPlan {
             positive_program,
             negative_program,
             sort: options.sort,
+            count: options.count,
         })
     }
 
@@ -711,7 +715,7 @@ impl<'a, W: Write> Runner<'a, W> {
     }
 
     fn finish(&mut self) -> io::Result<()> {
-        if self.plan.sort {
+        if self.plan.sort && !self.plan.count {
             self.output.sort_unstable();
             if let Some(limit) = self.plan.limit
                 && self.output.len() > limit
@@ -828,9 +832,9 @@ impl<'a, W: Write> Runner<'a, W> {
 
     fn emit(&mut self, path: PathBuf) -> io::Result<()> {
         self.stats.matches += 1;
-        if self.plan.sort {
+        if self.plan.sort && !self.plan.count {
             self.output.push(path);
-        } else {
+        } else if !self.plan.sort && !self.plan.count {
             writeln!(self.writer, "{}", display_path(&path))?;
         }
         if !self.plan.sort
@@ -903,6 +907,7 @@ fn parse_args() -> Result<Options> {
                     }
                 };
             }
+            "--count" => options.count = true,
             "--cwd" => options.cwd = PathBuf::from(next_os(&mut args, "--cwd")?),
             "--hidden" => options.hidden = true,
             "--first" => options.limit = Some(1),
@@ -924,7 +929,6 @@ fn parse_args() -> Result<Options> {
                 simple.extend(args.map(|value| value.to_string_lossy().into_owned()));
                 break;
             }
-            _ if text.starts_with('-') => return Err(AppError(format!("unknown option: {text}"))),
             _ => simple.push(text.to_owned()),
         }
     }
@@ -959,7 +963,7 @@ fn next_os(args: &mut impl Iterator<Item = OsString>, option: &str) -> Result<Os
 
 fn print_help() {
     println!(
-        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort all matches before applying limits\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
+        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort all matches before applying limits\n  --count              Print only the match count\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
     );
 }
 
@@ -1052,6 +1056,9 @@ fn real_main() -> Result<()> {
             "query incomplete: {} filesystem error(s)",
             runner.stats.errors
         )));
+    }
+    if options.count {
+        println!("{}", runner.stats.matches);
     }
     if options.stats {
         print_stats(&runner.stats, started.elapsed());
