@@ -1,6 +1,6 @@
 # Benchmarks
 
-These are initial Branchcut-only measurements, retained as a baseline. They are not competitor claims.
+These measurements compare Branchcut against the pinned `fast-glob@3.3.3` oracle. They are cold end-to-end measurements, not hot engine measurements.
 
 ## Environment
 
@@ -11,6 +11,7 @@ These are initial Branchcut-only measurements, retained as a baseline. They are 
 - Artifact: 236,544 bytes
 - Dataset: generated temporary corpus, 16,000 files
 - Artifact SHA-256: `4feccbc68617b55d8a23082db7c4bc21c6b234e2b32795c4a4ac2b33961c5b14`
+- Node oracle runtime: `v25.2.1`
 - Timing: parent-process wall-clock duration, including process startup
 
 ## Dataset shape
@@ -23,12 +24,9 @@ Twenty package directories were generated. Each package contained:
 
 Generation is intentionally not committed. The exact generator used 20 packages and those counts.
 
-## Results
-
-| Workload | Matches | Median | P90 | Directories opened | Directories pruned |
+| Workload | Matches | Branchcut median | fast-glob median | Branchcut P90 | fast-glob P90 |
 |---|---:|---:|---:|---:|---:|
-| `packages/**/src/**/*.never`, exclude target, one pattern | 0 | 27.25 ms | 30.85 ms | 81 | 20 |
-| 100 absent patterns under `packages/**/src/**` | 0 | 46.22 ms | 50.98 ms | 121 | 0 |
+| `**/*.{rs,toml}`, exclude `target` and `node_modules` | 10,000 | 24.99 ms | 148.53 ms | 27.23 ms | 168.10 ms |
 
 Representative statistics from the release binary:
 
@@ -56,13 +54,21 @@ filesystem errors       0
 elapsed                 32.963ms
 ```
 
-The first invocation in each set included one-time OS/filesystem/cache effects; medians are reported across all 12 launches. These are cold end-to-end measurements, not hot engine measurements.
+Ten cold process launches were measured for each tool. Both tools emitted the complete sorted result set; both returned exactly 10,000 matches. The parent process measured wall-clock duration including process startup, module loading, filesystem traversal, sorting, and output capture.
+
+The observed cold-process ratio for this workload was:
+
+```text
+148.53 ms / 24.99 ms = 5.94x Branchcut advantage
+```
+
+This is one workload on one Windows machine, not a universal performance claim. The Node oracle was launched as a separate process for every sample, so this is explicitly a cold comparison. A fair hot-engine comparison requires a persistent Node process and a persistent Branchcut benchmark harness.
 
 ## Interpretation
 
-The current result proves that the release binary runs and reports planner counters. It does **not** prove superiority over `fast-glob`, `tinyglobby`, `globset + walkdir`, or `zlob`.
+The result set comparison passed for this workload and the four previously recorded fixture cases. The benchmark does **not** prove superiority over `tinyglobby`, `globset + walkdir`, or `zlob`.
 
-Before publishing a speed claim, run equivalent result-set differential checks and report cold and hot measurements under identical output, query, dataset, and filesystem conditions. Keep losing results.
+Keep the query, dataset, output requirements, runtime versions, and commit hash with any future benchmark snapshot. Retain losing results.
 
 ## Reproducibility note
 
