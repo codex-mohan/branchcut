@@ -132,84 +132,126 @@ impl Pattern {
             literal_prefix,
         })
     }
+}
 
-    fn matches(&self, components: &[&OsStr]) -> bool {
-        let mut memo = vec![None; (self.segments.len() + 1) * (components.len() + 1)];
-        self.matches_from(0, 0, components, &mut memo)
-    }
+#[derive(Debug)]
+struct ProgramNode {
+    edges: Vec<(Segment, usize)>,
+    terminal: bool,
+    subtree_terminal: bool,
+}
 
-    fn matches_from(
-        &self,
-        pattern_index: usize,
-        path_index: usize,
-        components: &[&OsStr],
-        memo: &mut [Option<bool>],
-    ) -> bool {
-        let width = components.len() + 1;
-        let slot = pattern_index * width + path_index;
-        if let Some(answer) = memo[slot] {
-            return answer;
+impl ProgramNode {
+    fn new() -> Self {
+        Self {
+            edges: Vec::new(),
+            terminal: false,
+            subtree_terminal: false,
         }
-        let answer = if pattern_index == self.segments.len() {
-            path_index == components.len()
-        } else {
-            match &self.segments[pattern_index] {
-                Segment::GlobStar => {
-                    self.matches_from(pattern_index + 1, path_index, components, memo)
-                        || (path_index < components.len()
-                            && self.matches_from(pattern_index, path_index + 1, components, memo))
-                }
-                Segment::Match(tokens) => {
-                    path_index < components.len()
-                        && segment_matches(tokens, components[path_index])
-                        && self.matches_from(pattern_index + 1, path_index + 1, components, memo)
-                }
+    }
+}
+
+#[derive(Debug)]
+struct PatternProgram {
+    nodes: Vec<ProgramNode>,
+}
+
+impl PatternProgram {
+    fn compile(patterns: &[Pattern]) -> Self {
+        let mut nodes = vec![ProgramNode::new()];
+        for pattern in patterns {
+            let mut node = 0;
+            for segment in &pattern.segments {
+                let existing = nodes[node]
+                    .edges
+                    .iter()
+                    .find_map(|(edge, child)| (edge == segment).then_some(*child));
+                node = if let Some(child) = existing {
+                    child
+                } else {
+                    let child = nodes.len();
+                    nodes.push(ProgramNode::new());
+                    nodes[node].edges.push((segment.clone(), child));
+                    child
+                };
             }
-        };
-        memo[slot] = Some(answer);
-        answer
+            nodes[node].terminal = true;
+            if matches!(pattern.segments.last(), Some(Segment::GlobStar)) {
+                nodes[node].subtree_terminal = true;
+            }
+        }
+        Self { nodes }
     }
 
-    fn descendant_possible(&self, components: &[&OsStr]) -> bool {
-        let mut states = vec![false; self.segments.len() + 1];
-        states[0] = true;
-        epsilon_closure(&self.segments, &mut states);
-        for component in components {
-            let mut next = vec![false; states.len()];
-            for index in 0..self.segments.len() {
-                if !states[index] {
-                    continue;
-                }
-                match &self.segments[index] {
-                    Segment::GlobStar => next[index] = true,
+    fn initial_states(&self) -> Vec<usize> {
+        let mut states = vec![0];
+        self.add_epsilon_closure(&mut states);
+        states
+    }
+
+    fn advance(&self, states: &[usize], component: &OsStr) -> Vec<usize> {
+        let mut next = Vec::with_capacity(states.len());
+        for &node in states {
+            for (segment, child) in &self.nodes[node].edges {
+                match segment {
+                    Segment::GlobStar => push_unique(&mut next, node),
                     Segment::Match(tokens) if segment_matches(tokens, component) => {
-                        next[index + 1] = true;
+                        push_unique(&mut next, *child);
                     }
                     Segment::Match(_) => {}
                 }
             }
-            epsilon_closure(&self.segments, &mut next);
-            states = next;
-            if !states.iter().any(|active| *active) {
-                return false;
+        }
+        self.add_epsilon_closure(&mut next);
+        next
+    }
+
+    fn states_for_path(&self, components: &[&OsStr]) -> Vec<usize> {
+        let mut states = self.initial_states();
+        for component in components {
+            states = self.advance(&states, component);
+            if states.is_empty() {
+                break;
             }
         }
         states
+    }
+
+    fn matches(&self, components: &[&OsStr]) -> bool {
+        self.states_for_path(components)
             .iter()
-            .enumerate()
-            .any(|(index, active)| *active && index < self.segments.len())
+            .any(|node| self.nodes[*node].terminal)
+    }
+
+    fn descendant_possible(&self, components: &[&OsStr]) -> bool {
+        self.states_for_path(components)
+            .iter()
+            .any(|node| !self.nodes[*node].edges.is_empty())
     }
 
     fn excludes_subtree(&self, components: &[&OsStr]) -> bool {
-        matches!(self.segments.last(), Some(Segment::GlobStar)) && self.matches(components)
+        self.states_for_path(components)
+            .iter()
+            .any(|node| self.nodes[*node].subtree_terminal)
+    }
+
+    fn add_epsilon_closure(&self, states: &mut Vec<usize>) {
+        let mut cursor = 0;
+        while cursor < states.len() {
+            let node = states[cursor];
+            for (segment, child) in &self.nodes[node].edges {
+                if matches!(segment, Segment::GlobStar) {
+                    push_unique(states, *child);
+                }
+            }
+            cursor += 1;
+        }
     }
 }
 
-fn epsilon_closure(segments: &[Segment], states: &mut [bool]) {
-    for index in 0..segments.len() {
-        if states[index] && matches!(segments[index], Segment::GlobStar) {
-            states[index + 1] = true;
-        }
+fn push_unique(states: &mut Vec<usize>, node: usize) {
+    if !states.contains(&node) {
+        states.push(node);
     }
 }
 
@@ -397,6 +439,8 @@ struct QueryPlan {
     root: PathBuf,
     root_relative: PathBuf,
     positives: Vec<Pattern>,
+    positive_program: PatternProgram,
+    negative_program: PatternProgram,
     negatives: Vec<Pattern>,
     simple_terms: Vec<Vec<u8>>,
     extensions: Vec<Vec<u8>>,
@@ -430,6 +474,8 @@ impl QueryPlan {
             path
         });
         let root = options.cwd.join(&root_relative);
+        let positive_program = PatternProgram::compile(&positives);
+        let negative_program = PatternProgram::compile(&negatives);
         Ok(Self {
             root,
             root_relative,
@@ -440,19 +486,16 @@ impl QueryPlan {
             wanted_type: options.wanted_type,
             hidden: options.hidden,
             limit: options.limit,
+            positive_program,
+            negative_program,
             sort: options.sort,
         })
     }
 
     fn path_matches(&self, relative: &Path) -> bool {
         let components = normal_components(relative);
-        self.positives
-            .iter()
-            .any(|pattern| pattern.matches(&components))
-            && !self
-                .negatives
-                .iter()
-                .any(|pattern| pattern.matches(&components))
+        self.positive_program.matches(&components)
+            && !self.negative_program.matches(&components)
             && (self.simple_terms.is_empty()
                 || relative.file_name().is_some_and(|name| {
                     with_os_bytes(name, |bytes| {
@@ -464,17 +507,13 @@ impl QueryPlan {
     }
 
     fn directory_possible(&self, relative: &Path) -> bool {
-        let components = normal_components(relative);
-        self.positives
-            .iter()
-            .any(|pattern| pattern.descendant_possible(&components))
+        self.positive_program
+            .descendant_possible(&normal_components(relative))
     }
 
     fn directory_excluded(&self, relative: &Path) -> bool {
-        let components = normal_components(relative);
-        self.negatives
-            .iter()
-            .any(|pattern| pattern.excludes_subtree(&components))
+        self.negative_program
+            .excludes_subtree(&normal_components(relative))
     }
 
     fn extension_matches(&self, name: &OsStr) -> bool {
@@ -948,9 +987,8 @@ mod tests {
     }
 
     fn matches(pattern: &str, path: &str) -> bool {
-        Pattern::compile(pattern.to_owned())
-            .unwrap()
-            .matches(&parts(Path::new(path)))
+        let patterns = [Pattern::compile(pattern.to_owned()).unwrap()];
+        PatternProgram::compile(&patterns).matches(&parts(Path::new(path)))
     }
 
     #[test]
@@ -982,10 +1020,29 @@ mod tests {
 
     #[test]
     fn prefix_viability_prunes_impossible_directories() {
-        let pattern = Pattern::compile("packages/*/src/**/*.rs".to_owned()).unwrap();
-        assert!(pattern.descendant_possible(&parts(Path::new("packages/core"))));
-        assert!(pattern.descendant_possible(&parts(Path::new("packages/core/src/deep"))));
-        assert!(!pattern.descendant_possible(&parts(Path::new("unrelated"))));
+        let patterns = [Pattern::compile("packages/*/src/**/*.rs".to_owned()).unwrap()];
+        let program = PatternProgram::compile(&patterns);
+        assert!(program.descendant_possible(&parts(Path::new("packages/core"))));
+        assert!(program.descendant_possible(&parts(Path::new("packages/core/src/deep"))));
+        assert!(!program.descendant_possible(&parts(Path::new("unrelated"))));
+    }
+
+    #[test]
+    fn shared_program_merges_common_pattern_segments() {
+        let patterns = [
+            Pattern::compile("src/**/*.rs".to_owned()).unwrap(),
+            Pattern::compile("src/**/*.toml".to_owned()).unwrap(),
+            Pattern::compile("src/**/test*.rs".to_owned()).unwrap(),
+        ];
+        let independent_nodes = 1 + patterns
+            .iter()
+            .map(|pattern| pattern.segments.len())
+            .sum::<usize>();
+        let program = PatternProgram::compile(&patterns);
+
+        assert!(program.nodes.len() < independent_nodes);
+        assert!(program.matches(&parts(Path::new("src/deep/lib.rs"))));
+        assert!(program.matches(&parts(Path::new("src/Cargo.toml"))));
     }
 
     #[test]
