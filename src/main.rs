@@ -1044,6 +1044,7 @@ fn run_command(command: &[String], path: &Path) -> io::Result<()> {
 fn parse_args() -> Result<Options> {
     let mut options = Options::default();
     let mut args = env::args_os().skip(1).peekable();
+
     let mut simple = Vec::new();
     while let Some(argument) = args.next() {
         let text = argument
