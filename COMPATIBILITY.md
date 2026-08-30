@@ -25,7 +25,8 @@ Branchcut intentionally supports a focused filesystem-query surface rather than 
 | `--sort` | Supported | Collects all results, sorts globally, then truncates |
 | `--stats` | Supported | Real traversal counters |
 | `--explain` | Supported | Planner decisions and strategy |
-| Positional search | Supported | Literal, case-sensitive filename containment |
+| Positional pattern | Supported | Arguments containing glob syntax are treated as glob patterns |
+| Positional search | Supported | Plain text is literal, case-sensitive filename containment |
 | `--strict` | Supported | Exit code 2 on filesystem errors |
 | `--count` | Supported | Emits the match count without path serialization |
 | `--gitignore` | Supported | Root and nested rules, ordered overrides, directory rules, and conservative re-inclusion traversal |

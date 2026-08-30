@@ -110,6 +110,15 @@ branchcut config
 
 This finds file names containing the case-sensitive text `config`; glob metacharacters inside a simple search are not interpreted.
 
+Positional arguments containing glob syntax are also accepted as shorthand:
+
+```bash
+branchcut '**/*.rs'
+branchcut '*/*.rs'
+```
+
+Plain positional text remains a literal filename search. Use `--glob` when combining multiple explicit patterns or when you want the query to be self-documenting.
+
 ## Query Examples
 
 Find Rust and TOML files beneath `src`:

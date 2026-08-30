@@ -1024,6 +1024,12 @@ fn json_escape(value: &str) -> String {
     escaped
 }
 
+fn is_glob_pattern(value: &str) -> bool {
+    value
+        .bytes()
+        .any(|byte| matches!(byte, b'*' | b'?' | b'[' | b'{' | b'!'))
+}
+
 fn run_command(command: &[String], path: &Path) -> io::Result<()> {
     let rendered = display_path(path);
     let mut process = Command::new(&command[0]);
@@ -1046,6 +1052,7 @@ fn parse_args() -> Result<Options> {
     let mut args = env::args_os().skip(1).peekable();
 
     let mut simple = Vec::new();
+    let mut positional_patterns = Vec::new();
     while let Some(argument) = args.next() {
         let text = argument
             .to_str()
@@ -1101,11 +1108,28 @@ fn parse_args() -> Result<Options> {
             "--explain" => options.explain = true,
             "--strict" => options.strict = true,
             "--" => {
-                simple.extend(args.map(|value| value.to_string_lossy().into_owned()));
+                for value in args {
+                    let value = value.to_string_lossy().into_owned();
+                    if is_glob_pattern(&value) {
+                        positional_patterns.push(value);
+                    } else {
+                        simple.push(value);
+                    }
+                }
                 break;
             }
+            _ if is_glob_pattern(text) => positional_patterns.push(text.to_owned()),
             _ => simple.push(text.to_owned()),
         }
+    }
+    if !positional_patterns.is_empty() {
+        if !options.positive.is_empty() || !simple.is_empty() {
+            return Err(AppError(
+                "positional glob patterns cannot be combined with --glob or simple searches"
+                    .to_owned(),
+            ));
+        }
+        options.positive.extend(positional_patterns);
     }
     if !simple.is_empty() {
         if !options.positive.is_empty() {
@@ -1138,7 +1162,7 @@ fn next_os(args: &mut impl Iterator<Item = OsString>, option: &str) -> Result<Os
 
 fn print_help() {
     println!(
-        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort all matches before applying limits\n  --count              Print only the match count\n  --gitignore          Apply hierarchical .gitignore files\n  --json               Stream matching paths as JSON Lines\n  --exec COMMAND       Run a command template for each match; use {{}}\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
+        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [PATTERN|SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort all matches before applying limits\n  --count              Print only the match count\n  --gitignore          Apply hierarchical .gitignore files\n  --json               Stream matching paths as JSON Lines\n  --exec COMMAND       Run a command template for each match; use {{}}\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
     );
 }
 
