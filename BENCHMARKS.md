@@ -87,13 +87,13 @@ count-only output
 
 | Engine | Median / average per query | Matches |
 |---|---:|---:|
-| Branchcut traversal (`--count --stats`) | 18.393 ms | 13,000 |
-| zlob v1.6.3 public `match` API | 120.090 ms average | 13,000 |
+| Branchcut traversal (`--count --stats`) | 22.079 ms median | 13,000 |
+| zlob v1.6.3 public `match` API | 133.408 ms average | 13,000 |
 
 Observed startup-excluded ratio:
 
 ```text
-120.090 / 18.393 = 6.53x
+133.408 / 22.079 = 6.04x
 ```
 
 This is a narrow Windows workload. zlob's official README describes additional SIMD, platform-specific, and parallel walker paths that were not exercised by this direct single-threaded `match` API harness. Its official C-compatible benchmark path returned zero matches for the Windows drive-letter path, and the official tree-size benchmark is disabled on Windows because it requires libc glob; neither invalid result was used.
