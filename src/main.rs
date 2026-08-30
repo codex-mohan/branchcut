@@ -837,11 +837,10 @@ impl<'a, W: Write> Runner<'a, W> {
         } else if !self.plan.sort && !self.plan.count {
             writeln!(self.writer, "{}", display_path(&path))?;
         }
-        if !self.plan.sort
-            && self
-                .plan
-                .limit
-                .is_some_and(|limit| self.stats.matches as usize >= limit)
+        if self
+            .plan
+            .limit
+            .is_some_and(|limit| self.stats.matches as usize >= limit)
         {
             self.stopped = true;
         }
@@ -1321,6 +1320,25 @@ mod tests {
         runner.run().unwrap();
 
         assert_eq!(runner.output, [PathBuf::from("src/config[1].rs")]);
+    }
+
+    #[test]
+    fn count_mode_honors_limit_without_collecting_paths() {
+        let fixture = Fixture::new();
+        let options = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/*.rs".to_owned()],
+            count: true,
+            limit: Some(1),
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut runner = Runner::new(&plan, Vec::new());
+        runner.run().unwrap();
+
+        assert_eq!(runner.stats.matches, 1);
+        assert!(runner.output.is_empty());
+        assert!(runner.stopped);
     }
 
     struct BrokenWriter;
