@@ -322,7 +322,7 @@ See [COMPATIBILITY.md](COMPATIBILITY.md) for the exact supported surface and [BE
 
 `Cargo.toml` contains an empty dependency table:
 
-The complete recording script is in [DEMO.md](DEMO.md).
+The complete recording script is in [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md).
 
 ```toml
 [dependencies]

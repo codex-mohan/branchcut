@@ -33,6 +33,9 @@ cargo clippy -- -D warnings
 .\target\release\branchcut.exe --glob "**/*.rs" --first
 .\target\release\branchcut.exe --glob "**/*.rs" --count --stats
 .\target\release\branchcut.exe --glob "packages/**/src/**/*.rs" --exclude "**/node_modules/**" --explain
+.\target\release\branchcut.exe --glob "**/*" --gitignore --sort
+.\target\release\branchcut.exe --glob "**/*.rs" --json
+.\target\release\branchcut.exe --glob "src/*.rs" --exec "cmd.exe /c echo {}"
 ```
 
 `--stats` reports directories considered/opened/pruned, entries inspected, candidate files, metadata calls, errors, and elapsed traversal time. `--explain` reports the selected root, pattern classifications, filters, and strategy.
