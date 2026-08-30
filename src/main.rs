@@ -5,7 +5,7 @@ use std::fmt;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Component, Path, PathBuf};
-use std::process::ExitCode;
+use std::process::{Command, ExitCode};
 use std::time::{Duration, Instant};
 
 #[cfg(unix)]
@@ -46,6 +46,9 @@ struct Options {
     explain: bool,
     strict: bool,
     count: bool,
+    gitignore: bool,
+    json: bool,
+    exec: Option<String>,
 }
 
 impl Default for Options {
@@ -64,6 +67,9 @@ impl Default for Options {
             explain: false,
             strict: false,
             count: false,
+            gitignore: false,
+            json: false,
+            exec: None,
         }
     }
 }
@@ -213,7 +219,7 @@ impl Pattern {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct ProgramNode {
     edges: Vec<(Segment, usize)>,
     terminal: bool,
@@ -230,7 +236,7 @@ impl ProgramNode {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct PatternProgram {
     nodes: Vec<ProgramNode>,
 }
@@ -283,6 +289,15 @@ impl PatternProgram {
         }
         self.add_epsilon_closure(&mut next);
         next
+    }
+
+    fn matches_path(&self, components: &[&OsStr]) -> bool {
+        let states = components
+            .iter()
+            .fold(self.initial_states(), |states, component| {
+                self.advance(&states, component)
+            });
+        self.states_match(&states)
     }
 
     fn states_match(&self, states: &[usize]) -> bool {
@@ -512,6 +527,9 @@ struct QueryPlan {
     limit: Option<usize>,
     sort: bool,
     count: bool,
+    gitignore: bool,
+    json: bool,
+    exec: Option<Vec<String>>,
 }
 
 impl QueryPlan {
@@ -554,6 +572,13 @@ impl QueryPlan {
             negative_program,
             sort: options.sort,
             count: options.count,
+            gitignore: options.gitignore,
+            json: options.json,
+            exec: options
+                .exec
+                .as_deref()
+                .map(parse_command_line)
+                .transpose()?,
         })
     }
 
@@ -627,6 +652,74 @@ fn os_string_from_pattern_bytes(bytes: &[u8]) -> OsString {
     OsString::from(String::from_utf8_lossy(bytes).into_owned())
 }
 
+#[derive(Clone, Debug)]
+struct IgnoreRule {
+    program: PatternProgram,
+    base: PathBuf,
+    negated: bool,
+}
+
+impl IgnoreRule {
+    fn parse(line: &str, base: &Path) -> Option<Result<Self>> {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            return None;
+        }
+        let negated = line.starts_with('!');
+        let mut source = line.strip_prefix('!').unwrap_or(line).to_owned();
+        if source.ends_with('/') {
+            source.pop();
+            source.push_str("/**");
+        }
+        let anchored = source.starts_with('/');
+        if anchored {
+            source.remove(0);
+        }
+        let has_separator = source.contains('/');
+        let compiled_source = if anchored || has_separator {
+            source
+        } else {
+            format!("**/{source}")
+        };
+        Some(Pattern::compile(compiled_source).map(|pattern| Self {
+            program: PatternProgram::compile(std::slice::from_ref(&pattern)),
+            base: base.to_owned(),
+            negated,
+        }))
+    }
+
+    fn matches(&self, relative: &Path) -> bool {
+        let Ok(local) = relative.strip_prefix(&self.base) else {
+            return false;
+        };
+        self.program.matches_path(&normal_components(local))
+    }
+}
+
+fn load_ignore_rules(path: &Path, base: &Path) -> io::Result<Vec<IgnoreRule>> {
+    let contents = match fs::read_to_string(path) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(error),
+    };
+    let mut rules = Vec::new();
+    for line in contents.lines() {
+        if let Some(rule) = IgnoreRule::parse(line, base) {
+            rules.push(rule.map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.0))?);
+        }
+    }
+    Ok(rules)
+}
+
+fn ignored_by_rules(rules: &[IgnoreRule], relative: &Path) -> (bool, bool) {
+    let ignored = rules
+        .iter()
+        .filter(|rule| rule.matches(relative))
+        .fold(false, |_, rule| !rule.negated);
+    let may_reinclude = ignored && rules.iter().any(|rule| rule.negated);
+    (ignored, may_reinclude)
+}
+
 fn normal_components(path: &Path) -> Vec<&OsStr> {
     path.components()
         .filter_map(|component| match component {
@@ -642,6 +735,7 @@ struct Stats {
     dirs_opened: u64,
     dirs_pruned_positive: u64,
     dirs_pruned_exclude: u64,
+    dirs_pruned_ignore: u64,
     entries_seen: u64,
     candidate_files: u64,
     metadata_calls: u64,
@@ -710,6 +804,7 @@ impl<'a, W: Write> Runner<'a, W> {
             self.plan.root_relative.clone(),
             positive_states,
             negative_states,
+            Vec::new(),
         )?;
         self.finish()
     }
@@ -723,9 +818,8 @@ impl<'a, W: Write> Runner<'a, W> {
                 self.output.truncate(limit);
                 self.stopped = true;
             }
-            self.stats.matches = self.output.len() as u64;
-            for path in &self.output {
-                writeln!(self.writer, "{}", display_path(path))?;
+            for path in self.output.clone() {
+                self.write_match(&path)?;
             }
         }
         self.writer.flush()
@@ -737,11 +831,24 @@ impl<'a, W: Write> Runner<'a, W> {
         relative: PathBuf,
         positive_states: Vec<usize>,
         negative_states: Vec<usize>,
+        mut ignore_rules: Vec<IgnoreRule>,
     ) -> io::Result<()> {
         if self.stopped {
             return Ok(());
         }
         self.stats.dirs_seen += 1;
+        if self.plan.gitignore {
+            match load_ignore_rules(&absolute.join(".gitignore"), &relative) {
+                Ok(rules) => ignore_rules.extend(rules),
+                Err(error) => {
+                    self.stats.errors += 1;
+                    eprintln!(
+                        "branchcut: cannot read {}: {error}",
+                        absolute.join(".gitignore").display()
+                    );
+                }
+            }
+        }
         if self
             .plan
             .negative_program
@@ -798,9 +905,18 @@ impl<'a, W: Write> Runner<'a, W> {
                     continue;
                 }
             };
+            let child_relative = relative.join(&name);
+            if self.plan.gitignore {
+                let (ignored, may_reinclude) = ignored_by_rules(&ignore_rules, &child_relative);
+                if ignored && !(file_type.is_dir() && may_reinclude) {
+                    if file_type.is_dir() {
+                        self.stats.dirs_pruned_ignore += 1;
+                    }
+                    continue;
+                }
+            }
             let child_positive = self.plan.positive_program.advance(&positive_states, &name);
             let child_negative = self.plan.negative_program.advance(&negative_states, &name);
-            let child_relative = relative.join(&name);
             if file_type.is_dir() {
                 if self.plan.wanted_type == WantedType::Dir
                     && self
@@ -809,7 +925,13 @@ impl<'a, W: Write> Runner<'a, W> {
                 {
                     self.emit(child_relative.clone())?;
                 }
-                self.visit_directory(entry.path(), child_relative, child_positive, child_negative)?;
+                self.visit_directory(
+                    entry.path(),
+                    child_relative,
+                    child_positive,
+                    child_negative,
+                    ignore_rules.clone(),
+                )?;
             } else {
                 self.stats.candidate_files += 1;
                 let type_matches = match self.plan.wanted_type {
@@ -832,10 +954,13 @@ impl<'a, W: Write> Runner<'a, W> {
 
     fn emit(&mut self, path: PathBuf) -> io::Result<()> {
         self.stats.matches += 1;
+        if let Some(command) = &self.plan.exec {
+            run_command(command, &path)?;
+        }
         if self.plan.sort && !self.plan.count {
             self.output.push(path);
         } else if !self.plan.sort && !self.plan.count {
-            writeln!(self.writer, "{}", display_path(&path))?;
+            self.write_match(&path)?;
         }
         if self
             .plan
@@ -846,8 +971,19 @@ impl<'a, W: Write> Runner<'a, W> {
         }
         Ok(())
     }
-}
 
+    fn write_match(&mut self, path: &Path) -> io::Result<()> {
+        if self.plan.json {
+            writeln!(
+                self.writer,
+                "{{\"path\":\"{}\"}}",
+                json_escape(&display_path(path))
+            )
+        } else {
+            writeln!(self.writer, "{}", display_path(path))
+        }
+    }
+}
 fn is_hidden(name: &OsStr) -> bool {
     with_os_bytes(name, |bytes| {
         bytes.first() == Some(&b'.') && bytes != b"." && bytes != b".."
@@ -867,6 +1003,42 @@ fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
 
 fn display_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
+}
+
+fn json_escape(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len() + 2);
+    for character in value.chars() {
+        match character {
+            '"' => escaped.push_str("\\\""),
+            '\\' => escaped.push_str("\\\\"),
+            '\n' => escaped.push_str("\\n"),
+            '\r' => escaped.push_str("\\r"),
+            '\t' => escaped.push_str("\\t"),
+            character if character.is_control() => {
+                use std::fmt::Write as _;
+                write!(escaped, "\\u{:04x}", character as u32).expect("String write cannot fail");
+            }
+            character => escaped.push(character),
+        }
+    }
+    escaped
+}
+
+fn run_command(command: &[String], path: &Path) -> io::Result<()> {
+    let rendered = display_path(path);
+    let mut process = Command::new(&command[0]);
+    for argument in &command[1..] {
+        process.arg(argument.replace("{}", &rendered));
+    }
+    let status = process.status()?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::other(format!(
+            "command exited unsuccessfully for {}: {status}",
+            rendered
+        )))
+    }
 }
 
 fn parse_args() -> Result<Options> {
@@ -907,6 +1079,9 @@ fn parse_args() -> Result<Options> {
                 };
             }
             "--count" => options.count = true,
+            "--gitignore" => options.gitignore = true,
+            "--json" => options.json = true,
+            "--exec" => options.exec = Some(next_utf8(&mut args, "--exec")?),
             "--cwd" => options.cwd = PathBuf::from(next_os(&mut args, "--cwd")?),
             "--hidden" => options.hidden = true,
             "--first" => options.limit = Some(1),
@@ -962,8 +1137,49 @@ fn next_os(args: &mut impl Iterator<Item = OsString>, option: &str) -> Result<Os
 
 fn print_help() {
     println!(
-        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort all matches before applying limits\n  --count              Print only the match count\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
+        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort all matches before applying limits\n  --count              Print only the match count\n  --gitignore          Apply hierarchical .gitignore files\n  --json               Stream matching paths as JSON Lines\n  --exec COMMAND       Run a command template for each match; use {{}}\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
     );
+}
+
+fn parse_command_line(command: &str) -> Result<Vec<String>> {
+    let mut words = Vec::new();
+    let mut word = String::new();
+    let mut quote = None;
+    let mut escaped = false;
+    for character in command.chars() {
+        if escaped {
+            word.push(character);
+            escaped = false;
+        } else if character == '\\' && quote != Some('\'') {
+            escaped = true;
+        } else if let Some(active) = quote {
+            if character == active {
+                quote = None;
+            } else {
+                word.push(character);
+            }
+        } else if character == '\'' || character == '"' {
+            quote = Some(character);
+        } else if character.is_whitespace() {
+            if !word.is_empty() {
+                words.push(std::mem::take(&mut word));
+            }
+        } else {
+            word.push(character);
+        }
+    }
+    if escaped || quote.is_some() {
+        return Err(AppError(
+            "unterminated quote or escape in --exec command".to_owned(),
+        ));
+    }
+    if !word.is_empty() {
+        words.push(word);
+    }
+    if words.is_empty() {
+        return Err(AppError("--exec command cannot be empty".to_owned()));
+    }
+    Ok(words)
 }
 
 fn print_explain(plan: &QueryPlan) {
@@ -1320,6 +1536,54 @@ mod tests {
         runner.run().unwrap();
 
         assert_eq!(runner.output, [PathBuf::from("src/config[1].rs")]);
+    }
+
+    #[test]
+    fn hierarchical_gitignore_uses_child_precedence_and_reinclusion() {
+        let fixture = Fixture::new();
+        fs::write(fixture.0.join("src/config[1].rs"), b"").unwrap();
+        fs::write(
+            fixture.0.join(".gitignore"),
+            "target/\n*.toml\n!src/nested/config.toml\n",
+        )
+        .unwrap();
+        fs::write(fixture.0.join("src/.gitignore"), "lib.rs\n").unwrap();
+        let options = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/*".to_owned()],
+            gitignore: true,
+            sort: true,
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut runner = Runner::new(&plan, Vec::new());
+        runner.run().unwrap();
+
+        assert_eq!(
+            runner.output,
+            [
+                PathBuf::from("src/config[1].rs"),
+                PathBuf::from("src/nested/config.toml")
+            ]
+        );
+        assert_eq!(runner.stats.matches, 2);
+    }
+
+    #[test]
+    fn json_escaping_produces_valid_string_content() {
+        assert_eq!(
+            json_escape("quote\" slash\\ newline\n"),
+            "quote\\\" slash\\\\ newline\\n"
+        );
+    }
+
+    #[test]
+    fn exec_command_parser_honors_quotes_and_placeholders() {
+        assert_eq!(
+            parse_command_line("tool --name 'hello world' {}").unwrap(),
+            ["tool", "--name", "hello world", "{}"]
+        );
+        assert!(parse_command_line("tool 'unterminated").is_err());
     }
 
     #[test]

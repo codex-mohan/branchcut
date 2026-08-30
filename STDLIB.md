@@ -8,7 +8,7 @@ Branchcut is Rust `std` only. `Cargo.toml` has no runtime crates. The following 
 | `glob` | Hand-written `Token`, `Segment`, and parser types | Implements the claimed glob subset without a parser dependency. |
 | `globset` | `PatternProgram` shared trie/NFA | Shares common segments across positive and negative patterns. |
 | `walkdir` | `std::fs::read_dir` and `DirEntry` | Traverses only directories that can contribute. |
-| `ignore` | Compiled explicit exclusion program | Prunes explicit excluded subtrees; `.gitignore` is intentionally not claimed. |
+| `ignore` | `std::fs::read_to_string` plus hierarchical `IgnoreRule` state | Loads nested rules, applies ordered overrides, and preserves possible negated descendants. |
 | `regex` | Direct wildcard state matching | Avoids compiling path patterns into a general regex engine. |
 | `smallvec` | Bounded `Vec` state buffers | The state representation is simple and owned by the single-file engine. |
 | `indexmap` / duplicate collection | Shared state graph and sorted output | No duplicate result set is required for multi-pattern matches. |
@@ -18,6 +18,8 @@ Branchcut is Rust `std` only. `Cargo.toml` has no runtime crates. The following 
 | `rayon` | Sequential traversal plus `std::fs` | Correct sequential planning comes before optional concurrency. |
 | `crossbeam-channel` | Not needed | Streaming writes directly through a buffered `std::io::Write`. |
 | `path-clean` | `std::path::Component` | Relative path components are normalized without a path crate. |
+| `serde_json` | Manual JSON Lines escaping | Emits one valid `{"path":"..."}` object per match without a serializer crate. |
+| `duct` / shell command helpers | `std::process::Command` | Executes argv safely without shell interpretation or hidden runtime tools. |
 | `humantime` | Not needed | Current P0 does not expose duration predicates. |
 
 ## Rule boundary
@@ -26,4 +28,4 @@ The event's Rust guidance states that Rust 1.98 has no standard glob, regex, JSO
 
 No third-party implementation was copied into this repository. No executable invokes an external tool at runtime. The only Rust implementation source is `src/main.rs`.
 
-The project does not claim substitutions for features it does not implement: hierarchical `.gitignore`, metadata predicates, async traversal, command execution, or JSON output.
+The project does not claim substitutions for features it does not implement: metadata predicates, async traversal, or JSON arrays. Hierarchical `.gitignore`, JSON Lines, and shell-free command execution are implemented directly with `std`.

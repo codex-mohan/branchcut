@@ -61,6 +61,9 @@ The goal is not to claim universal superiority over mature globbers. The goal is
 - Immediate `--first` and `--limit` termination when streaming
 - Planner and traversal diagnostics through `--explain` and `--stats`
 - Strict and best-effort filesystem error policies
+- Hierarchical nested `.gitignore` support with ordered negation/re-inclusion
+- Streaming JSON Lines output with `--json`
+- Shell-free per-match command execution with `--exec "command {}"`
 - No directory-symlink traversal
 - Raw non-UTF-8 path support on Unix
 
@@ -178,8 +181,36 @@ Fail if any filesystem entry cannot be read:
 ```bash
 branchcut --glob '**/*.rs' --strict
 ```
-
 Without `--strict`, Branchcut reports unreadable entries to stderr, continues, and exits successfully with every result it could inspect.
+
+Apply hierarchical `.gitignore` rules:
+
+```bash
+branchcut --glob '**/*' --gitignore
+```
+
+Rules are read when each directory is entered. Parent rules remain active, child rules are appended, and the last matching rule wins. Negated rules such as `!keep.txt` are honored conservatively; a directory is kept open when a descendant might be re-included.
+
+Stream JSON Lines:
+
+```bash
+branchcut --glob '**/*.rs' --json
+```
+
+Each match is emitted as one valid object:
+
+```json
+{"path":"src/main.rs"}
+```
+
+Run a command once per match without invoking a shell:
+
+```bash
+branchcut --glob '**/*.tmp' --exec 'rm {}'
+```
+
+`{}` is replaced with the displayed relative path. Shell pipelines, redirections, environment expansion, and shell built-ins are intentionally unsupported.
+
 
 ## Query Planning
 
@@ -226,17 +257,10 @@ elapsed
 
 The root is inspected once with `symlink_metadata`. Branchcut does not call per-entry `metadata()` for currently supported filters; `DirEntry::file_type()` supplies traversal type information.
 
-## CLI Contract
-
-| Behavior | Contract |
-|---|---|
-| Default type | Regular files |
-| Default hidden policy | Excluded, including literal hidden traversal roots |
-| Pattern case | Case-sensitive on every platform |
-| Output paths | Relative to `--cwd`, `/` separators in displayed output |
-| Output order | Filesystem discovery order unless `--sort` |
-| Default I/O errors | Warn and continue |
 | `--strict` I/O errors | Exit code 2 after traversal |
+| `--json` | One JSON object per matching path, streamed as JSON Lines |
+| `--exec COMMAND` | Runs the parsed command once per match; `{}` is replaced by the displayed path; no shell |
+| `--gitignore` | Loads root and nested `.gitignore` files; later rules override earlier rules |
 | Invalid query | Exit code 2 |
 | Broken output pipe | Clean success, no panic |
 | Symlink traversal | Never follows directory symlinks |
@@ -277,13 +301,13 @@ cargo metadata --no-deps --format-version 1
 
 The inline Rust suite covers matcher syntax, globstar zero-component behavior, brace limits, shared compilation, planner pruning, hidden semantics, extension filtering, exclusions, literal simple search, sorted limits, broken pipes, deep traversal, symlink policy on Unix, and non-UTF-8 Unix names.
 
-## Honest Limitations
-
 - This is not a full `fast-glob` API or syntax replacement.
 - Extglobs such as `+(foo)` and `@(foo|bar)` are unsupported.
 - Nested braces and multiple brace groups are unsupported.
+- `.gitignore` parsing is opt-in with `--gitignore`; comments, ordered rules, directory rules, and negation are supported, but advanced Git escaping and platform-specific ignore edge cases are not claimed.
+- `--json` is JSON Lines rather than one enclosing JSON array, preserving streaming behavior.
+- `--exec` uses a small quote-aware argument parser and `std::process::Command`; it never invokes a shell, and shell syntax/pipelines are unsupported.
 - Backslash escaping is not a portable pattern feature; use `/` as the pattern separator.
-- `.gitignore` files are not read. Use explicit `--exclude` patterns.
 - Negative patterns passed through `--glob` are not interpreted as exclusions; use `--exclude`.
 - Matching is byte-oriented. On UTF-8 platforms, `?` consumes one encoded byte, not one Unicode scalar or grapheme.
 - Unix non-UTF-8 names are preserved and do not panic. Windows matching currently uses a lossy UTF-16-to-UTF-8 view.

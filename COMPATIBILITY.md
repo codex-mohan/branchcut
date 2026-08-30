@@ -28,14 +28,17 @@ Branchcut intentionally supports a focused filesystem-query surface rather than 
 | Positional search | Supported | Literal, case-sensitive filename containment |
 | `--strict` | Supported | Exit code 2 on filesystem errors |
 | `--count` | Supported | Emits the match count without path serialization |
+| `--gitignore` | Supported | Root and nested rules, ordered overrides, directory rules, and conservative re-inclusion traversal |
+| `--json` | Supported | Streaming JSON Lines output |
+| `--exec` | Supported | Shell-free command templates with `{}` substitution |
 
 ## Deliberate gaps
 
-- No `.gitignore` parsing or hierarchical ignore precedence.
+- Advanced `.gitignore` escaping and every Git edge case are not claimed.
 - No extglobs, including `+(...)`, `?(...)`, `*(...)`, `@(...)`, and `!(...)`.
 - No nested brace expansion or brace ranges.
 - No full `fast-glob` options/API compatibility.
-- No captures, JSON output, command execution, metadata predicates, or watch mode.
+- No captures, metadata predicates, or watch mode.
 - No case-insensitive or smart-case mode.
 - No parallel traversal.
 - Wildcard matching is byte-oriented rather than Unicode-scalar-oriented.
