@@ -15,7 +15,7 @@ Branchcut is Rust `std` only. `Cargo.toml` has no runtime crates. The following 
 | `anyhow` | `AppError` implementing `Display` and `Error` | Keeps errors dependency-free and contextual. |
 | `thiserror` | Manual error formatting | The binary has one focused error type. |
 | `itoa` | `format!` and standard formatting | Statistics use Rust's standard formatting machinery. |
-| `rayon` | Sequential traversal plus `std::fs` | Correct sequential planning comes before optional concurrency. |
+| `rayon` | Bounded `std::thread` workers | Parallel traversal uses a fixed worker count and no thread-per-directory spawning. |
 | `crossbeam-channel` | Not needed | Streaming writes directly through a buffered `std::io::Write`. |
 | `path-clean` | `std::path::Component` | Relative path components are normalized without a path crate. |
 | `serde_json` | Manual JSON Lines escaping | Emits one valid `{"path":"..."}` object per match without a serializer crate. |

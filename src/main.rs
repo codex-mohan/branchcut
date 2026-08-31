@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::fmt;
@@ -6,6 +6,9 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Component, Path, PathBuf};
 use std::process::{Command, ExitCode};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Condvar, Mutex};
+use std::thread;
 use std::time::{Duration, Instant};
 
 #[cfg(unix)]
@@ -49,8 +52,8 @@ struct Options {
     gitignore: bool,
     json: bool,
     exec: Option<String>,
+    threads: usize,
 }
-
 impl Default for Options {
     fn default() -> Self {
         Self {
@@ -70,6 +73,7 @@ impl Default for Options {
             gitignore: false,
             json: false,
             exec: None,
+            threads: 1,
         }
     }
 }
@@ -512,7 +516,7 @@ fn expand_braces(pattern: &str) -> Result<Vec<String>> {
     Ok(expanded)
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct QueryPlan {
     root: PathBuf,
     root_relative: PathBuf,
@@ -741,6 +745,21 @@ struct Stats {
     metadata_calls: u64,
     matches: u64,
     errors: u64,
+}
+
+impl Stats {
+    fn merge(&mut self, other: Stats) {
+        self.dirs_seen += other.dirs_seen;
+        self.dirs_opened += other.dirs_opened;
+        self.dirs_pruned_positive += other.dirs_pruned_positive;
+        self.dirs_pruned_exclude += other.dirs_pruned_exclude;
+        self.dirs_pruned_ignore += other.dirs_pruned_ignore;
+        self.entries_seen += other.entries_seen;
+        self.candidate_files += other.candidate_files;
+        self.metadata_calls += other.metadata_calls;
+        self.matches += other.matches;
+        self.errors += other.errors;
+    }
 }
 
 struct Runner<'a, W: Write> {
@@ -984,6 +1003,382 @@ impl<'a, W: Write> Runner<'a, W> {
         }
     }
 }
+#[derive(Clone)]
+struct ParallelTask {
+    absolute: PathBuf,
+    relative: PathBuf,
+    positive: Vec<usize>,
+    negative: Vec<usize>,
+    ignore_rules: Vec<IgnoreRule>,
+}
+
+#[derive(Default)]
+struct ParallelQueueState {
+    queued: usize,
+    outstanding: usize,
+    closed: bool,
+    failure: Option<io::Error>,
+}
+
+enum ParallelPush {
+    Queued,
+    Full(ParallelTask),
+}
+
+struct ParallelQueue {
+    locals: Vec<Mutex<VecDeque<ParallelTask>>>,
+    state: Mutex<ParallelQueueState>,
+    ready: Condvar,
+    cancelled: AtomicBool,
+    max_queued: usize,
+}
+
+impl ParallelQueue {
+    fn new(workers: usize) -> Self {
+        Self {
+            locals: (0..workers).map(|_| Mutex::new(VecDeque::new())).collect(),
+            state: Mutex::new(ParallelQueueState::default()),
+            ready: Condvar::new(),
+            cancelled: AtomicBool::new(false),
+            max_queued: workers.saturating_mul(256).max(256),
+        }
+    }
+
+    fn push(&self, worker: usize, task: ParallelTask) -> ParallelPush {
+        let mut state = self.state.lock().expect("parallel queue state poisoned");
+        if state.closed || self.cancelled.load(Ordering::Acquire) || state.queued >= self.max_queued
+        {
+            return ParallelPush::Full(task);
+        }
+        state.queued += 1;
+        state.outstanding += 1;
+        drop(state);
+        self.locals[worker % self.locals.len()]
+            .lock()
+            .expect("parallel local queue poisoned")
+            .push_back(task);
+        self.ready.notify_one();
+        ParallelPush::Queued
+    }
+
+    fn try_pop(&self, worker: usize) -> Option<ParallelTask> {
+        if self.cancelled.load(Ordering::Acquire) {
+            return None;
+        }
+        if let Some(task) = self.locals[worker]
+            .lock()
+            .expect("parallel local queue poisoned")
+            .pop_back()
+        {
+            self.decrement_queued();
+            return Some(task);
+        }
+        for offset in 1..self.locals.len() {
+            let index = (worker + offset) % self.locals.len();
+            if let Some(task) = self.locals[index]
+                .lock()
+                .expect("parallel local queue poisoned")
+                .pop_front()
+            {
+                self.decrement_queued();
+                return Some(task);
+            }
+        }
+        None
+    }
+
+    fn pop(&self, worker: usize) -> Option<ParallelTask> {
+        loop {
+            if let Some(task) = self.try_pop(worker) {
+                return Some(task);
+            }
+            let mut state = self.state.lock().expect("parallel queue state poisoned");
+            while state.queued == 0 && !state.closed && !self.cancelled.load(Ordering::Acquire) {
+                state = self
+                    .ready
+                    .wait(state)
+                    .expect("parallel queue state poisoned while waiting");
+            }
+            if state.closed || self.cancelled.load(Ordering::Acquire) {
+                return None;
+            }
+        }
+    }
+
+    fn decrement_queued(&self) {
+        let mut state = self.state.lock().expect("parallel queue state poisoned");
+        state.queued -= 1;
+    }
+
+    fn task_done(&self) {
+        let mut state = self.state.lock().expect("parallel queue state poisoned");
+        state.outstanding -= 1;
+        if state.outstanding == 0 {
+            state.closed = true;
+            self.ready.notify_all();
+        }
+    }
+
+    fn cancel(&self, error: io::Error) {
+        self.cancelled.store(true, Ordering::Release);
+        let mut state = self.state.lock().expect("parallel queue state poisoned");
+        if state.failure.is_none() {
+            state.failure = Some(error);
+        }
+        state.closed = true;
+        self.ready.notify_all();
+    }
+
+    fn take_failure(&self) -> Option<io::Error> {
+        self.state
+            .lock()
+            .expect("parallel queue state poisoned")
+            .failure
+            .take()
+    }
+
+    fn queued_count(&self) -> usize {
+        self.state
+            .lock()
+            .expect("parallel queue state poisoned")
+            .queued
+    }
+
+    fn close_if_idle(&self) {
+        let mut state = self.state.lock().expect("parallel queue state poisoned");
+        if state.outstanding == 0 {
+            state.closed = true;
+            self.ready.notify_all();
+        }
+    }
+}
+
+struct ParallelWorker<'a> {
+    id: usize,
+    plan: &'a QueryPlan,
+    queue: Arc<ParallelQueue>,
+    strict: bool,
+    entries: Vec<fs::DirEntry>,
+    output: Vec<PathBuf>,
+    stats: Stats,
+}
+
+impl<'a> ParallelWorker<'a> {
+    fn new(id: usize, plan: &'a QueryPlan, queue: Arc<ParallelQueue>, strict: bool) -> Self {
+        Self {
+            id,
+            plan,
+            queue,
+            strict,
+            entries: Vec::with_capacity(128),
+            output: Vec::new(),
+            stats: Stats::default(),
+        }
+    }
+
+    fn run(mut self) -> ParallelWorkerResult {
+        while let Some(task) = self.queue.pop(self.id) {
+            if let Err(error) = self.process(task) {
+                self.stats.errors += 1;
+                if self.strict {
+                    self.queue.cancel(error);
+                }
+            }
+            self.queue.task_done();
+        }
+        ParallelWorkerResult {
+            stats: self.stats,
+            output: self.output,
+        }
+    }
+
+    fn process(&mut self, task: ParallelTask) -> io::Result<()> {
+        if self.queue.cancelled.load(Ordering::Acquire) {
+            return Ok(());
+        }
+        self.stats.dirs_seen += 1;
+        if self
+            .plan
+            .negative_program
+            .states_exclude_subtree(&task.negative)
+        {
+            self.stats.dirs_pruned_exclude += 1;
+            return Ok(());
+        }
+        if !self
+            .plan
+            .positive_program
+            .states_descendant_possible(&task.positive)
+        {
+            self.stats.dirs_pruned_positive += 1;
+            return Ok(());
+        }
+        let mut ignore_rules = task.ignore_rules.clone();
+        if self.plan.gitignore {
+            ignore_rules.extend(load_ignore_rules(
+                &task.absolute.join(".gitignore"),
+                &task.relative,
+            )?);
+        }
+        self.entries.clear();
+        for entry in fs::read_dir(&task.absolute)? {
+            self.entries.push(entry?);
+        }
+        self.stats.dirs_opened += 1;
+        self.stats.entries_seen += self.entries.len() as u64;
+        let entries = std::mem::take(&mut self.entries);
+        for entry in entries {
+            if self.queue.cancelled.load(Ordering::Acquire) {
+                break;
+            }
+            self.process_entry(&task, &ignore_rules, entry)?;
+        }
+        self.entries.clear();
+        Ok(())
+    }
+
+    fn process_entry(
+        &mut self,
+        parent: &ParallelTask,
+        ignore_rules: &[IgnoreRule],
+        entry: fs::DirEntry,
+    ) -> io::Result<()> {
+        let name = entry.file_name();
+        if !self.plan.hidden && is_hidden(&name) {
+            return Ok(());
+        }
+        let file_type = entry.file_type()?;
+        let relative = parent.relative.join(&name);
+        if self.plan.gitignore {
+            let (ignored, may_reinclude) = ignored_by_rules(ignore_rules, &relative);
+            if ignored && !(file_type.is_dir() && may_reinclude) {
+                if file_type.is_dir() {
+                    self.stats.dirs_pruned_ignore += 1;
+                }
+                return Ok(());
+            }
+        }
+        let positive = self.plan.positive_program.advance(&parent.positive, &name);
+        let negative = self.plan.negative_program.advance(&parent.negative, &name);
+        if file_type.is_dir() {
+            if self.plan.wanted_type == WantedType::Dir
+                && self.plan.states_match(&positive, &negative, &name)
+            {
+                self.output.push(relative.clone());
+                self.stats.matches += 1;
+            }
+            let child = ParallelTask {
+                absolute: entry.path(),
+                relative,
+                positive,
+                negative,
+                ignore_rules: ignore_rules.to_vec(),
+            };
+            if let ParallelPush::Full(child) = self.queue.push(self.id, child) {
+                self.process(child)?;
+            }
+        } else {
+            self.stats.candidate_files += 1;
+            let type_matches = match self.plan.wanted_type {
+                WantedType::File => file_type.is_file(),
+                WantedType::Dir => false,
+                WantedType::Symlink => file_type.is_symlink(),
+            };
+            if type_matches
+                && self.plan.extension_matches(&name)
+                && self.plan.states_match(&positive, &negative, &name)
+            {
+                self.output.push(relative);
+                self.stats.matches += 1;
+            }
+        }
+        Ok(())
+    }
+}
+
+struct ParallelWorkerResult {
+    stats: Stats,
+    output: Vec<PathBuf>,
+}
+
+fn run_parallel(
+    plan: &QueryPlan,
+    requested_threads: usize,
+    strict: bool,
+) -> io::Result<(Stats, Vec<PathBuf>)> {
+    let metadata = fs::symlink_metadata(&plan.root)?;
+    if !metadata.file_type().is_dir() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "parallel traversal requires a directory root",
+        ));
+    }
+    if !plan.hidden && path_has_hidden_component(&plan.root_relative) {
+        return Ok((Stats::default(), Vec::new()));
+    }
+    let worker_count = requested_threads.clamp(1, 64);
+    let queue = Arc::new(ParallelQueue::new(worker_count));
+    let (positive, negative) = plan.root_states();
+    let root = ParallelTask {
+        absolute: plan.root.clone(),
+        relative: plan.root_relative.clone(),
+        positive,
+        negative,
+        ignore_rules: Vec::new(),
+    };
+    let mut main_worker = ParallelWorker::new(0, plan, Arc::clone(&queue), strict);
+    if let Err(error) = main_worker.process(root) {
+        main_worker.stats.errors += 1;
+        if strict {
+            queue.cancel(error);
+        }
+    }
+    while worker_count > 1 && queue.queued_count() <= 2 && !queue.cancelled.load(Ordering::Acquire)
+    {
+        let Some(task) = queue.try_pop(0) else {
+            break;
+        };
+        if let Err(error) = main_worker.process(task) {
+            main_worker.stats.errors += 1;
+            if strict {
+                queue.cancel(error);
+            }
+        }
+        queue.task_done();
+    }
+    queue.close_if_idle();
+    let helper_count = if queue.queued_count() > 2 {
+        worker_count.saturating_sub(1)
+    } else {
+        0
+    };
+    let results = thread::scope(|scope| {
+        let handles: Vec<_> = (1..=helper_count)
+            .map(|id| {
+                let queue = Arc::clone(&queue);
+                scope.spawn(move || ParallelWorker::new(id, plan, queue, strict).run())
+            })
+            .collect();
+        let mut results = vec![main_worker.run()];
+        for handle in handles {
+            results.push(handle.join().expect("parallel worker panicked"));
+        }
+        results
+    });
+    if let Some(error) = queue.take_failure() {
+        return Err(error);
+    }
+    let mut stats = Stats {
+        metadata_calls: 1,
+        ..Stats::default()
+    };
+    let mut output = Vec::new();
+    for result in results {
+        stats.merge(result.stats);
+        output.extend(result.output);
+    }
+    Ok((stats, output))
+}
 fn is_hidden(name: &OsStr) -> bool {
     with_os_bytes(name, |bytes| {
         bytes.first() == Some(&b'.') && bytes != b"." && bytes != b".."
@@ -999,6 +1394,18 @@ fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
         && haystack
             .windows(needle.len())
             .any(|window| window == needle)
+}
+
+fn write_path<W: Write>(writer: &mut W, json: bool, path: &Path) -> io::Result<()> {
+    if json {
+        writeln!(
+            writer,
+            "{{\"path\":\"{}\"}}",
+            json_escape(&display_path(path))
+        )
+    } else {
+        writeln!(writer, "{}", display_path(path))
+    }
 }
 
 fn display_path(path: &Path) -> String {
@@ -1090,6 +1497,20 @@ fn parse_args() -> Result<Options> {
             "--gitignore" => options.gitignore = true,
             "--json" => options.json = true,
             "--exec" => options.exec = Some(next_utf8(&mut args, "--exec")?),
+            "--threads" => {
+                let value = next_utf8(&mut args, "--threads")?;
+                options.threads = value
+                    .parse::<usize>()
+                    .map_err(|_| AppError(format!("invalid --threads value: {value}")))?;
+                if options.threads == 0 {
+                    options.threads = thread::available_parallelism()
+                        .map(|count| count.get().min(16))
+                        .unwrap_or(1);
+                }
+                if options.threads == 0 {
+                    return Err(AppError("--threads must be greater than zero".to_owned()));
+                }
+            }
             "--cwd" => options.cwd = PathBuf::from(next_os(&mut args, "--cwd")?),
             "--hidden" => options.hidden = true,
             "--first" => options.limit = Some(1),
@@ -1162,7 +1583,7 @@ fn next_os(args: &mut impl Iterator<Item = OsString>, option: &str) -> Result<Os
 
 fn print_help() {
     println!(
-        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [PATTERN|SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --sort               Sort all matches before applying limits\n  --count              Print only the match count\n  --gitignore          Apply hierarchical .gitignore files\n  --json               Stream matching paths as JSON Lines\n  --exec COMMAND       Run a command template for each match; use {{}}\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
+        "branchcut — compile the query, cut the tree\n\nUSAGE:\n  branchcut [PATTERN|SEARCH]\n  branchcut [OPTIONS]\n\nOPTIONS:\n  --glob PATTERN       Add a positive glob (repeatable)\n  --exclude PATTERN    Exclude a glob; subtree patterns are pruned\n  -e, --extension EXT  Match an extension (repeatable)\n  --type TYPE          Match file, dir, or symlink\n  --cwd PATH           Query root [default: .]\n  --hidden             Include hidden paths\n  --first              Stop after the first match\n  --limit N            Stop after N matches\n  --threads N          Use bounded parallel traversal workers (0 = auto)\n  --sort               Sort all matches before applying limits\n  --count              Print only the match count\n  --gitignore          Apply hierarchical .gitignore files\n  --json               Stream matching paths as JSON Lines\n  --exec COMMAND       Run a command template for each match; use {{}}\n  --strict             Fail if any filesystem entry cannot be read\n  --stats              Print traversal counters to stderr\n  --explain            Print the compiled plan without traversing\n  -h, --help           Print help\n  --version            Print version"
     );
 }
 
@@ -1207,7 +1628,7 @@ fn parse_command_line(command: &str) -> Result<Vec<String>> {
     Ok(words)
 }
 
-fn print_explain(plan: &QueryPlan) {
+fn print_explain(plan: &QueryPlan, threads: usize) {
     println!("QUERY PLAN\n");
     println!("ROOT\n  {}", plan.root.display());
     println!(
@@ -1249,7 +1670,13 @@ fn print_explain(plan: &QueryPlan) {
             "first {limit} matches"
         ))
     );
-    println!("\nSTRATEGY\n  sequential depth-first traversal with positive and exclusion pruning");
+    if threads > 1 {
+        println!("\nSTRATEGY\n  bounded parallel root-task traversal with buffered output");
+    } else {
+        println!(
+            "\nSTRATEGY\n  sequential depth-first traversal with positive and exclusion pruning"
+        );
+    }
 }
 
 fn print_stats(stats: &Stats, elapsed: Duration) {
@@ -1271,12 +1698,49 @@ fn print_stats(stats: &Stats, elapsed: Duration) {
         elapsed.as_secs_f64() * 1000.0
     );
 }
-
 fn real_main() -> Result<()> {
     let options = parse_args()?;
     let plan = QueryPlan::compile(&options)?;
     if options.explain {
-        print_explain(&plan);
+        print_explain(&plan, options.threads);
+        return Ok(());
+    }
+    if options.threads > 1 && plan.root.is_dir() {
+        if options.limit.is_some() || options.exec.is_some() {
+            return Err(AppError(
+                "--threads cannot be combined with --limit or --exec; use sequential mode for exact ordering"
+                    .to_owned(),
+            ));
+        }
+        let started = Instant::now();
+        let (stats, mut output) = run_parallel(&plan, options.threads, options.strict)
+            .map_err(|error| AppError(format!("parallel query failed: {error}")))?;
+        if options.strict && stats.errors > 0 {
+            return Err(AppError(format!(
+                "query incomplete: {} filesystem error(s)",
+                stats.errors
+            )));
+        }
+        if options.sort {
+            output.sort_unstable();
+        }
+        let stdout = io::stdout();
+        let mut writer = io::BufWriter::with_capacity(64 * 1024, stdout.lock());
+        if options.count {
+            writeln!(writer, "{}", stats.matches)
+                .map_err(|error| AppError(format!("output failed: {error}")))?;
+        } else {
+            for path in &output {
+                write_path(&mut writer, options.json, path)
+                    .map_err(|error| AppError(format!("output failed: {error}")))?;
+            }
+        }
+        writer
+            .flush()
+            .map_err(|error| AppError(format!("output failed: {error}")))?;
+        if options.stats {
+            print_stats(&stats, started.elapsed());
+        }
         return Ok(());
     }
     let started = Instant::now();
@@ -1741,5 +2205,27 @@ mod tests {
         runner.run().unwrap();
 
         assert!(runner.output.contains(&PathBuf::from(name)));
+    }
+
+    #[test]
+    fn parallel_traversal_matches_sequential_results() {
+        let fixture = Fixture::new();
+        fs::write(fixture.0.join(".gitignore"), "target/\n").unwrap();
+        let options = Options {
+            cwd: fixture.0.clone(),
+            positive: vec!["**/*.{rs,toml}".to_owned()],
+            negative: vec!["**/target/**".to_owned()],
+            gitignore: true,
+            sort: true,
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&options).unwrap();
+        let mut sequential = Runner::new(&plan, Vec::new());
+        sequential.run().unwrap();
+        let (stats, mut parallel) = run_parallel(&plan, 2, false).unwrap();
+        parallel.sort_unstable();
+
+        assert_eq!(parallel, sequential.output);
+        assert_eq!(stats.matches as usize, parallel.len());
     }
 }

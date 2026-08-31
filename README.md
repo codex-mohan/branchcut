@@ -59,6 +59,7 @@ The goal is not to claim universal superiority over mature globbers. The goal is
 - Streaming output by default
 - Deterministic global sorting on request
 - Immediate `--first` and `--limit` termination when streaming
+- Bounded parallel traversal with `--threads`
 - Planner and traversal diagnostics through `--explain` and `--stats`
 - Strict and best-effort filesystem error policies
 - Hierarchical nested `.gitignore` support with ordered negation/re-inclusion
@@ -173,6 +174,14 @@ branchcut --glob '**/*.rs' --sort --limit 100
 
 Sorting necessarily collects all matching paths before truncation. Without `--sort`, output streams and the limit stops traversal immediately.
 
+Run with bounded parallel traversal:
+
+```bash
+branchcut --glob '**/*.rs' --threads 4 --count --stats
+```
+
+Parallel mode uses a bounded worker set and buffers matches before output. `--sort` is applied globally after workers finish. For exact early-stop and command-execution ordering, omit `--threads` and use the sequential engine.
+
 Count matches without serializing paths:
 
 ```bash
@@ -244,6 +253,8 @@ branchcut \
 - termination policy;
 - traversal strategy.
 
+
+With `--threads N`, directory tasks use bounded per-worker queues, dynamic work stealing, outstanding-task completion, condition-variable sleeping, atomic cancellation, and reusable worker-local buffers. Results are buffered before one coordinator writes them. The sequential engine remains the default.
 ## Traversal Statistics
 
 ```bash
@@ -320,7 +331,7 @@ The inline Rust suite covers matcher syntax, globstar zero-component behavior, b
 - Negative patterns passed through `--glob` are not interpreted as exclusions; use `--exclude`.
 - Matching is byte-oriented. On UTF-8 platforms, `?` consumes one encoded byte, not one Unicode scalar or grapheme.
 - Unix non-UTF-8 names are preserved and do not panic. Windows matching currently uses a lossy UTF-16-to-UTF-8 view.
-- Traversal is sequential. No worker pool or async runtime is included.
+- Parallel traversal is available with `--threads`; it buffers results and does not support `--limit` or `--exec` because those require exact global ordering.
 - Filesystem iteration order is platform- and filesystem-dependent unless `--sort` is selected.
 - Permission behavior varies by platform and account privileges.
 - Published comparisons include fast-glob, tinyglobby, and zlob; accuracy and methodology are documented in `COMPARISON.md`. Claims are workload-specific, not universal.
@@ -338,65 +349,11 @@ See [COMPATIBILITY.md](COMPATIBILITY.md) for the exact supported surface and [BE
 
 See [deps-proof.txt](deps-proof.txt) for recorded Cargo metadata and source-file proof. See [STDLIB.md](STDLIB.md) for every implemented standard-library substitution.
 
-## Five-Minute Demo Runbook
-
-### 0:00–0:30 — Problem
-
-Explain why real filesystem queries usually combine a glob package, walker, ignore engine, CLI parser, and post-filter pipeline.
-
-### 0:30–1:00 — Constraint proof
-
-```bash
-cargo metadata --no-deps --format-version 1
-```
-
-Show the empty `[dependencies]` section and the single `src/main.rs` implementation.
-
-### 1:00–1:45 — Useful CLI
-
-```bash
-branchcut config
-branchcut --glob 'src/**/*.{rs,toml}'
-branchcut -e rs --type file
-```
-
-### 1:45–2:45 — Planner advantage
-
-```bash
-branchcut \
-  --glob 'packages/**/src/**/*.{rs,ts}' \
-  --exclude '**/target/**' \
-  --exclude '**/node_modules/**' \
-  --limit 100 \
-  --explain
-```
-
-Then run the same query with `--stats` and point to directories opened, directories pruned, metadata calls, and immediate termination.
-
-### 2:45–3:30 — Correctness
-
-Run the Rust suite and show representative differential-corpus cases:
-
-```bash
-cargo test
-```
-
-Show the 16,000-file corpus, result-set equality checks, and raw hot-engine medians in `COMPARISON.md`. State explicitly that the hot comparison excludes startup and serialization, while the separate cold section includes process startup.
-
-### 4:30–4:50 — Standard-library craft
-
-Open `STDLIB.md` and connect the custom parser, shared state program, `read_dir` traversal, manual CLI, buffered output, and error types to the packages they replace.
-
-### 4:50–5:00 — Limits
-
-State the unsupported extglobs, lack of `.gitignore` parsing, byte-oriented wildcard semantics, sequential traversal, and workload-specific rather than universal performance claims.
 
 ## Future Enhancements
 
-- **Bounded parallel traversal:** add a fixed-size `std::thread` worker pool after differential testing against the sequential engine. Required invariants: no thread per directory, atomic cancellation for `--first`/`--limit`, synchronized streaming output, deterministic `--sort`, and benchmarked worker counts of 1/2/4/8/logical cores.
-- **Hierarchical `.gitignore`:** compile nested ignore state and prune ignored subtrees while preserving re-inclusion semantics.
-- **Metadata predicates:** add size and modification-time filters without introducing metadata calls for queries that do not require them.
-- **Broader syntax:** consider extglobs and richer brace forms only after the current compatibility surface remains regression-free.
+- Metadata predicates such as size and modification time without unnecessary metadata calls.
+- Broader syntax such as extglobs and richer brace forms after compatibility remains regression-free.
 
 ## License
 

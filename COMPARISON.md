@@ -162,7 +162,7 @@ For the exclusion-heavy 10,000-match query, Branchcut reported 20 pruned directo
 | Command execution | Shell-free `std::process::Command` | Not a glob feature | Not a glob feature | Not a glob feature |
 | Metadata predicates | Not implemented | Not a core glob feature | Not a core glob feature | Walker metadata API |
 | Extglob | Not implemented | Supported subset | Supported through underlying engine | Supported |
-| Parallel traversal | Not implemented | Internal detail | Internal detail | Separate walker API, not benchmarked here |
+| Parallel traversal | Supported via `--threads`; separate feature benchmark omitted | Internal detail | Internal detail | Separate walker API, not benchmarked here |
 | Runtime dependencies | None | 17 transitive npm deps | 2 transitive npm deps | Zig/native build ecosystem |
 
 The matrix intentionally distinguishes “not implemented” from “implemented and slower.” Branchcut's competitive thesis is a smaller, transparent planner with fewer filesystem opens, not feature parity with every mature library.

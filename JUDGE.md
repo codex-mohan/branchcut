@@ -36,7 +36,10 @@ cargo clippy -- -D warnings
 .\target\release\branchcut.exe --glob "**/*" --gitignore --sort
 .\target\release\branchcut.exe --glob "**/*.rs" --json
 .\target\release\branchcut.exe --glob "src/*.rs" --exec "cmd.exe /c echo {}"
+.\target\release\branchcut.exe --glob "**/*.rs" --threads 4 --count --stats
+
 ```
+Parallel mode buffers results before output. It intentionally rejects `--limit` and `--exec`, which require exact global ordering or side-effect ordering; omit `--threads` for those workflows.
 
 `--stats` reports directories considered/opened/pruned, entries inspected, candidate files, metadata calls, errors, and elapsed traversal time. `--explain` reports the selected root, pattern classifications, filters, and strategy.
 
@@ -79,8 +82,7 @@ For hot measurements:
 All measured cases must return identical counts and sets before speed numbers are published.
 
 ## Important limitations
-
-- The zlob official C-compatible benchmark path returned zero matches for a Windows drive-letter path; zlob's own tree-size benchmark is disabled on Windows because it requires libc glob. The published zlob number therefore uses the public API harness, not a fabricated zero result.
+- Parallel Branchcut mode uses bounded per-worker queues and dynamic work stealing, but buffers results and rejects `--limit`/`--exec`.
 - Hot zlob comparison does not exercise zlob's separate parallel walker.
 - Performance results are workload-specific and should not be generalized.
 - Branchcut does not claim full `fast-glob`, tinyglobby, or zlob compatibility.

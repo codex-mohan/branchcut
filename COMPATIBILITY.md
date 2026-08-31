@@ -32,6 +32,7 @@ Branchcut intentionally supports a focused filesystem-query surface rather than 
 | `--gitignore` | Supported | Root and nested rules, ordered overrides, directory rules, and conservative re-inclusion traversal |
 | `--json` | Supported | Streaming JSON Lines output |
 | `--exec` | Supported | Shell-free command templates with `{}` substitution |
+| `--threads N` | Supported | Bounded parallel traversal; buffered output; incompatible with `--limit` and `--exec` |
 
 ## Deliberate gaps
 
@@ -41,7 +42,6 @@ Branchcut intentionally supports a focused filesystem-query surface rather than 
 - No full `fast-glob` options/API compatibility.
 - No captures, metadata predicates, or watch mode.
 - No case-insensitive or smart-case mode.
-- No parallel traversal.
 - Wildcard matching is byte-oriented rather than Unicode-scalar-oriented.
 - Windows paths with characters not representable by the current lossy matching view are not fully byte-preserving.
 
