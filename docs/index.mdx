@@ -1,0 +1,48 @@
+---
+title: Branchcut
+description: Compile the query, cut the tree.
+icon: GitBranch
+---
+
+```text
+query
+  │
+  ├── positive patterns
+  ├── exclusions
+  ├── type and extension filters
+  └── termination rules
+          │
+          ▼
+     COMPILE ONCE
+          │
+          ├── open useful subtree ───────────────▶ matches
+          ├── target/ ───────────────────────────╳ cut
+          └── node_modules/ ─────────────────────╳ cut
+```
+
+Branchcut is a single-file, zero-crate Rust filesystem query engine. It compiles the whole query into one traversal plan, then avoids opening directories that cannot contribute to the result.
+
+<Cards>
+  <Card title="Quick start" description="Build Branchcut and run the first useful query." href="/docs/getting-started/quick-start" />
+  <Card title="Query planning" description="See how patterns become traversal decisions." href="/docs/guides/query-planning" />
+  <Card title="CLI reference" description="Every option, interaction, and constraint." href="/docs/reference/cli" />
+  <Card title="Evidence" description="Correctness, benchmark methodology, and honest limitations." href="/docs/evidence/benchmarks" />
+</Cards>
+
+## The premise
+
+Most filesystem queries are assembled as a pipeline that discovers too much and filters too late:
+
+```text
+walk everything → glob → ignore → stat → filter → collect
+```
+
+Branchcut moves those decisions ahead of traversal:
+
+```text
+compile positives + exclusions + predicates + limits
+                         ↓
+            open only viable directories
+```
+
+That is the product: not merely faster matching after a walk, but less filesystem work in the first place.

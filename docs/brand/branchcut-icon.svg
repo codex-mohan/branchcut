@@ -22,7 +22,7 @@
   <!-- Two candidate routes terminate early; their square ends read as clean cuts. -->
   <path
     class="pruned"
-    d="M35 24H59M35 24 55 44"
+    d="M35 24H59M35 24 51 40H68"
     fill="none"
     stroke-width="7"
     stroke-linecap="butt"

@@ -1,0 +1,13 @@
+{
+  "title": "Branchcut",
+  "pages": [
+    "index",
+    "README",
+    "getting-started",
+    "guides",
+    "concepts",
+    "reference",
+    "evidence",
+    "contributing"
+  ]
+}

@@ -1,19 +1,28 @@
 <div align="center">
 
+<img src="docs/brand/branchcut-icon.svg" alt="Branchcut icon" width="128">
+
 # Branchcut
 
 **Compile the query, cut the tree.**
 
-[![Rust](https://img.shields.io/badge/Rust-std_only-000000?style=flat-square&logo=rust)](https://www.rust-lang.org/)
-![Dependencies](https://img.shields.io/badge/runtime_dependencies-0-2ea44f?style=flat-square)
-![Source](https://img.shields.io/badge/Rust_source_files-1-4c1?style=flat-square)
-![Track](https://img.shields.io/badge/Zero_Dependency-Track_A-6f42c1?style=flat-square)
+<p align="center">
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-2024-DEA584?style=for-the-badge&amp;logo=rust&amp;logoColor=white&amp;labelColor=0A1220" alt="Rust 2024" /></a>
+  <img src="https://img.shields.io/badge/dependencies-zero-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="Zero dependencies" />
+  <img src="https://img.shields.io/badge/Rust_sources-one-3178C6?style=for-the-badge&amp;labelColor=0A1220" alt="Single Rust source file" />
+  <img src="https://img.shields.io/badge/track-A%3A_Zero_Dependency-BB86FC?style=for-the-badge&amp;labelColor=0A1220" alt="Zero Dependency Track A" />
+  <a href="https://github.com/codex-mohan/branchcut/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-BB86FC?style=for-the-badge&amp;labelColor=0A1220" alt="MIT license" /></a>
+  <a href="https://github.com/codex-mohan/branchcut/stargazers"><img src="https://img.shields.io/github/stars/codex-mohan/branchcut?style=for-the-badge&amp;labelColor=0A1220&amp;color=FFD700" alt="GitHub stars" /></a>
+  <a href="https://github.com/codex-mohan/branchcut/pulls"><img src="https://img.shields.io/badge/PRs-welcome-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="PRs welcome" /></a>
+</p>
 
 </div>
 
 Branchcut is a single-file, zero-crate Rust filesystem query engine. It compiles positive globs, exclusions, file predicates, and termination rules into one traversal plan. The planner narrows literal roots, shares common pattern segments, and prunes directories that cannot contribute to the result.
 
 It targets workflows normally implemented with `fast-glob`, `globset`, `walkdir`, `ignore`, `regex`, and a CLI framework—without shipping any of them.
+
+**[Why Branchcut](#why-branchcut) · [Documentation](#documentation) · [Features](#current-features) · [Quick start](#quick-start) · [CLI reference](#cli-reference) · [Query planning](#query-planning) · [Evidence](#performance-and-correctness-evidence) · [Limitations](#limitations)**
 
 ## Why Branchcut
 
@@ -43,51 +52,60 @@ open only directories that may contribute
 
 The goal is not to claim universal superiority over mature globbers. The goal is to perform less irrelevant filesystem work on planning-heavy queries, then publish correctness and performance evidence honestly.
 
+## Documentation
+
+The complete documentation lives in [`docs/`](docs/README.md). Those Markdown and MDX files are the canonical source for both repository readers and the Fumadocs site in [`website/`](website/README.md).
+
+- [Install Branchcut](docs/getting-started/installation.md) and run the [quick start](docs/getting-started/quick-start.md)
+- Learn the [mental model](docs/getting-started/mental-model.md) and [query compiler](docs/concepts/query-compiler.md)
+- Use the complete [CLI reference](docs/reference/cli.md) and [glob syntax reference](docs/reference/glob-syntax.md)
+- Read the published [benchmark evidence](docs/evidence/benchmarks.md), [correctness method](docs/evidence/correctness.md), and [compatibility boundaries](docs/reference/compatibility.md)
+- Preview or deploy the [Fumadocs website](website/README.md)
+
 ## Current Features
 
-- Segment syntax: `*`, `?`, `[abc]`, `[a-z]`, `[!abc]`
-- Path-component globstar: `**`
-- One common, non-nested brace group such as `*.{js,ts}`
-- Repeatable positive patterns
-- Repeatable exclusions with safe trailing-globstar subtree pruning
-- Shared pattern-state graph for common pattern segments
-- Literal-prefix traversal root selection
-- Specialized literal, prefix, and suffix segment matchers
-- File, directory, and symlink filtering
-- Repeatable extension filters
-- Hidden-path exclusion by default
-- Streaming output by default
-- Deterministic global sorting on request
-- Immediate `--first` and `--limit` termination when streaming
-- Bounded parallel traversal with `--threads`
-- Planner and traversal diagnostics through `--explain` and `--stats`
-- Strict and best-effort filesystem error policies
-- Hierarchical nested `.gitignore` support with ordered negation/re-inclusion
-- Streaming JSON Lines output with `--json`
-- Shell-free per-match command execution with `--exec "command {}"`
-- No directory-symlink traversal
-- Raw non-UTF-8 path support on Unix
+### Query compilation
 
-## Build
+- `*`, `?`, `[abc]`, `[a-z]`, `[!abc]`, path-component `**`, and one common non-nested brace group
+- Repeatable positive patterns and exclusions compiled into a shared pattern-state graph
+- Literal-prefix root selection, positive feasibility pruning, and safe trailing-globstar exclusion pruning
+- Specialized literal, prefix, and suffix segment matchers
+
+### Traversal and filtering
+
+- File, directory, and symlink selection with repeatable extension filters
+- Hidden-path exclusion by default; directory symlinks are never followed
+- Hierarchical, opt-in `.gitignore` rules with ordered negation and conservative re-inclusion
+- Sequential streaming by default or bounded parallel traversal with `--threads`
+- Unix non-UTF-8 path support without forcing hot-path UTF-8 conversion
+
+### Output and control
+
+- Immediate `--first` and `--limit` termination in sequential streaming mode
+- Optional deterministic sorting, count-only output, and JSON Lines
+- Shell-free command execution through `std::process::Command`
+- Strict or best-effort filesystem error handling
+- Real query-plan and traversal diagnostics through `--explain` and `--stats`
+
+## Install and Build
 
 ### Prerequisite
 
 Rust with Cargo. Development and release gates have been exercised with Rust 1.96.0. The hackathon reference toolchain is Rust 1.98.0.
 
-### One-command release build
+Build the optimized binary:
 
 ```bash
 cargo build --release
 ```
 
-Result:
+Or install it from the local checkout:
 
-```text
-Windows: target/release/branchcut.exe
-Unix:    target/release/branchcut
+```bash
+cargo install --path .
 ```
 
-The release profile enables optimization level 3, fat LTO, one codegen unit, symbol stripping, and abort-on-panic.
+Release binaries are written to `target/release/branchcut.exe` on Windows and `target/release/branchcut` on Unix. The release profile uses optimization level 3, fat LTO, one codegen unit, symbol stripping, and abort-on-panic.
 
 ## Quick Start
 
@@ -119,6 +137,27 @@ branchcut '*/*.rs'
 ```
 
 Plain positional text remains a literal filename search. Use `--glob` when combining multiple explicit patterns or when you want the query to be self-documenting.
+
+## CLI Reference
+
+| Option | Behavior |
+|---|---|
+| `--glob PATTERN` | Add a positive glob; repeat to compile several patterns together |
+| `--exclude PATTERN` | Add an exclusion; complete trailing-`**` subtrees can be pruned |
+| `-e, --extension EXT` | Restrict file names by extension; repeatable |
+| `--type file\|dir\|symlink` | Select the returned filesystem entry type |
+| `--cwd PATH` | Set the query root |
+| `--hidden` | Include hidden path components |
+| `--first`, `--limit N` | Stop sequential traversal after enough matches |
+| `--threads N` | Use bounded parallel traversal; `0` selects an available worker count |
+| `--sort` | Collect and sort globally before output |
+| `--count` | Print only the match count |
+| `--gitignore` | Apply root and nested `.gitignore` rules |
+| `--json` | Emit one JSON object per matching path |
+| `--exec COMMAND` | Run a shell-free command template for every match; `{}` inserts the path |
+| `--strict` | Fail the query on filesystem read errors |
+| `--stats` | Write measured traversal counters to stderr |
+| `--explain` | Print the compiled plan without traversing |
 
 ## Query Examples
 
@@ -229,7 +268,6 @@ branchcut --glob '**/*.tmp' --exec 'rm {}'
 
 `{}` is replaced with the displayed relative path. Shell pipelines, redirections, environment expansion, and shell built-ins are intentionally unsupported.
 
-
 ## Query Planning
 
 Inspect compiler decisions without walking the filesystem:
@@ -253,8 +291,8 @@ branchcut \
 - termination policy;
 - traversal strategy.
 
-
 With `--threads N`, directory tasks use bounded per-worker queues, dynamic work stealing, outstanding-task completion, condition-variable sleeping, atomic cancellation, and reusable worker-local buffers. Results are buffered before one coordinator writes them. The sequential engine remains the default.
+
 ## Traversal Statistics
 
 ```bash
@@ -277,6 +315,10 @@ elapsed
 
 The root is inspected once with `symlink_metadata`. Branchcut does not call per-entry `metadata()` for currently supported filters; `DirEntry::file_type()` supplies traversal type information.
 
+### Runtime behavior
+
+| Condition | Result |
+|---|---|
 | `--strict` I/O errors | Exit code 2 after traversal |
 | `--json` | One JSON object per matching path, streamed as JSON Lines |
 | `--exec COMMAND` | Runs the parsed command once per match; `{}` is replaced by the displayed path; no shell |
@@ -292,11 +334,12 @@ The implementation lives entirely in `src/main.rs`:
 ```text
 CLI parser
   -> brace expansion and pattern parser
-  -> Pattern IR
+  -> compact Pattern IR
   -> shared PatternProgram trie/NFA
   -> QueryPlan
-  -> state-carrying depth-first traversal
-  -> buffered streaming output or sorted collection
+  -> sequential state-carrying traversal
+       or bounded parallel task queues
+  -> streamed, counted, or globally sorted output
 ```
 
 Each traversal frame carries the active positive and negative program states. Child names advance those states once. Branchcut does not rebuild and rematch the full relative path against every pattern for every entry.
@@ -310,7 +353,9 @@ Common segment forms bypass the general wildcard matcher:
 | `*suffix` | `ends_with` |
 | general wildcard | allocation-free star backtracking |
 
-## Tests and Quality Gates
+## Performance and Correctness Evidence
+
+Correctness gates:
 
 ```bash
 cargo fmt -- --check
@@ -319,7 +364,11 @@ cargo clippy -- -D warnings
 cargo metadata --no-deps --format-version 1
 ```
 
-The inline Rust suite covers matcher syntax, globstar zero-component behavior, brace limits, shared compilation, planner pruning, hidden semantics, extension filtering, exclusions, literal simple search, sorted limits, broken pipes, deep traversal, symlink policy on Unix, and non-UTF-8 Unix names.
+The inline Rust suite covers matcher syntax, globstar zero-component behavior, brace limits, shared compilation, planner pruning, hidden semantics, extension filtering, exclusions, literal simple search, sorted limits, broken pipes, deep traversal, parallel/sequential result equality, symlink policy on Unix, and non-UTF-8 Unix names.
+
+Published comparisons cover `fast-glob`, `tinyglobby`, and `zlob`, with workload definitions, correctness checks, environment details, raw measurements, and losses retained. See [COMPARISON.md](COMPARISON.md) for results and [BENCHMARKS.md](BENCHMARKS.md) for methodology.
+
+## Limitations
 
 - This is not a full `fast-glob` API or syntax replacement.
 - Extglobs such as `+(foo)` and `@(foo|bar)` are unsupported.
@@ -334,20 +383,19 @@ The inline Rust suite covers matcher syntax, globstar zero-component behavior, b
 - Parallel traversal is available with `--threads`; it buffers results and does not support `--limit` or `--exec` because those require exact global ordering.
 - Filesystem iteration order is platform- and filesystem-dependent unless `--sort` is selected.
 - Permission behavior varies by platform and account privileges.
-- Published comparisons include fast-glob, tinyglobby, and zlob; accuracy and methodology are documented in `COMPARISON.md`. Claims are workload-specific, not universal.
+- Published performance claims are workload-specific, not universal.
 
-See [COMPATIBILITY.md](COMPATIBILITY.md) for the exact supported surface and [BENCHMARKS.md](BENCHMARKS.md) for methodology and raw measurements.
+See [COMPATIBILITY.md](COMPATIBILITY.md) for the exact supported surface.
 
 ## Zero-Dependency Proof
 
 `Cargo.toml` contains an empty dependency table:
 
-
 ```toml
 [dependencies]
 ```
 
-See [deps-proof.txt](deps-proof.txt) for recorded Cargo metadata and source-file proof. See [STDLIB.md](STDLIB.md) for every implemented standard-library substitution.
+See [deps-proof.txt](deps-proof.txt) for recorded Cargo metadata and source-file proof. [STDLIB.md](STDLIB.md) maps each implemented standard-library component to the crate it replaces.
 
 
 ## Future Enhancements

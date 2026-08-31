@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280, initial-scale=1">
+  <title>Branchcut demo thumbnail</title>
+  <style>
+    :root {
+      --bg: #07100e;
+      --panel: rgba(8, 16, 15, 0.88);
+      --panel-top: rgba(19, 27, 27, 0.94);
+      --line: rgba(190, 216, 207, 0.22);
+      --line-strong: rgba(190, 216, 207, 0.38);
+      --grid: rgba(166, 205, 191, 0.055);
+      --white: #f4f7f5;
+      --muted: #9aa9a4;
+      --green: #3ddc97;
+      --green-soft: #82e8ba;
+      --amber: #f3b84b;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    body {
+      position: relative;
+      color: var(--white);
+      font-family: "Segoe UI Variable Display", "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(640px 420px at 71% 12%, rgba(45, 190, 132, 0.14), transparent 70%),
+        radial-gradient(470px 350px at 8% 91%, rgba(229, 153, 55, 0.11), transparent 72%),
+        linear-gradient(rgba(166, 205, 191, 0.052) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(166, 205, 191, 0.052) 1px, transparent 1px),
+        linear-gradient(120deg, #07100e 0%, #060b0b 54%, #07110f 100%);
+      background-size: auto, auto, 48px 48px, 48px 48px, auto;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 1px solid rgba(180, 207, 197, 0.28);
+      border-radius: 20px;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 43%, rgba(0, 0, 0, 0.36) 100%);
+      pointer-events: none;
+    }
+
+    .frame {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 510px 1fr;
+      gap: 50px;
+      width: 100%;
+      height: 100%;
+      padding: 52px 50px 48px;
+    }
+
+    .left {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .badge {
+      align-self: flex-start;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      height: 40px;
+      padding: 0 18px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: #d9e2df;
+      background: rgba(8, 14, 14, 0.58);
+      box-shadow: inset 0 0 22px rgba(61, 220, 151, 0.035);
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: 0.16em;
+    }
+
+    .badge .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 16px rgba(61, 220, 151, 0.9);
+    }
+
+    .badge .accent { color: var(--green-soft); }
+    .badge .separator { color: #50615c; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      margin-top: 41px;
+    }
+
+    .brand img {
+      width: 112px;
+      height: 68px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 19px rgba(61, 220, 151, 0.2));
+    }
+
+    .brand-name {
+      margin: 0;
+      color: #f8faf9;
+      font-size: 72px;
+      font-weight: 735;
+      letter-spacing: -0.055em;
+      line-height: 1;
+    }
+
+    .headline {
+      margin: 45px 0 0;
+      font-size: 61px;
+      font-weight: 760;
+      letter-spacing: -0.047em;
+      line-height: 0.98;
+    }
+
+    .headline span {
+      display: block;
+      margin-top: 13px;
+      color: var(--green-soft);
+    }
+
+    .subhead {
+      margin: 26px 0 0;
+      max-width: 475px;
+      color: #b7c3bf;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 18px;
+      line-height: 1.5;
+      letter-spacing: -0.02em;
+    }
+
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .fact {
+      min-height: 94px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+    }
+
+    .fact strong {
+      color: var(--green);
+      font-size: 36px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .fact span {
+      margin-top: 11px;
+      color: #9daca7;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+    }
+
+    .right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .terminal {
+      width: 100%;
+      max-width: 650px;
+      border: 1px solid rgba(186, 214, 204, 0.33);
+      border-radius: 19px;
+      overflow: hidden;
+      background: var(--panel);
+      box-shadow:
+        0 38px 80px rgba(0, 0, 0, 0.46),
+        0 0 70px rgba(61, 220, 151, 0.045),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.018);
+    }
+
+    .terminal-bar {
+      height: 62px;
+      display: flex;
+      align-items: center;
+      padding: 0 22px;
+      border-bottom: 1px solid rgba(186, 214, 204, 0.24);
+      background: var(--panel-top);
+    }
+
+    .lights { display: flex; gap: 10px; }
+    .light { width: 14px; height: 14px; border-radius: 50%; }
+    .red { background: #ff6259; box-shadow: 0 0 12px rgba(255,98,89,.18); }
+    .yellow { background: #ffbd45; box-shadow: 0 0 12px rgba(255,189,69,.16); }
+    .green { background: #35c96f; box-shadow: 0 0 12px rgba(53,201,111,.16); }
+
+    .terminal-title {
+      margin-left: 22px;
+      color: #9faeaa;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 15px;
+      letter-spacing: 0.045em;
+    }
+
+    .terminal-body {
+      padding: 27px 29px 28px;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 18px;
+      line-height: 1.55;
+    }
+
+    .cmd { color: #dce4e1; white-space: nowrap; }
+    .prompt { color: var(--green); }
+    .flag { color: #f3f6f5; }
+    .value { color: var(--green-soft); }
+    .slash { color: #64736e; }
+    .indent { padding-left: 27px; }
+
+    .plan {
+      margin-top: 25px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(180, 207, 197, 0.16);
+    }
+
+    .plan-title {
+      color: var(--green-soft);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+    }
+
+    .plan-row {
+      display: grid;
+      grid-template-columns: 125px 1fr;
+      gap: 13px;
+      margin-top: 13px;
+      font-size: 16px;
+    }
+
+    .plan-key { color: #71817c; }
+    .plan-value { color: #d7dfdc; }
+    .plan-value.green-text { color: var(--green-soft); }
+
+    .callout {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 26px 18px 18px;
+      padding: 17px 20px;
+      border: 1px solid rgba(243, 184, 75, 0.58);
+      border-radius: 12px;
+      color: #f5c45f;
+      background: linear-gradient(90deg, rgba(243,184,75,.075), rgba(243,184,75,.018));
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 16px;
+      letter-spacing: 0.02em;
+    }
+
+    .branch-glyph {
+      position: relative;
+      width: 42px;
+      height: 30px;
+      flex: 0 0 auto;
+    }
+
+    .branch-glyph::before,
+    .branch-glyph::after {
+      content: "";
+      position: absolute;
+      background: #f3b84b;
+    }
+
+    .branch-glyph::before { left: 19px; top: 1px; width: 3px; height: 25px; }
+    .branch-glyph::after { left: 4px; top: 13px; width: 33px; height: 3px; }
+
+    .node {
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      border: 3px solid #f3b84b;
+      border-radius: 50%;
+      background: #101713;
+      z-index: 2;
+    }
+
+    .node.top { left: 16px; top: -2px; }
+    .node.left { left: 0; top: 21px; }
+    .node.mid { left: 16px; top: 21px; }
+    .node.right { right: 0; top: 21px; }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <section class="left">
+      <div class="badge">
+        <span class="dot"></span>
+        <span>LIVE DEMO</span>
+        <span class="separator">•</span>
+        <span class="accent">ZERO CRATES</span>
+      </div>
+
+      <div class="brand">
+        <img src="../brand/branchcut-icon.svg" alt="">
+        <h1 class="brand-name">branchcut</h1>
+      </div>
+
+      <h2 class="headline">Compile the query.<span>Cut the tree.</span></h2>
+      <p class="subhead">A filesystem query engine that avoids work before traversal begins.</p>
+
+      <div class="facts">
+        <div class="fact"><strong>0</strong><span>CRATES</span></div>
+        <div class="fact"><strong>1</strong><span>RUST FILE</span></div>
+        <div class="fact"><strong>19</strong><span>TESTS</span></div>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="lights">
+            <span class="light red"></span>
+            <span class="light yellow"></span>
+            <span class="light green"></span>
+          </div>
+          <div class="terminal-title">branchcut — live demo</div>
+        </div>
+
+        <div class="terminal-body">
+          <div class="cmd"><span class="prompt">$</span> branchcut <span class="slash">\</span></div>
+          <div class="cmd indent"><span class="flag">--glob</span> <span class="value">'packages/**/src/**/*.{rs,ts}'</span> <span class="slash">\</span></div>
+          <div class="cmd indent"><span class="flag">--exclude</span> <span class="value">'**/{target,node_modules,dist}/**'</span> <span class="slash">\</span></div>
+          <div class="cmd indent"><span class="flag">--limit</span> <span class="value">100</span> <span class="flag">--explain</span></div>
+
+          <div class="plan">
+            <div class="plan-title">QUERY PLAN</div>
+            <div class="plan-row"><span class="plan-key">root</span><span class="plan-value">packages/</span></div>
+            <div class="plan-row"><span class="plan-key">patterns</span><span class="plan-value green-text">.rs · .ts</span></div>
+            <div class="plan-row"><span class="plan-key">excluded</span><span class="plan-value">target · node_modules · dist</span></div>
+            <div class="plan-row"><span class="plan-key">metadata</span><span class="plan-value green-text">not required</span></div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <span class="branch-glyph">
+            <i class="node top"></i><i class="node left"></i><i class="node mid"></i><i class="node right"></i>
+          </span>
+          <span><strong>PRUNES</strong> DIRECTORIES BEFORE OPENING</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
