@@ -105,6 +105,22 @@ For completeness, 10 fresh process launches with complete sorted output produced
 
 This is a startup-inclusive CLI result and is not the headline engine comparison.
 
+### Direct PowerShell executable check
+
+Both native executables were launched directly from PowerShell with `Measure-Command`, count-only output, the same absolute corpus, and ten fresh launches:
+
+```text
+Branchcut: branchcut.exe --cwd C:\tmp\branchcut-speed --glob "**/*.{rs,toml}" --count
+zlob:      zlob.exe -c "**/*.{rs,toml}" C:\tmp\branchcut-speed
+```
+
+| Tool | Median | P90 | Matches |
+|---|---:|---:|---:|
+| Branchcut release | 38.635 ms | 41.512 ms | 13,000 |
+| zlob v1.6.3 ReleaseFast | 120.153 ms | 130.615 ms | 13,000 |
+
+This direct executable check includes process startup and executable initialization. The first launch was a cold-cache outlier for both tools and remains in the samples; medians and P90 are reported without cherry-picking.
+
 ## Filesystem-work evidence
 
 For Branchcut's 13,000-match corpus query, `--stats` reported:
