@@ -4,13 +4,14 @@
 
 # Branchcut
 
-**Compile the query, cut the tree.**
+**Compile the query. Cut the tree. Skip the packages.**
 
 <p align="center">
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-2024-DEA584?style=for-the-badge&amp;logo=rust&amp;logoColor=white&amp;labelColor=0A1220" alt="Rust 2024" /></a>
   <img src="https://img.shields.io/badge/dependencies-zero-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Rust_sources-one-3178C6?style=for-the-badge&amp;labelColor=0A1220" alt="Single Rust source file" />
-  <img src="https://img.shields.io/badge/track-A%3A_Zero_Dependency-BB86FC?style=for-the-badge&amp;labelColor=0A1220" alt="Zero Dependency Track A" />
+  <img src="https://img.shields.io/badge/Package_Killer-fast--glob-FF6B35?style=for-the-badge&amp;labelColor=0A1220" alt="Package Killer target: fast-glob" />
+  <img src="https://img.shields.io/badge/hot_benchmark-1.70%C3%97_faster-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="1.70 times faster than fast-glob in the published hot benchmark" />
   <a href="https://github.com/codex-mohan/branchcut/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-BB86FC?style=for-the-badge&amp;labelColor=0A1220" alt="MIT license" /></a>
   <a href="https://github.com/codex-mohan/branchcut/stargazers"><img src="https://img.shields.io/github/stars/codex-mohan/branchcut?style=for-the-badge&amp;labelColor=0A1220&amp;color=FFD700" alt="GitHub stars" /></a>
   <a href="https://github.com/codex-mohan/branchcut/pulls"><img src="https://img.shields.io/badge/PRs-welcome-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="PRs welcome" /></a>
@@ -18,11 +19,68 @@
 
 </div>
 
-Branchcut is a single-file, zero-crate Rust filesystem query engine. It compiles positive globs, exclusions, file predicates, and termination rules into one traversal plan. The planner narrows literal roots, shares common pattern segments, and prunes directories that cannot contribute to the result.
+Branchcut is a filesystem query engine built for the [Zero Dependency 72-Hour Hackathon](https://zerodepshack.com/). It replaces the work normally delegated to a glob package, directory walker, ignore engine, argument parser, JSON serializer, and worker-pool library with **one Rust source file and zero crates**.
 
-It targets workflows normally implemented with `fast-glob`, `globset`, `walkdir`, `ignore`, `regex`, and a CLI framework—without shipping any of them.
+Its primary **Package Killer** target is [`fast-glob@3.3.3`](https://www.npmjs.com/package/fast-glob): a package averaging **461.4 million downloads per month** over the latest completed 12-month window. Branchcut does not imitate its JavaScript API. It replaces the real filesystem-query workflow with a native CLI that compiles globs, exclusions, ignore rules, filters, and termination into one traversal plan—and can avoid opening irrelevant directories in the first place.
 
-**[Why Branchcut](#why-branchcut) · [Documentation](#documentation) · [Features](#current-features) · [Quick start](#quick-start) · [CLI reference](#cli-reference) · [Query planning](#query-planning) · [Evidence](#performance-and-correctness-evidence) · [Limitations](#limitations)**
+```bash
+branchcut \
+  --glob 'packages/**/src/**/*.{rs,ts}' \
+  --exclude '**/{target,node_modules,dist}/**' \
+  --type file \
+  --limit 100 \
+  --stats
+```
+
+> **The pitch:** `fast-glob` finds paths. Branchcut compiles the whole filesystem query so it can prune the search tree, stream results, stop early, and explain exactly what work it performed.
+
+**[Package Killer case](#package-killer-fast-glob) · [Features](#what-ships-today) · [Quick start](#quick-start) · [Query planning](#query-planning) · [Benchmarks](#measured-results) · [Judge checklist](#60-second-judge-check) · [Limitations](#limitations)**
+
+## Package Killer: `fast-glob`
+
+The hackathon defines the [Package Killer bonus](https://zerodepshack.com/#bonus-points) as cleanly reimplementing a package people actually install, documenting the replacement, and backing its popularity with real download numbers. Branchcut targets that definition directly.
+
+| | `fast-glob@3.3.3` | Branchcut `0.1.0` |
+|---|---|---|
+| What ships | Node package and transitive dependency tree | One native executable |
+| Runtime dependencies | 17 transitive npm dependencies in the tested install | **0 crates** |
+| Source layout | Package implementation plus dependencies | **1 Rust file**: `src/main.rs` |
+| Positive globs | Yes | Yes; compiled into a shared program |
+| Exclusions | Ignore matching | Matching plus safe subtree pruning |
+| Result delivery | Returns a collected array | Streams by default; sorting is opt-in |
+| Early stop | Caller truncates after collection | `--first` / `--limit` stop traversal |
+| Ignore files | Separate configuration/tooling | Hierarchical `.gitignore` support built in |
+| Diagnostics | No filesystem-work counters | `--explain` plan + `--stats` counters |
+| Commands | Separate runner needed | Shell-free `--exec` built in |
+| Published hot result | 37.528 ms | **22.079 ms — 1.70× faster** |
+
+The benchmark row is one correctness-checked, 16,000-file Windows workload—not a universal claim. The complete protocol, versions, losses, and caveats are in [COMPARISON.md](COMPARISON.md).
+
+### Adoption receipt
+
+| Package | Role in this project | 12-month downloads | Average downloads/month |
+|---|---|---:|---:|
+| [`fast-glob`](https://www.npmjs.com/package/fast-glob) | **Primary Package Killer target and correctness oracle** | 5,536,931,736 | **461,410,978** |
+| [`tinyglobby`](https://www.npmjs.com/package/tinyglobby) | Secondary modern Node benchmark opponent | 4,775,466,973 | 397,955,581 |
+
+Download figures use the official npm downloads API for **2025-09-01 through 2026-08-31**, divided by 12 and rounded to the nearest whole download: [`fast-glob` receipt](https://api.npmjs.org/downloads/point/2025-09-01:2026-08-31/fast-glob), [`tinyglobby` receipt](https://api.npmjs.org/downloads/point/2025-09-01:2026-08-31/tinyglobby). Retrieved 2026-09-02. npm does not publish a first-party package “rating,” so this README uses auditable adoption and benchmark data instead of inventing one.
+
+Branchcut also replaces work commonly split among Rust crates such as `globset`, `walkdir`, `ignore`, `regex`, `clap`, `rayon`, and `serde_json`. Those are **stdlib substitutions**, not claims of full API compatibility. The implementation-by-implementation ledger is in [STDLIB.md](STDLIB.md).
+
+## Measured Results
+
+Every timed comparison first checked that the result sets matched for the supported semantics.
+
+| Engine | Hot query time | Relative to Branchcut | Matches |
+|---|---:|---:|---:|
+| **Branchcut** | **22.079 ms median** | **1.00×** | 13,000 |
+| `tinyglobby@0.2.14` | 35.666 ms median | 1.61× slower | 13,000 |
+| `fast-glob@3.3.3` | 37.528 ms median | 1.70× slower | 13,000 |
+| `zlob@1.6.3` public `match` API | 133.408 ms average | 6.04× slower | 13,000 |
+
+Workload: `**/*.{rs,toml}` over a synthetic 16,000-file corpus, hidden paths excluded, no path serialization, after warmup. The zlob result covers its direct single-threaded public `match` API on Windows, not every platform-specific walker path. See [COMPARISON.md](COMPARISON.md) and [BENCHMARKS.md](BENCHMARKS.md) before quoting these numbers.
+
+In the exclusion-heavy cold CLI workload, Branchcut returned the same 10,000 sorted paths as `fast-glob`, opened only relevant directories, pruned 20 excluded directories, and measured **24.99 ms vs 148.53 ms**. Cold startup and hot engine results are deliberately kept separate.
 
 ## Why Branchcut
 
@@ -50,7 +108,16 @@ shared pattern program
 open only directories that may contribute
 ```
 
-The goal is not to claim universal superiority over mature globbers. The goal is to perform less irrelevant filesystem work on planning-heavy queries, then publish correctness and performance evidence honestly.
+The key distinction is architectural: Branchcut does not first walk the entire tree and then ask whether each path matched. Every directory carries the currently viable positive and exclusion states. When no positive state can match a descendant—or an exclusion safely covers the whole subtree—the walker does not open that directory.
+
+That produces four practical advantages:
+
+1. **Less filesystem work:** literal prefixes narrow the traversal root and impossible subtrees are pruned.
+2. **One pass for many patterns:** common pattern segments are merged into one trie/NFA-style program.
+3. **Results now, not later:** output streams as matches are found, and limits cancel traversal immediately.
+4. **Proof instead of mystery:** `--explain` shows the plan; `--stats` shows actual directories, entries, metadata calls, matches, errors, and elapsed time.
+
+Branchcut does not claim universal superiority or full `fast-glob` compatibility. Its claim is narrower and measurable: on planning-heavy filesystem queries, compiling the whole query can avoid work that a generic walk-then-filter pipeline performs.
 
 ## Documentation
 
@@ -62,7 +129,7 @@ The complete documentation lives in [`docs/`](docs/README.md). Those Markdown an
 - Read the published [benchmark evidence](docs/evidence/benchmarks.md), [correctness method](docs/evidence/correctness.md), and [compatibility boundaries](docs/reference/compatibility.md)
 - Preview or deploy the [Fumadocs website](website/README.md)
 
-## Current Features
+## What Ships Today
 
 ### Query compilation
 
@@ -367,6 +434,49 @@ cargo metadata --no-deps --format-version 1
 The inline Rust suite covers matcher syntax, globstar zero-component behavior, brace limits, shared compilation, planner pruning, hidden semantics, extension filtering, exclusions, literal simple search, sorted limits, broken pipes, deep traversal, parallel/sequential result equality, symlink policy on Unix, and non-UTF-8 Unix names.
 
 Published comparisons cover `fast-glob`, `tinyglobby`, and `zlob`, with workload definitions, correctness checks, environment details, raw measurements, and losses retained. See [COMPARISON.md](COMPARISON.md) for results and [BENCHMARKS.md](BENCHMARKS.md) for methodology.
+
+## How This Maps to Hackathon Judging
+
+The hackathon rates every submission on a five-point scale across [four weighted criteria](https://zerodepshack.com/#scoring). This table points to evidence; it is not a self-awarded score.
+
+| Judging criterion | Weight | Branchcut evidence |
+|---|---:|---|
+| Functionality & Usefulness | 35% | Working CLI; globs, exclusions, ignore rules, type/extension filters, streaming, early stop, JSONL, exec, and parallel traversal |
+| Zero-Dependency Craft | 30% | Empty `[dependencies]`; hand-written matcher/planner/walker; detailed [STDLIB.md](STDLIB.md) ledger |
+| Code Quality & Idiom | 25% | One readable Rust source; explicit errors; no unsafe code; bounded concurrency; 19 passing tests on the recorded Windows run |
+| Innovation | 10% | Compiles the whole query into traversal state so directories can be rejected before `read_dir` |
+
+**Primary bonus claim — Package Killer (+3):** `fast-glob@3.3.3` is the named target, its npm adoption is documented above, overlapping result sets are checked before timing, and limitations are explicit. Branchcut also meets the mechanical **Single File** condition: the only `.rs` file is `src/main.rs`.
+
+## 60-Second Judge Check
+
+```powershell
+# 0 third-party crates
+cargo metadata --no-deps --format-version 1
+
+# 1 Rust source file
+Get-ChildItem -Recurse -Filter *.rs | Select-Object -ExpandProperty FullName
+
+# Tests and optimized build
+cargo test
+cargo build --release
+
+# See the compiler plan without traversing
+.\target\release\branchcut.exe `
+  --glob "packages/**/src/**/*.{rs,ts}" `
+  --exclude "**/{target,node_modules,dist}/**" `
+  --limit 100 `
+  --explain
+
+# Run a query and expose the filesystem-work counters
+.\target\release\branchcut.exe `
+  --glob "**/*.{rs,toml}" `
+  --exclude "**/target/**" `
+  --count `
+  --stats
+```
+
+Expected dependency result: `"dependencies":[]`. Expected source result: only `src/main.rs`. For the complete verification path, use [JUDGE.md](JUDGE.md).
 
 ## Limitations
 
