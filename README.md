@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/Rust_sources-one-3178C6?style=for-the-badge&amp;labelColor=0A1220" alt="Single Rust source file" />
   <img src="https://img.shields.io/badge/Package_Killer-fast--glob-FF6B35?style=for-the-badge&amp;labelColor=0A1220" alt="Package Killer target: fast-glob" />
   <img src="https://img.shields.io/badge/hot_benchmark-1.70%C3%97_faster-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="1.70 times faster than fast-glob in the published hot benchmark" />
+  <a href="https://github.com/codex-mohan/branchcut/actions/workflows/install-matrix.yml"><img src="https://img.shields.io/github/actions/workflow/status/codex-mohan/branchcut/install-matrix.yml?style=for-the-badge&amp;label=installers&amp;labelColor=0A1220" alt="Windows, Linux, and macOS installer checks" /></a>
   <a href="https://github.com/codex-mohan/branchcut/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-BB86FC?style=for-the-badge&amp;labelColor=0A1220" alt="MIT license" /></a>
   <a href="https://github.com/codex-mohan/branchcut/stargazers"><img src="https://img.shields.io/github/stars/codex-mohan/branchcut?style=for-the-badge&amp;labelColor=0A1220&amp;color=FFD700" alt="GitHub stars" /></a>
   <a href="https://github.com/codex-mohan/branchcut/pulls"><img src="https://img.shields.io/badge/PRs-welcome-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="PRs welcome" /></a>
@@ -34,7 +35,7 @@ branchcut \
 
 > **The pitch:** `fast-glob` finds paths. Branchcut compiles the whole filesystem query so it can prune the search tree, stream results, stop early, and explain exactly what work it performed.
 
-**[Package Killer case](#package-killer-fast-glob) · [Features](#what-ships-today) · [Quick start](#quick-start) · [Query planning](#query-planning) · [Benchmarks](#measured-results) · [Judge checklist](#60-second-judge-check) · [Limitations](#limitations)**
+**[Getting started](#getting-started) · [Package Killer case](#package-killer-fast-glob) · [Features](#what-ships-today) · [Quick start](#quick-start) · [Query planning](#query-planning) · [Benchmarks](#measured-results) · [Judge checklist](#60-second-judge-check) · [Limitations](#limitations)**
 
 ## Package Killer: `fast-glob`
 
@@ -154,38 +155,101 @@ The complete documentation lives in [`docs/`](docs/README.md). Those Markdown an
 - Strict or best-effort filesystem error handling
 - Real query-plan and traversal diagnostics through `--explain` and `--stats`
 
-## Install and Build
+## Getting Started
 
-### Prerequisite
+Branchcut is installed as a user-level command through Cargo. Rust and Cargo are the only prerequisites; the resulting Branchcut executable has zero third-party runtime dependencies.
 
-Rust with Cargo. Development and release gates have been exercised with Rust 1.96.0. The hackathon reference toolchain is Rust 1.98.0.
+### Installation
 
-Build the optimized binary:
+| Windows | Linux | macOS |
+|:---:|:---:|:---:|
+| PowerShell installer | POSIX `sh` installer | POSIX `sh` installer |
+| `branchcut.exe` | `branchcut` | `branchcut` |
+| Install + query + uninstall CI | Install + query + uninstall CI | Install + query + uninstall CI |
+
+#### Recommended: install directly from GitHub
+
+No clone is required:
+
+```bash
+cargo install --locked --git https://github.com/codex-mohan/branchcut.git
+```
+
+Cargo installs `branchcut` into `$CARGO_HOME/bin`—normally `%USERPROFILE%\.cargo\bin` on Windows or `~/.cargo/bin` on Unix. Rustup normally adds that directory to `PATH`.
+
+Verify the installation from any directory:
+
+```bash
+branchcut --version
+branchcut --help
+```
+
+#### Install from a checkout
+
+The checked-in installers build the locked release and verify the installed executable. They also support a custom Cargo root.
+
+Windows PowerShell:
+
+```powershell
+.\scripts\install.ps1
+
+# Optional custom location
+.\scripts\install.ps1 -InstallRoot "$HOME\.branchcut"
+```
+
+Linux and macOS:
+
+```bash
+sh scripts/install.sh
+
+# Optional custom location
+BRANCHCUT_INSTALL_ROOT="$HOME/.branchcut" sh scripts/install.sh
+```
+
+For a custom root, add its `bin` directory to `PATH`; the installer prints a warning when it is not already present.
+
+### Uninstall
+
+For the default installation:
+
+```bash
+cargo uninstall branchcut
+```
+
+Or use the matching checkout script:
+
+```powershell
+.\scripts\uninstall.ps1
+```
+
+```bash
+sh scripts/uninstall.sh
+```
+
+Pass the same custom root used during installation:
+
+```powershell
+.\scripts\uninstall.ps1 -InstallRoot "$HOME\.branchcut"
+```
+
+```bash
+BRANCHCUT_INSTALL_ROOT="$HOME/.branchcut" sh scripts/uninstall.sh
+```
+
+### Build without installing
 
 ```bash
 cargo build --release
 ```
 
-Or install it from the local checkout:
+Release binaries are written to `target/release/branchcut.exe` on Windows and `target/release/branchcut` on Unix. Development and release gates have been exercised with Rust 1.96.0; the hackathon reference toolchain is Rust 1.98.0. See the complete [installation guide](docs/getting-started/installation.md) for PATH troubleshooting and upgrade instructions.
+
+### Quick Start
+
+Once installed, the same command works in PowerShell, Command Prompt, Bash, Zsh, and other shells:
 
 ```bash
-cargo install --path .
-```
-
-Release binaries are written to `target/release/branchcut.exe` on Windows and `target/release/branchcut` on Unix. The release profile uses optimization level 3, fat LTO, one codegen unit, symbol stripping, and abort-on-panic.
-
-## Quick Start
-
-PowerShell:
-
-```powershell
-.\target\release\branchcut.exe --glob "src/**/*.rs"
-```
-
-Unix shell:
-
-```bash
-./target/release/branchcut --glob 'src/**/*.rs'
+branchcut --glob 'src/**/*.rs'
 ```
 
 Simple filename search treats the input literally:
