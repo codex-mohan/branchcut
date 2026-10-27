@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { pathToFileURL } from 'node:url';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, statfs, writeFile } from 'node:fs/promises';
 
 const EXPECTED_FAST_GLOB = '3.3.3';
 const PACKAGE_COUNT = 20;
@@ -15,7 +15,7 @@ const DISTRACTOR_FILES_PER_PACKAGE = 150;
 const GLOBS = ['**/*.rs', '**/*.toml'];
 const EXCLUDES = ['**/target/**', '**/node_modules/**'];
 function usage() {
-  return `Usage: node scripts/benchmark.mjs --binary PATH --oracle-dir PATH [--iterations N] [--warmups N] [--output PATH]\n`;
+  return `Usage: node scripts/benchmark.mjs --binary PATH --oracle-dir PATH [--binary-label LABEL] [--iterations N] [--warmups N] [--output PATH]\n`;
 }
 
 function parseArgs(argv) {
@@ -26,17 +26,20 @@ function parseArgs(argv) {
       process.stdout.write(usage());
       process.exit(0);
     }
-    if (!['--binary', '--oracle-dir', '--iterations', '--warmups', '--output'].includes(arg)) {
+    if (!['--binary', '--binary-label', '--oracle-dir', '--iterations', '--warmups', '--output'].includes(arg)) {
       throw new Error(`Unknown option: ${arg}\n${usage()}`);
     }
     const value = argv[++i];
     if (!value || value.startsWith('--')) throw new Error(`Missing value for ${arg}`);
     const name = arg.slice(2).replaceAll('-', '_');
-    options[name] = name === 'iterations' || name === 'warmups'
-      ? Number.parseInt(value, 10)
-      : path.resolve(value);
-    if ((name === 'iterations' || name === 'warmups') && (!Number.isSafeInteger(options[name]) || options[name] < 0)) {
-      throw new Error(`${arg} must be a nonnegative integer`);
+    if (name === 'iterations' || name === 'warmups') {
+      if (!/^\d+$/.test(value)) throw new Error(`${arg} must be a nonnegative integer`);
+      options[name] = Number(value);
+      if (!Number.isSafeInteger(options[name])) throw new Error(`${arg} exceeds the supported integer range`);
+    } else if (name === 'binary_label') {
+      options[name] = value;
+    } else {
+      options[name] = path.resolve(value);
     }
   }
   if (!options.binary || !options.oracle_dir) throw new Error(usage());
@@ -178,8 +181,31 @@ function systemInfo() {
 
 function gitInfo() {
   const commit = run('git', ['rev-parse', 'HEAD']).stdout.trim();
-  const dirty = run('git', ['status', '--porcelain', '--', 'src', 'Cargo.toml', 'Cargo.lock']).stdout.trim().length > 0;
-  return { commit, tracked_source_dirty: dirty };
+  const sourceTreeDirty = run('git', ['status', '--porcelain', '--', 'src', 'Cargo.toml', 'Cargo.lock']).stdout.trim().length > 0;
+  const workingTreeDirty = run('git', ['status', '--porcelain']).stdout.trim().length > 0;
+  return { commit, source_tree_dirty: sourceTreeDirty, working_tree_dirty: workingTreeDirty };
+}
+
+async function filesystemInfo(root) {
+  if (process.platform === 'win32') {
+    const drive = path.parse(root).root.match(/^([A-Za-z]):[\\/]$/)?.[1];
+    if (!drive) return { name: 'unknown', detail: 'could not resolve corpus volume' };
+    try {
+      const result = run('pwsh', [
+        '-NoProfile', '-NonInteractive', '-Command',
+        `$volume = Get-Volume -DriveLetter '${drive}' -ErrorAction Stop; [Console]::Out.Write($volume.FileSystem)`,
+      ]).stdout.trim();
+      return { name: result || 'unknown' };
+    } catch {
+      return { name: 'unknown', detail: 'Get-Volume was unavailable or returned no filesystem name' };
+    }
+  }
+  try {
+    const info = await statfs(root);
+    return { type: `0x${Number(info.type).toString(16)}`, type_number: Number(info.type) };
+  } catch {
+    return { type: 'unknown' };
+  }
 }
 
 function oracleWorkerSource() {
@@ -236,33 +262,37 @@ async function main() {
 
     for (let iteration = 0; iteration < options.warmups + options.iterations; iteration += 1) {
       const timed = iteration >= options.warmups;
-      const branchcutStart = performance.now();
-      const branchcutResult = run(options.binary, queryArgs);
-      const branchcutElapsed = performance.now() - branchcutStart;
-      const count = Number(branchcutResult.stdout.trim());
-      if (count !== resultCount) throw new Error(`Branchcut count changed before/after correctness check: ${count} != ${resultCount}`);
-      finalStats = parseStats(branchcutResult.stderr);
-
-      const oracleStart = performance.now();
-      const oracleResult = run(process.execPath, ['--eval', worker, options.oracle_dir, corpus.root]);
-      const oracleElapsed = performance.now() - oracleStart;
-      const oracleCount = Number(oracleResult.stdout.trim());
-      if (oracleCount !== resultCount) throw new Error(`fast-glob count changed: ${oracleCount} != ${resultCount}`);
-
-      if (timed) {
-        branchcutSamples.push(Number(branchcutElapsed.toFixed(3)));
-        oracleSamples.push(Number(oracleElapsed.toFixed(3)));
+      const engines = iteration % 2 === 0 ? ['branchcut', 'fast_glob'] : ['fast_glob', 'branchcut'];
+      for (const engine of engines) {
+        const started = performance.now();
+        let result;
+        if (engine === 'branchcut') {
+          result = run(options.binary, queryArgs);
+          const count = Number(result.stdout.trim());
+          if (count !== resultCount) throw new Error(`Branchcut count changed before/after correctness check: ${count} != ${resultCount}`);
+          finalStats = parseStats(result.stderr);
+        } else {
+          result = run(process.execPath, ['--eval', worker, options.oracle_dir, corpus.root]);
+          const count = Number(result.stdout.trim());
+          if (count !== resultCount) throw new Error(`fast-glob count changed: ${count} != ${resultCount}`);
+        }
+        const elapsed = performance.now() - started;
+        if (timed) {
+          const samples = engine === 'branchcut' ? branchcutSamples : oracleSamples;
+          samples.push(Number(elapsed.toFixed(3)));
+        }
       }
     }
 
     const metadata = {
       schema_version: 1,
-      measurement: 'fresh process per sample; includes startup, query, and count output; filesystem cache state is uncontrolled',
+      measurement: 'fresh process per sample; includes startup, query, and count output; engine order alternates by iteration; filesystem cache state is uncontrolled',
       correctness: { passed: true, result_count: resultCount, comparison: 'complete sorted path sets before timing' },
       git: gitInfo(),
-      system: systemInfo(),
+      system: { ...systemInfo(), filesystem: await filesystemInfo(corpus.root) },
       fast_glob: { version: oraclePackage.version },
       branchcut: {
+        binary_label: options.binary_label ?? path.basename(options.binary),
         binary_name: path.basename(options.binary),
         binary_sha256: createHash('sha256').update(await readFile(options.binary)).digest('hex'),
         query: [

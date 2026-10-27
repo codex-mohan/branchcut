@@ -30,6 +30,8 @@ Use the matching native Branchcut binary path on Linux and macOS. The script bui
 
 `--output` writes exactly the retained JSON record to the requested path. Choose a durable location for records used in reports. Do not compare runs with different result counts or publish a speed claim from this one synthetic corpus alone.
 
+The runner alternates engine order between iterations and records the temporary corpus filesystem. Use `--binary-label LABEL` to identify a preserved binary separately from the current checkout; its SHA-256 is also recorded. A dirty source tree is recorded explicitly, so the checkout commit alone is not a claim about that binary's exact source.
+
 The temporary tree is created under the operating system's temporary directory. The scripts validate that cleanup remains under that directory before removing it. `target/oracle` contains a development-only correctness oracle; it is not a runtime dependency.
 
 ## Correctness gate

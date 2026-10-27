@@ -57,6 +57,30 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --locked --all-targets -- -D warnings
 
+      - name: Set up Node.js for the pinned behavioral oracle
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build release binary for differential checks
+        run: cargo build --release --locked
+
+      - name: Install fast-glob 3.3.3 oracle on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $oracleDir = Join-Path $env:RUNNER_TEMP 'branchcut-oracle'
+          npm install --prefix $oracleDir --no-save --package-lock=false --no-audit --no-fund --ignore-scripts fast-glob@3.3.3
+          node scripts/verify.mjs --binary target/release/branchcut.exe --oracle-dir $oracleDir
+
+      - name: Install fast-glob 3.3.3 oracle on Unix
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          oracle_dir="$RUNNER_TEMP/branchcut-oracle"
+          npm install --prefix "$oracle_dir" --no-save --package-lock=false --no-audit --no-fund --ignore-scripts fast-glob@3.3.3
+          node scripts/verify.mjs --binary target/release/branchcut --oracle-dir "$oracle_dir"
+
       - name: Install, query, and uninstall on Windows
         if: runner.os == 'Windows'
         shell: pwsh

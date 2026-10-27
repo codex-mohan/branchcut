@@ -1,5 +1,20 @@
 # Benchmarks
 
+The competition-era results below are retained as historical evidence. Current development uses the checked-in [benchmark and oracle runners](docs/contributing/benchmarking.md). Raw post-competition records live in [benchmarks/results](benchmarks/results/).
+
+## Post-competition module extraction
+
+On 2026-10-28, the same runner measured the preserved pre-module binary and the extracted-library binary on Windows/NTFS. Both returned the same 10,000 paths on a generated 16,000-file corpus before timing. Each engine used two fresh-process warmups and ten samples, alternating execution order. Filesystem cache state was uncontrolled.
+
+| Branchcut build | Median | P90 | P95 |
+|---|---:|---:|---:|
+| Pre-module binary, source `28109b1` | 62.416 ms | 64.410 ms | 67.587 ms |
+| Extracted-library binary | 63.290 ms | 67.952 ms | 68.683 ms |
+
+The median difference is about 1.4%, and the distributions overlap. This run supports no performance-improvement claim. It also does not establish behavior on other workloads or operating systems. Raw samples, binary labels, hashes, dirty-tree state, oracle timings, and environment details are retained in [pre-module](benchmarks/results/2026-10-28-pre-modular.json) and [post-module](benchmarks/results/2026-10-28-post-modular.json) records. These snapshots preceded the follow-up parallel-error regression fixes.
+
+## Historical competition measurements
+
 These measurements compare Branchcut against the pinned `fast-glob@3.3.3` oracle. They are cold end-to-end measurements, not hot engine measurements.
 
 ## Environment

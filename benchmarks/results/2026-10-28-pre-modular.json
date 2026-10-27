@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "measurement": "fresh process per sample; includes startup, query, and count output; engine order alternates by iteration; filesystem cache state is uncontrolled",
+  "correctness": {
+    "passed": true,
+    "result_count": 10000,
+    "comparison": "complete sorted path sets before timing"
+  },
+  "git": {
+    "commit": "28109b1858a2b16ffdd5dc8b44fa7cb378673b04",
+    "source_tree_dirty": true,
+    "working_tree_dirty": true
+  },
+  "system": {
+    "os": "Windows_NT 10.0.26200 (x64)",
+    "cpu_model": "Intel(R) Core(TM) 5 210H",
+    "logical_cpu_count": 12,
+    "ram_bytes": 16788987904,
+    "node": "v25.2.1",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "filesystem": {
+      "name": "NTFS"
+    }
+  },
+  "fast_glob": {
+    "version": "3.3.3"
+  },
+  "branchcut": {
+    "binary_label": "pre-modular 28109b1",
+    "binary_name": "branchcut-pre-modular.exe",
+    "binary_sha256": "ff57ea56a7491ff955cc87798c1da87ecc457e6df3add7ac44b69ed03b400305",
+    "query": [
+      "branchcut",
+      "--cwd",
+      "$FIXTURE",
+      "--glob",
+      "**/*.rs",
+      "--glob",
+      "**/*.toml",
+      "--exclude",
+      "**/target/**",
+      "--exclude",
+      "**/node_modules/**",
+      "--type",
+      "file",
+      "--count",
+      "--stats"
+    ],
+    "stats_from_last_sample": {
+      "matches": 10000,
+      "directories_considered": 142,
+      "directories_opened": 102,
+      "directories_pruned": 40,
+      "entries_inspected": 10141,
+      "candidate_files": 10000,
+      "metadata_calls": 1,
+      "filesystem_errors": 0,
+      "branchcut_internal_elapsed_ms": 29.836
+    }
+  },
+  "fast_glob_query": {
+    "process": "node --eval <worker>",
+    "patterns": [
+      "**/*.rs",
+      "**/*.toml"
+    ],
+    "options": {
+      "cwd": "$FIXTURE",
+      "ignore": [
+        "**/target/**",
+        "**/node_modules/**"
+      ],
+      "dot": false,
+      "onlyFiles": true,
+      "unique": true,
+      "followSymbolicLinks": false
+    }
+  },
+  "corpus": {
+    "shape": "20 packages; per package: src/{250 .rs,250 .toml}, target/debug/150 .rs, node_modules/dep/150 .ts",
+    "total_files": 16000,
+    "expected_matches": 10000
+  },
+  "warmup_iterations": 2,
+  "measured_iterations": 10,
+  "output_mode": "count only for both tools; all matching paths enumerated; no path serialization during timing",
+  "results": {
+    "branchcut": {
+      "samples_ms": [
+        63.703,
+        63.061,
+        63.472,
+        55.082,
+        55.185,
+        52.101,
+        59.399,
+        62.616,
+        62.215,
+        70.765
+      ],
+      "median_ms": 62.4155,
+      "p90_ms": 64.4092,
+      "p95_ms": 67.58709999999999,
+      "mean_ms": 60.759899999999995,
+      "standard_deviation_ms": 5.1683990838556575,
+      "dispersion_percent": 8.506266606521171
+    },
+    "fast_glob": {
+      "samples_ms": [
+        275.843,
+        287.689,
+        269.877,
+        238.795,
+        206.202,
+        234.205,
+        217.791,
+        243.941,
+        244.781,
+        215.655
+      ],
+      "median_ms": 241.368,
+      "p90_ms": 277.0276,
+      "p95_ms": 282.3583,
+      "mean_ms": 243.47789999999995,
+      "standard_deviation_ms": 25.753224296969112,
+      "dispersion_percent": 10.5772327989395
+    }
+  }
+}
