@@ -7,14 +7,16 @@ on:
       - "Cargo.lock"
       - "Cargo.toml"
       - "scripts/**"
-      - "src/main.rs"
+      - "src/**"
+      - "tests/**"
   pull_request:
     paths:
       - ".github/workflows/install-matrix.yml"
       - "Cargo.lock"
       - "Cargo.toml"
       - "scripts/**"
-      - "src/main.rs"
+      - "src/**"
+      - "tests/**"
   workflow_dispatch:
 
 permissions:
@@ -46,6 +48,15 @@ jobs:
           rustc --version
           cargo --version
 
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Run unit and CLI regression tests
+        run: cargo test --locked
+
+      - name: Run Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+
       - name: Install, query, and uninstall on Windows
         if: runner.os == 'Windows'
         shell: pwsh
@@ -53,7 +64,7 @@ jobs:
           $installRoot = Join-Path $env:RUNNER_TEMP 'branchcut-install'
           .\scripts\install.ps1 -InstallRoot $installRoot
           $binary = Join-Path $installRoot 'bin\branchcut.exe'
-          $result = & $binary --cwd . --glob 'src/**/*.rs' --count
+          $result = & $binary --cwd . --glob 'src/main.rs' --count
           if ($LASTEXITCODE -ne 0 -or $result -ne '1') {
             throw "Installed query failed or returned an unexpected count: $result"
           }
@@ -69,7 +80,7 @@ jobs:
           install_root="$RUNNER_TEMP/branchcut-install"
           BRANCHCUT_INSTALL_ROOT="$install_root" sh scripts/install.sh
           binary="$install_root/bin/branchcut"
-          result=$("$binary" --cwd . --glob 'src/**/*.rs' --count)
+          result=$("$binary" --cwd . --glob 'src/main.rs' --count)
           if [ "$result" != '1' ]; then
             printf 'Installed query returned an unexpected count: %s\n' "$result" >&2
             exit 1

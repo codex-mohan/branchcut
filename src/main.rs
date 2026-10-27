@@ -226,14 +226,16 @@ impl Pattern {
 #[derive(Clone, Debug)]
 struct ProgramNode {
     edges: Vec<(Segment, usize)>,
+    globstar: bool,
     terminal: bool,
     subtree_terminal: bool,
 }
 
 impl ProgramNode {
-    fn new() -> Self {
+    fn new(globstar: bool) -> Self {
         Self {
             edges: Vec::new(),
+            globstar,
             terminal: false,
             subtree_terminal: false,
         }
@@ -247,7 +249,7 @@ struct PatternProgram {
 
 impl PatternProgram {
     fn compile(patterns: &[Pattern]) -> Self {
-        let mut nodes = vec![ProgramNode::new()];
+        let mut nodes = vec![ProgramNode::new(false)];
         for pattern in patterns {
             let mut node = 0;
             for segment in &pattern.segments {
@@ -259,7 +261,7 @@ impl PatternProgram {
                     child
                 } else {
                     let child = nodes.len();
-                    nodes.push(ProgramNode::new());
+                    nodes.push(ProgramNode::new(matches!(segment, Segment::GlobStar)));
                     nodes[node].edges.push((segment.clone(), child));
                     child
                 };
@@ -281,9 +283,12 @@ impl PatternProgram {
     fn advance(&self, states: &[usize], component: &OsStr) -> Vec<usize> {
         let mut next = Vec::with_capacity(states.len());
         for &node in states {
+            if self.nodes[node].globstar {
+                push_unique(&mut next, node);
+            }
             for (segment, child) in &self.nodes[node].edges {
                 match segment {
-                    Segment::GlobStar => push_unique(&mut next, node),
+                    Segment::GlobStar => push_unique(&mut next, *child),
                     Segment::Match(matcher) if matcher.matches(component) => {
                         push_unique(&mut next, *child);
                     }
@@ -311,7 +316,7 @@ impl PatternProgram {
     fn states_descendant_possible(&self, states: &[usize]) -> bool {
         states
             .iter()
-            .any(|node| !self.nodes[*node].edges.is_empty())
+            .any(|node| self.nodes[*node].globstar || !self.nodes[*node].edges.is_empty())
     }
 
     fn states_exclude_subtree(&self, states: &[usize]) -> bool {
@@ -468,8 +473,7 @@ fn with_os_bytes<T>(value: &OsStr, function: impl FnOnce(&[u8]) -> T) -> T {
 
 #[cfg(not(unix))]
 fn with_os_bytes<T>(value: &OsStr, function: impl FnOnce(&[u8]) -> T) -> T {
-    let text = value.to_string_lossy();
-    function(text.as_bytes())
+    function(value.as_encoded_bytes())
 }
 
 fn has_drive_prefix(pattern: &str) -> bool {
@@ -518,6 +522,7 @@ fn expand_braces(pattern: &str) -> Result<Vec<String>> {
 
 #[derive(Clone, Debug)]
 struct QueryPlan {
+    cwd: PathBuf,
     root: PathBuf,
     root_relative: PathBuf,
     positives: Vec<Pattern>,
@@ -563,6 +568,7 @@ impl QueryPlan {
         let positive_program = PatternProgram::compile(&positives);
         let negative_program = PatternProgram::compile(&negatives);
         Ok(Self {
+            cwd: options.cwd.clone(),
             root,
             root_relative,
             positives,
@@ -762,6 +768,62 @@ impl Stats {
     }
 }
 
+struct RootStart {
+    file_type: fs::FileType,
+    ignore_rules: Vec<IgnoreRule>,
+    ignored: bool,
+}
+
+// Reconstruct the context an ordinary walk would encounter before the narrowed
+// root. In particular, narrowing must not bypass ignore rules or symlinks.
+fn prepare_root(plan: &QueryPlan, stats: &mut Stats) -> io::Result<Option<RootStart>> {
+    if !plan.hidden && path_has_hidden_component(&plan.root_relative) {
+        return Ok(None);
+    }
+    let mut absolute = plan.cwd.clone();
+    let mut relative = PathBuf::new();
+    let mut ignore_rules = Vec::new();
+    let mut components = plan.root_relative.components().peekable();
+    loop {
+        stats.metadata_calls += 1;
+        let metadata = match fs::symlink_metadata(&absolute) {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(error),
+        };
+        let file_type = metadata.file_type();
+        let (ignored, may_reinclude) = ignored_by_rules(&ignore_rules, &relative);
+        if ignored && !(file_type.is_dir() && may_reinclude) {
+            if file_type.is_dir() {
+                stats.dirs_pruned_ignore += 1;
+            }
+            return Ok(None);
+        }
+        let Some(component) = components.next() else {
+            return Ok(Some(RootStart {
+                file_type,
+                ignore_rules,
+                ignored,
+            }));
+        };
+        if !file_type.is_dir() {
+            return Ok(None);
+        }
+        if plan.gitignore {
+            let path = absolute.join(".gitignore");
+            match load_ignore_rules(&path, &relative) {
+                Ok(rules) => ignore_rules.extend(rules),
+                Err(error) => {
+                    stats.errors += 1;
+                    eprintln!("branchcut: cannot read {}: {error}", path.display());
+                }
+            }
+        }
+        absolute.push(component.as_os_str());
+        relative.push(component.as_os_str());
+    }
+}
+
 struct Runner<'a, W: Write> {
     plan: &'a QueryPlan,
     writer: W,
@@ -782,16 +844,10 @@ impl<'a, W: Write> Runner<'a, W> {
     }
 
     fn run(&mut self) -> io::Result<()> {
-        if !self.plan.hidden && path_has_hidden_component(&self.plan.root_relative) {
-            return Ok(());
-        }
-        let root_metadata = match fs::symlink_metadata(&self.plan.root) {
-            Ok(metadata) => metadata,
-            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
-            Err(error) => return Err(error),
+        let Some(root) = prepare_root(self.plan, &mut self.stats)? else {
+            return self.finish();
         };
-        self.stats.metadata_calls += 1;
-        let root_type = root_metadata.file_type();
+        let root_type = root.file_type;
         let (positive_states, negative_states) = self.plan.root_states();
         let root_name = self.plan.root.file_name().unwrap_or_default();
         if !root_type.is_dir() {
@@ -811,6 +867,7 @@ impl<'a, W: Write> Runner<'a, W> {
             return self.finish();
         }
         if !self.plan.root_relative.as_os_str().is_empty()
+            && !root.ignored
             && self.plan.wanted_type == WantedType::Dir
             && self
                 .plan
@@ -823,7 +880,7 @@ impl<'a, W: Write> Runner<'a, W> {
             self.plan.root_relative.clone(),
             positive_states,
             negative_states,
-            Vec::new(),
+            root.ignore_rules,
         )?;
         self.finish()
     }
@@ -837,7 +894,11 @@ impl<'a, W: Write> Runner<'a, W> {
                 self.output.truncate(limit);
                 self.stopped = true;
             }
+            self.stats.matches = self.output.len() as u64;
             for path in self.output.clone() {
+                if let Some(command) = &self.plan.exec {
+                    run_command(command, &path, &self.plan.cwd)?;
+                }
                 self.write_match(&path)?;
             }
         }
@@ -973,18 +1034,21 @@ impl<'a, W: Write> Runner<'a, W> {
 
     fn emit(&mut self, path: PathBuf) -> io::Result<()> {
         self.stats.matches += 1;
-        if let Some(command) = &self.plan.exec {
-            run_command(command, &path)?;
+        if (!self.plan.sort || self.plan.count)
+            && let Some(command) = &self.plan.exec
+        {
+            run_command(command, &path, &self.plan.cwd)?;
         }
         if self.plan.sort && !self.plan.count {
             self.output.push(path);
         } else if !self.plan.sort && !self.plan.count {
             self.write_match(&path)?;
         }
-        if self
-            .plan
-            .limit
-            .is_some_and(|limit| self.stats.matches as usize >= limit)
+        if (!self.plan.sort || self.plan.count)
+            && self
+                .plan
+                .limit
+                .is_some_and(|limit| self.stats.matches as usize >= limit)
         {
             self.stopped = true;
         }
@@ -992,15 +1056,7 @@ impl<'a, W: Write> Runner<'a, W> {
     }
 
     fn write_match(&mut self, path: &Path) -> io::Result<()> {
-        if self.plan.json {
-            writeln!(
-                self.writer,
-                "{{\"path\":\"{}\"}}",
-                json_escape(&display_path(path))
-            )
-        } else {
-            writeln!(self.writer, "{}", display_path(path))
-        }
+        write_path(&mut self.writer, self.plan.json, path)
     }
 }
 #[derive(Clone)]
@@ -1306,15 +1362,15 @@ fn run_parallel(
     requested_threads: usize,
     strict: bool,
 ) -> io::Result<(Stats, Vec<PathBuf>)> {
-    let metadata = fs::symlink_metadata(&plan.root)?;
-    if !metadata.file_type().is_dir() {
+    let mut initial_stats = Stats::default();
+    let Some(start) = prepare_root(plan, &mut initial_stats)? else {
+        return Ok((initial_stats, Vec::new()));
+    };
+    if !start.file_type.is_dir() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
             "parallel traversal requires a directory root",
         ));
-    }
-    if !plan.hidden && path_has_hidden_component(&plan.root_relative) {
-        return Ok((Stats::default(), Vec::new()));
     }
     let worker_count = requested_threads.clamp(1, 64);
     let queue = Arc::new(ParallelQueue::new(worker_count));
@@ -1324,9 +1380,21 @@ fn run_parallel(
         relative: plan.root_relative.clone(),
         positive,
         negative,
-        ignore_rules: Vec::new(),
+        ignore_rules: start.ignore_rules,
     };
     let mut main_worker = ParallelWorker::new(0, plan, Arc::clone(&queue), strict);
+    if !plan.root_relative.as_os_str().is_empty()
+        && !start.ignored
+        && plan.wanted_type == WantedType::Dir
+        && plan.states_match(
+            &root.positive,
+            &root.negative,
+            plan.root.file_name().unwrap_or_default(),
+        )
+    {
+        main_worker.output.push(plan.root_relative.clone());
+        main_worker.stats.matches += 1;
+    }
     if let Err(error) = main_worker.process(root) {
         main_worker.stats.errors += 1;
         if strict {
@@ -1368,10 +1436,7 @@ fn run_parallel(
     if let Some(error) = queue.take_failure() {
         return Err(error);
     }
-    let mut stats = Stats {
-        metadata_calls: 1,
-        ..Stats::default()
-    };
+    let mut stats = initial_stats;
     let mut output = Vec::new();
     for result in results {
         stats.merge(result.stats);
@@ -1398,18 +1463,52 @@ fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
 
 fn write_path<W: Write>(writer: &mut W, json: bool, path: &Path) -> io::Result<()> {
     if json {
-        writeln!(
+        write!(
             writer,
-            "{{\"path\":\"{}\"}}",
+            "{{\"path\":\"{}\"",
             json_escape(&display_path(path))
-        )
+        )?;
+        if path.to_str().is_none() {
+            #[cfg(unix)]
+            {
+                write!(writer, ",\"path_bytes\":\"")?;
+                for byte in path.as_os_str().as_bytes() {
+                    write!(writer, "{byte:02x}")?;
+                }
+                write!(writer, "\"")?;
+            }
+            #[cfg(windows)]
+            {
+                use std::os::windows::ffi::OsStrExt;
+                write!(writer, ",\"path_utf16\":[")?;
+                for (index, unit) in path.as_os_str().encode_wide().enumerate() {
+                    if index != 0 {
+                        write!(writer, ",")?;
+                    }
+                    write!(writer, "{unit}")?;
+                }
+                write!(writer, "]")?;
+            }
+        }
+        writeln!(writer, "}}")
     } else {
-        writeln!(writer, "{}", display_path(path))
+        #[cfg(unix)]
+        writer.write_all(path.as_os_str().as_bytes())?;
+        #[cfg(not(unix))]
+        writer.write_all(display_path(path).as_bytes())?;
+        writer.write_all(b"\n")
     }
 }
 
 fn display_path(path: &Path) -> String {
-    path.to_string_lossy().replace('\\', "/")
+    #[cfg(windows)]
+    {
+        path.to_string_lossy().replace('\\', "/")
+    }
+    #[cfg(not(windows))]
+    {
+        path.to_string_lossy().into_owned()
+    }
 }
 
 fn json_escape(value: &str) -> String {
@@ -1437,11 +1536,18 @@ fn is_glob_pattern(value: &str) -> bool {
         .any(|byte| matches!(byte, b'*' | b'?' | b'[' | b'{' | b'!'))
 }
 
-fn run_command(command: &[String], path: &Path) -> io::Result<()> {
-    let rendered = display_path(path);
+fn run_command(command: &[String], path: &Path, cwd: &Path) -> io::Result<()> {
     let mut process = Command::new(&command[0]);
+    process.current_dir(cwd);
     for argument in &command[1..] {
-        process.arg(argument.replace("{}", &rendered));
+        let mut native = OsString::new();
+        let mut parts = argument.split("{}");
+        native.push(parts.next().unwrap_or_default());
+        for part in parts {
+            native.push(path.as_os_str());
+            native.push(part);
+        }
+        process.arg(native);
     }
     let status = process.status()?;
     if status.success() {
@@ -1449,7 +1555,7 @@ fn run_command(command: &[String], path: &Path) -> io::Result<()> {
     } else {
         Err(io::Error::other(format!(
             "command exited unsuccessfully for {}: {status}",
-            rendered
+            path.display()
         )))
     }
 }
@@ -1685,10 +1791,11 @@ fn print_stats(stats: &Stats, elapsed: Duration) {
     eprintln!("directories opened      {}", stats.dirs_opened);
     eprintln!(
         "directories pruned      {}",
-        stats.dirs_pruned_positive + stats.dirs_pruned_exclude
+        stats.dirs_pruned_positive + stats.dirs_pruned_exclude + stats.dirs_pruned_ignore
     );
     eprintln!("  positive              {}", stats.dirs_pruned_positive);
     eprintln!("  excluded              {}", stats.dirs_pruned_exclude);
+    eprintln!("  ignored               {}", stats.dirs_pruned_ignore);
     eprintln!("entries inspected       {}", stats.entries_seen);
     eprintln!("candidate files         {}", stats.candidate_files);
     eprintln!("metadata calls          {}", stats.metadata_calls);
@@ -1705,13 +1812,15 @@ fn real_main() -> Result<()> {
         print_explain(&plan, options.threads);
         return Ok(());
     }
-    if options.threads > 1 && plan.root.is_dir() {
-        if options.limit.is_some() || options.exec.is_some() {
-            return Err(AppError(
+    if options.threads > 1 && (options.limit.is_some() || options.exec.is_some()) {
+        return Err(AppError(
                 "--threads cannot be combined with --limit or --exec; use sequential mode for exact ordering"
                     .to_owned(),
             ));
-        }
+    }
+    if options.threads > 1
+        && fs::symlink_metadata(&plan.root).is_ok_and(|metadata| metadata.is_dir())
+    {
         let started = Instant::now();
         let (stats, mut output) = run_parallel(&plan, options.threads, options.strict)
             .map_err(|error| AppError(format!("parallel query failed: {error}")))?;
@@ -1884,6 +1993,99 @@ mod tests {
         assert!(program.nodes.len() < independent_nodes);
         assert!(program.states_match(&program_states(&program, Path::new("src/deep/lib.rs"))));
         assert!(program.states_match(&program_states(&program, Path::new("src/Cargo.toml"))));
+    }
+
+    #[test]
+    fn shared_globstar_does_not_leak_into_sibling_patterns() {
+        let cases: &[(&[&str], &[&str])] = &[
+            (
+                &["docs/**/__nonexistent__", "docs/cli.md"],
+                &[
+                    "docs/cli.md",
+                    "docs/reference/cli.md",
+                    "docs/reference/__nonexistent__",
+                    "docs/reference/deep/cli.md",
+                ],
+            ),
+            (
+                &["src/**/foo.rs", "src/components/bar.rs"],
+                &[
+                    "src/foo.rs",
+                    "src/deep/foo.rs",
+                    "src/components/bar.rs",
+                    "src/deep/components/bar.rs",
+                ],
+            ),
+            (
+                &["src/**/target/**", "src/other/fixed.rs"],
+                &[
+                    "src/target",
+                    "src/target/generated.rs",
+                    "src/deep/target/generated.rs",
+                    "src/other/fixed.rs",
+                    "src/deep/other/fixed.rs",
+                ],
+            ),
+            (
+                &["a/**/**/leaf", "a/fixed.txt"],
+                &["a/leaf", "a/deep/leaf", "a/fixed.txt", "a/deep/fixed.txt"],
+            ),
+            (
+                &["build/**", "build.rs"],
+                &["build", "build/file.rs", "build/deep/file.rs", "build.rs"],
+            ),
+        ];
+
+        for &(sources, paths) in cases {
+            let patterns = sources
+                .iter()
+                .map(|source| Pattern::compile((*source).to_owned()).unwrap())
+                .collect::<Vec<_>>();
+            let program = PatternProgram::compile(&patterns);
+
+            for path in paths {
+                let combined = program.states_match(&program_states(&program, Path::new(path)));
+                let independent = sources.iter().any(|source| matches(source, path));
+                assert_eq!(
+                    combined, independent,
+                    "shared patterns {sources:?} disagreed with independent matching for {path:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn mixed_globstar_query_does_not_return_or_exclude_sibling_matches() {
+        let fixture = Fixture::new();
+        fs::create_dir_all(fixture.0.join("docs/reference")).unwrap();
+        fs::write(fixture.0.join("docs/reference/cli.md"), b"").unwrap();
+
+        let positives = Options {
+            cwd: fixture.0.clone(),
+            positive: vec![
+                "docs/**/__nonexistent__".to_owned(),
+                "docs/cli.md".to_owned(),
+            ],
+            sort: true,
+            ..Options::default()
+        };
+        let plan = QueryPlan::compile(&positives).unwrap();
+        let mut runner = Runner::new(&plan, Vec::new());
+        runner.run().unwrap();
+        assert!(runner.output.is_empty());
+
+        let with_exclusions = Options {
+            positive: vec!["**/*.md".to_owned()],
+            negative: vec![
+                "docs/**/__nonexistent__".to_owned(),
+                "docs/cli.md".to_owned(),
+            ],
+            ..positives
+        };
+        let plan = QueryPlan::compile(&with_exclusions).unwrap();
+        let mut runner = Runner::new(&plan, Vec::new());
+        runner.run().unwrap();
+        assert_eq!(runner.output, [PathBuf::from("docs/reference/cli.md")]);
     }
 
     #[test]
