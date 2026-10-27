@@ -8,10 +8,9 @@
 
 <p align="center">
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-2024-DEA584?style=for-the-badge&amp;logo=rust&amp;logoColor=white&amp;labelColor=0A1220" alt="Rust 2024" /></a>
-  <img src="https://img.shields.io/badge/dependencies-zero-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="Zero dependencies" />
-  <img src="https://img.shields.io/badge/Rust_sources-one-3178C6?style=for-the-badge&amp;labelColor=0A1220" alt="Single Rust source file" />
-  <img src="https://img.shields.io/badge/Package_Killer-fast--glob-FF6B35?style=for-the-badge&amp;labelColor=0A1220" alt="Package Killer target: fast-glob" />
-  <img src="https://img.shields.io/badge/hot_benchmark-1.70%C3%97_faster-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="1.70 times faster than fast-glob in the published hot benchmark" />
+  <img src="https://img.shields.io/badge/core_crates-zero-00C853?style=for-the-badge&amp;labelColor=0A1220" alt="Zero third-party crates in the core engine" />
+  <img src="https://img.shields.io/badge/filesystem_query-engine-3178C6?style=for-the-badge&amp;labelColor=0A1220" alt="Filesystem query engine" />
+  <img src="https://img.shields.io/badge/historical_hot_result-1.70%C3%97-64748B?style=for-the-badge&amp;labelColor=0A1220" alt="Historical hackathon benchmark result; not a current general performance claim" />
   <a href="https://github.com/codex-mohan/branchcut/actions/workflows/install-matrix.yml"><img src="https://img.shields.io/github/actions/workflow/status/codex-mohan/branchcut/install-matrix.yml?style=for-the-badge&amp;label=installers&amp;labelColor=0A1220" alt="Windows, Linux, and macOS installer checks" /></a>
   <a href="https://github.com/codex-mohan/branchcut/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-BB86FC?style=for-the-badge&amp;labelColor=0A1220" alt="MIT license" /></a>
   <a href="https://github.com/codex-mohan/branchcut/stargazers"><img src="https://img.shields.io/github/stars/codex-mohan/branchcut?style=for-the-badge&amp;labelColor=0A1220&amp;color=FFD700" alt="GitHub stars" /></a>
@@ -20,9 +19,9 @@
 
 </div>
 
-Branchcut is a filesystem query engine built for the [Zero Dependency 72-Hour Hackathon](https://zerodepshack.com/). It replaces the work normally delegated to a glob package, directory walker, ignore engine, argument parser, JSON serializer, and worker-pool library with **one Rust source file and zero crates**.
+Branchcut is a native filesystem query engine that compiles globs, exclusions, ignore rules, and file filters into a traversal plan. Its goal is to find the intended paths while avoiding directories that cannot contribute to the result. The project began at the [Zero Dependency 72-Hour Hackathon](https://zerodepshack.com/); the preserved competition artifact is tagged `submission-v1`. Current development keeps the core free of third-party crates and provides a modular Rust library with a thin CLI.
 
-Its primary **Package Killer** target is [`fast-glob@3.3.3`](https://www.npmjs.com/package/fast-glob): a package averaging **461.4 million downloads per month** over the latest completed 12-month window. Branchcut does not imitate its JavaScript API. It replaces the real filesystem-query workflow with a native CLI that compiles globs, exclusions, ignore rules, filters, and termination into one traversal plan—and can avoid opening irrelevant directories in the first place.
+The competition targeted [`fast-glob@3.3.3`](https://www.npmjs.com/package/fast-glob) for its Package Killer bonus. Its API and result semantics remain distinct from Branchcut. The comparison receipt and benchmark results below document that competition snapshot; they are historical evidence, not a claim about current performance across workloads.
 
 ```bash
 branchcut \
@@ -33,19 +32,19 @@ branchcut \
   --stats
 ```
 
-> **The pitch:** `fast-glob` finds paths. Branchcut compiles the whole filesystem query so it can prune the search tree, stream results, stop early, and explain exactly what work it performed.
+> **The idea:** compile the query once, use its active states and filters to guide traversal, stream useful results, and show the filesystem work the query performed.
 
-**[Getting started](#getting-started) · [Package Killer case](#package-killer-fast-glob) · [Features](#what-ships-today) · [Quick start](#quick-start) · [Query planning](#query-planning) · [Benchmarks](#measured-results) · [Judge checklist](#60-second-judge-check) · [Limitations](#limitations)**
+**[Getting started](#getting-started) · [Features](#what-ships-today) · [Quick start](#quick-start) · [Query planning](#query-planning) · [Historical competition evidence](#hackathon-snapshot-package-killer-fast-glob) · [Limitations](#limitations)**
 
-## Package Killer: `fast-glob`
+## Hackathon snapshot: Package Killer (`fast-glob`)
 
 The hackathon defines the [Package Killer bonus](https://zerodepshack.com/#bonus-points) as cleanly reimplementing a package people actually install, documenting the replacement, and backing its popularity with real download numbers. Branchcut targets that definition directly.
 
-| | `fast-glob@3.3.3` | Branchcut `0.1.0` |
+| | `fast-glob@3.3.3` | Branchcut `0.1.0` submission |
 |---|---|---|
 | What ships | Node package and transitive dependency tree | One native executable |
 | Runtime dependencies | 17 transitive npm dependencies in the tested install | **0 crates** |
-| Source layout | Package implementation plus dependencies | **1 Rust file**: `src/main.rs` |
+| Source layout | Package implementation plus dependencies | **1 Rust file**: `src/main.rs` at the `submission-v1` tag |
 | Positive globs | Yes | Yes; compiled into a shared program |
 | Exclusions | Ignore matching | Matching plus safe subtree pruning |
 | Result delivery | Returns a collected array | Streams by default; sorting is opt-in |
@@ -53,20 +52,20 @@ The hackathon defines the [Package Killer bonus](https://zerodepshack.com/#bonus
 | Ignore files | Separate configuration/tooling | Hierarchical `.gitignore` support built in |
 | Diagnostics | No filesystem-work counters | `--explain` plan + `--stats` counters |
 | Commands | Separate runner needed | Shell-free `--exec` built in |
-| Published hot result | 37.528 ms | **22.079 ms — 1.70× faster** |
+| Published hot result | 37.528 ms | **22.079 ms — 1.70× in the recorded workload** |
 
-The benchmark row is one correctness-checked, 16,000-file Windows workload—not a universal claim. The complete protocol, versions, losses, and caveats are in [COMPARISON.md](COMPARISON.md).
+The table describes the tagged competition artifact and one correctness-checked, 16,000-file Windows workload. It is not a current, general performance claim. See [COMPARISON.md](COMPARISON.md), [BENCHMARKS.md](BENCHMARKS.md), and the [post-competition baseline](docs/evidence/post-competition-baseline.md) for the original protocol, versions, limitations, and provenance.
 
-### Adoption receipt
+### Competition-era adoption receipt
 
 | Package | Role in this project | 12-month downloads | Average downloads/month |
 |---|---|---:|---:|
 | [`fast-glob`](https://www.npmjs.com/package/fast-glob) | **Primary Package Killer target and correctness oracle** | 5,536,931,736 | **461,410,978** |
 | [`tinyglobby`](https://www.npmjs.com/package/tinyglobby) | Secondary modern Node benchmark opponent | 4,775,466,973 | 397,955,581 |
 
-Download figures use the official npm downloads API for **2025-09-01 through 2026-08-31**, divided by 12 and rounded to the nearest whole download: [`fast-glob` receipt](https://api.npmjs.org/downloads/point/2025-09-01:2026-08-31/fast-glob), [`tinyglobby` receipt](https://api.npmjs.org/downloads/point/2025-09-01:2026-08-31/tinyglobby). Retrieved 2026-09-02. npm does not publish a first-party package “rating,” so this README uses auditable adoption and benchmark data instead of inventing one.
+These download counts were retrieved on 2026-09-02 from the official npm downloads API for **2025-09-01 through 2026-08-31**. They document the competition research snapshot, not current package popularity: [`fast-glob` receipt](https://api.npmjs.org/downloads/point/2025-09-01:2026-08-31/fast-glob), [`tinyglobby` receipt](https://api.npmjs.org/downloads/point/2025-09-01:2026-08-31/tinyglobby).
 
-Branchcut also replaces work commonly split among Rust crates such as `globset`, `walkdir`, `ignore`, `regex`, `clap`, `rayon`, and `serde_json`. Those are **stdlib substitutions**, not claims of full API compatibility. The implementation-by-implementation ledger is in [STDLIB.md](STDLIB.md).
+The zero-crate engine uses Rust's standard library for matching, traversal, ignore rules, command execution, and JSON Lines. This does not claim full API compatibility with packages that solve those jobs. See the [standard-library ledger](STDLIB.md).
 
 ## Measured Results
 
@@ -145,13 +144,13 @@ The complete documentation lives in [`docs/`](docs/README.md). Those Markdown an
 - Hidden-path exclusion by default; directory symlinks are never followed
 - Hierarchical, opt-in `.gitignore` rules with ordered negation and conservative re-inclusion
 - Sequential streaming by default or bounded parallel traversal with `--threads`
-- Unix non-UTF-8 path support without forcing hot-path UTF-8 conversion
+- Native path matching without forcing hot-path UTF-8 conversion
 
 ### Output and control
 
-- Immediate `--first` and `--limit` termination in sequential streaming mode
+- Immediate `--first` and `--limit` termination for streaming selection
 - Optional deterministic sorting, count-only output, and JSON Lines
-- Shell-free command execution through `std::process::Command`
+- Shell-free, native-path command execution through `std::process::Command`
 - Strict or best-effort filesystem error handling
 - Real query-plan and traversal diagnostics through `--explain` and `--stats`
 
@@ -279,7 +278,7 @@ Plain positional text remains a literal filename search. Use `--glob` when combi
 | `--type file\|dir\|symlink` | Select the returned filesystem entry type |
 | `--cwd PATH` | Set the query root |
 | `--hidden` | Include hidden path components |
-| `--first`, `--limit N` | Stop sequential traversal after enough matches |
+| `--first`, `--limit N` | Stop unsorted sequential traversal after enough matches; with `--sort`, select from the full sorted set |
 | `--threads N` | Use bounded parallel traversal; `0` selects an available worker count |
 | `--sort` | Collect and sort globally before output |
 | `--count` | Print only the match count |
@@ -342,7 +341,7 @@ Sort globally, then apply the limit:
 branchcut --glob '**/*.rs' --sort --limit 100
 ```
 
-Sorting necessarily collects all matching paths before truncation. Without `--sort`, output streams and the limit stops traversal immediately.
+Sorting collects all matching paths before choosing the globally first results. Without `--sort`, output streams and the limit stops traversal immediately. Count mode can stop at the limit even if sorting was requested because path order does not affect the count.
 
 Run with bounded parallel traversal:
 
@@ -397,7 +396,7 @@ Run a command once per match without invoking a shell:
 branchcut --glob '**/*.tmp' --exec 'rm {}'
 ```
 
-`{}` is replaced with the displayed relative path. Shell pipelines, redirections, environment expansion, and shell built-ins are intentionally unsupported.
+`{}` is replaced with the native relative path under the `--cwd` root. The child command runs with that query root as its working directory. Shell pipelines, redirections, environment expansion, and shell built-ins are intentionally unsupported. With `--sort`, commands run for the final sorted result set; a sorted limit requires the full search first.
 
 ## Query Planning
 
@@ -444,7 +443,7 @@ filesystem errors
 elapsed
 ```
 
-The root is inspected once with `symlink_metadata`. Branchcut does not call per-entry `metadata()` for currently supported filters; `DirEntry::file_type()` supplies traversal type information.
+The query root and any literal-prefix ancestors are checked with `symlink_metadata` so traversal cannot skip ancestor symlinks or ignore rules. A fixed-prefix query can therefore record more than one root check. Branchcut avoids per-entry size/time metadata because those predicates are not currently implemented; `DirEntry::file_type()` supplies traversal type information.
 
 ### Runtime behavior
 
@@ -452,7 +451,7 @@ The root is inspected once with `symlink_metadata`. Branchcut does not call per-
 |---|---|
 | `--strict` I/O errors | Exit code 2 after traversal |
 | `--json` | One JSON object per matching path, streamed as JSON Lines |
-| `--exec COMMAND` | Runs the parsed command once per match; `{}` is replaced by the displayed path; no shell |
+| `--exec COMMAND` | Runs the parsed command once per match from the query root; `{}` is replaced with the native path; no shell |
 | `--gitignore` | Loads root and nested `.gitignore` files; later rules override earlier rules |
 | Invalid query | Exit code 2 |
 | Broken output pipe | Clean success, no panic |
@@ -460,20 +459,18 @@ The root is inspected once with `symlink_metadata`. Branchcut does not call per-
 
 ## Architecture
 
-The implementation lives entirely in `src/main.rs`:
+The implementation uses one Cargo package, a reusable Rust library, and a thin CLI. The library compiles queries and performs filesystem traversal. CLI modules parse options, present results, and launch explicitly requested commands:
 
 ```text
-CLI parser
-  -> brace expansion and pattern parser
-  -> compact Pattern IR
-  -> shared PatternProgram trie/NFA
-  -> QueryPlan
-  -> sequential state-carrying traversal
-       or bounded parallel task queues
-  -> streamed, counted, or globally sorted output
+CLI arguments
+  -> Query::compile()
+  -> immutable CompiledQuery
+  -> sequential visit callback or bounded parallel collection
+  -> SearchReport / collected matches
+  -> CLI output, sorting, or requested command execution
 ```
 
-Each traversal frame carries the active positive and negative program states. Child names advance those states once. Branchcut does not rebuild and rematch the full relative path against every pattern for every entry.
+The public API exposes `Query`, `CompiledQuery`, `EntryType`, `Stats`, `Visitor`, `Completion`, `SearchReport`, and filesystem-error results. `CompiledQuery::visit` streams native `Path` values through a callback and returns a report; the caller chooses how to display or process them. Pattern and traversal internals remain private.
 
 Common segment forms bypass the general wildcard matcher:
 
@@ -482,7 +479,7 @@ Common segment forms bypass the general wildcard matcher:
 | `literal` | byte equality |
 | `prefix*` | `starts_with` |
 | `*suffix` | `ends_with` |
-| general wildcard | allocation-free star backtracking |
+| general wildcard | token-based matching |
 
 ## Performance and Correctness Evidence
 
@@ -495,31 +492,33 @@ cargo clippy -- -D warnings
 cargo metadata --no-deps --format-version 1
 ```
 
-The inline Rust suite covers matcher syntax, globstar zero-component behavior, brace limits, shared compilation, planner pruning, hidden semantics, extension filtering, exclusions, literal simple search, sorted limits, broken pipes, deep traversal, parallel/sequential result equality, symlink policy on Unix, and non-UTF-8 Unix names.
+The Rust test suite in `src/tests.rs` covers matcher syntax, globstar zero-component behavior, brace limits, shared compilation, planner pruning, hidden semantics, extension filtering, exclusions, literal simple search, sorted limits, broken pipes, deep traversal, parallel/sequential result equality, symlink policy on Unix, and non-UTF-8 Unix names. `tests/library.rs` exercises the public library API.
 
 Published comparisons cover `fast-glob`, `tinyglobby`, and `zlob`, with workload definitions, correctness checks, environment details, raw measurements, and losses retained. See [COMPARISON.md](COMPARISON.md) for results and [BENCHMARKS.md](BENCHMARKS.md) for methodology.
 
-## How This Maps to Hackathon Judging
+## Historical Hackathon Judging Evidence
 
-The hackathon rates every submission on a five-point scale across [four weighted criteria](https://zerodepshack.com/#scoring). This table points to evidence; it is not a self-awarded score.
+The hackathon rated submissions on a five-point scale across [four weighted criteria](https://zerodepshack.com/#scoring). This section records how the tagged competition submission presented its evidence; it is not a current project scorecard.
 
 | Judging criterion | Weight | Branchcut evidence |
 |---|---:|---|
 | Functionality & Usefulness | 35% | Working CLI; globs, exclusions, ignore rules, type/extension filters, streaming, early stop, JSONL, exec, and parallel traversal |
 | Zero-Dependency Craft | 30% | Empty `[dependencies]`; hand-written matcher/planner/walker; detailed [STDLIB.md](STDLIB.md) ledger |
-| Code Quality & Idiom | 25% | One readable Rust source; explicit errors; no unsafe code; bounded concurrency; 19 passing tests on the recorded Windows run |
+| Code Quality & Idiom | 25% | The tagged submission used one Rust source; explicit errors; no unsafe code; bounded concurrency; passing tests on the recorded Windows run |
 | Innovation | 10% | Compiles the whole query into traversal state so directories can be rejected before `read_dir` |
 
-**Primary bonus claim — Package Killer (+3):** `fast-glob@3.3.3` is the named target, its npm adoption is documented above, overlapping result sets are checked before timing, and limitations are explicit. Branchcut also meets the mechanical **Single File** condition: the only `.rs` file is `src/main.rs`.
+**Primary bonus claim — Package Killer (+3):** the `submission-v1` artifact targeted `fast-glob@3.3.3`; its adoption and benchmark evidence are preserved above and in the linked reports.
 
-## 60-Second Judge Check
+## Rechecking the Historical Submission
+
+The one-file bonus applies to the preserved competition revision, not current source. Inspect it without moving the working tree:
 
 ```powershell
 # 0 third-party crates
 cargo metadata --no-deps --format-version 1
 
-# 1 Rust source file
-Get-ChildItem -Recurse -Filter *.rs | Select-Object -ExpandProperty FullName
+# Inspect the preserved competition source
+git show submission-v1:src/main.rs
 
 # Tests and optimized build
 cargo test
@@ -540,7 +539,7 @@ cargo build --release
   --stats
 ```
 
-Expected dependency result: `"dependencies":[]`. Expected source result: only `src/main.rs`. For the complete verification path, use [JUDGE.md](JUDGE.md).
+The current source has multiple modules by design. For the competition judging checklist, see [JUDGE.md](JUDGE.md).
 
 ## Limitations
 
@@ -553,8 +552,9 @@ Expected dependency result: `"dependencies":[]`. Expected source result: only `s
 - Backslash escaping is not a portable pattern feature; use `/` as the pattern separator.
 - Negative patterns passed through `--glob` are not interpreted as exclusions; use `--exclude`.
 - Matching is byte-oriented. On UTF-8 platforms, `?` consumes one encoded byte, not one Unicode scalar or grapheme.
-- Unix non-UTF-8 names are preserved and do not panic. Windows matching currently uses a lossy UTF-16-to-UTF-8 view.
-- Parallel traversal is available with `--threads`; it buffers results and does not support `--limit` or `--exec` because those require exact global ordering.
+- On Unix, native path bytes are preserved in plain output and represented by `path_bytes` in JSON when the complete relative path is not UTF-8. On Windows, matching uses `OsStr::as_encoded_bytes`; JSON adds `path_utf16` when a path is not UTF-8-representable. Human-readable Windows output can replace unpaired UTF-16 surrogates.
+- Sequential traversal is recursive; tests cover a 64-component tree and do not guarantee safe traversal of arbitrarily deep trees.
+- Parallel traversal is available with `--threads`; it buffers results and does not support `--limit` or `--exec`.
 - Filesystem iteration order is platform- and filesystem-dependent unless `--sort` is selected.
 - Permission behavior varies by platform and account privileges.
 - Published performance claims are workload-specific, not universal.
@@ -569,7 +569,7 @@ See [COMPATIBILITY.md](COMPATIBILITY.md) for the exact supported surface.
 [dependencies]
 ```
 
-See [deps-proof.txt](deps-proof.txt) for recorded Cargo metadata and source-file proof. [STDLIB.md](STDLIB.md) maps each implemented standard-library component to the crate it replaces.
+See [deps-proof.txt](deps-proof.txt) for the dependency-graph check. [STDLIB.md](STDLIB.md) describes the standard-library components used by the core.
 
 
 ## Future Enhancements

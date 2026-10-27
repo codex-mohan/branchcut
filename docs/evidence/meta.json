@@ -1,5 +1,5 @@
 {
   "title": "Evidence",
   "icon": "ChartNoAxesCombined",
-  "pages": ["benchmarks", "correctness", "stdlib"]
+  "pages": ["benchmarks", "correctness", "stdlib", "post-competition-baseline"]
 }

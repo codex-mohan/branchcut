@@ -17,7 +17,7 @@ Branchcut intentionally implements a focused filesystem-query surface. It is not
 - repeatable extension filters;
 - hidden-path control and hierarchical `.gitignore`;
 - sequential streaming and early stop;
-- optional sorting, counting, JSON Lines, and command execution;
+- optional global sorting, counting, JSON Lines, and command execution;
 - bounded parallel traversal;
 - planner explanations and real traversal statistics.
 
@@ -29,8 +29,16 @@ Branchcut intentionally implements a focused filesystem-query surface. It is not
 - captures and watch mode;
 - case-insensitive or smart-case matching;
 - every advanced Git ignore escaping edge case;
-- complete Windows byte preservation;
+- Unicode scalar or grapheme matching (wildcard tokens operate on bytes in the platform's encoded representation);
 - full API and option parity with `fast-glob`, tinyglobby, or zlob.
+
+## Paths, sorting, and commands
+
+- Unix JSON Lines adds `path_bytes` (lowercase hexadecimal) when the complete relative path is not UTF-8. Windows JSON Lines adds `path_utf16` (UTF-16 code units) when a path cannot be represented as UTF-8. The ordinary `path` field is for display in those cases.
+- Unix plain output writes native bytes followed by a newline; filenames containing newlines are ambiguous in this format.
+- `--sort --limit N` returns the first N results from the global sorted match set, so it must finish traversal before output. Count-only queries can stop after reaching the count limit.
+- `--exec` substitutes native path values and runs with the query root as its working directory. Sorted execution processes the final sorted, limited result set.
+- The sequential walker is recursive. Tests cover a 64-component tree, not unlimited depth.
 
 ## Comparison principle
 

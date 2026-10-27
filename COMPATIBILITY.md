@@ -21,8 +21,8 @@ Branchcut intentionally supports a focused filesystem-query surface rather than 
 | `-e` | Supported | Case-sensitive suffix filter |
 | `--hidden` | Supported | Hidden components excluded by default |
 | `--cwd` | Supported | Relative output paths |
-| `--first` / `--limit` | Supported | Immediate stop in streaming mode |
-| `--sort` | Supported | Collects all results, sorts globally, then truncates |
+| `--first` / `--limit` | Supported | Stops after enough discovered matches when streaming |
+| `--sort` | Supported | Sorts the complete result set globally; a sorted limit selects from that full ordering |
 | `--stats` | Supported | Real traversal counters |
 | `--explain` | Supported | Planner decisions and strategy |
 | Positional pattern | Supported | Arguments containing glob syntax are treated as glob patterns |
@@ -31,8 +31,8 @@ Branchcut intentionally supports a focused filesystem-query surface rather than 
 | `--count` | Supported | Emits the match count without path serialization |
 | `--gitignore` | Supported | Root and nested rules, ordered overrides, directory rules, and conservative re-inclusion traversal |
 | `--json` | Supported | Streaming JSON Lines output |
-| `--exec` | Supported | Shell-free command templates with `{}` substitution |
-| `--threads N` | Supported | Bounded parallel traversal; buffered output; incompatible with `--limit` and `--exec` |
+| `--exec` | Supported | Shell-free command templates; native path substitution; child cwd is the query root |
+| `--threads N` | Supported | Bounded parallel traversal with buffered results; incompatible with `--limit` and `--exec` |
 
 ## Deliberate gaps
 
@@ -43,6 +43,8 @@ Branchcut intentionally supports a focused filesystem-query surface rather than 
 - No captures, metadata predicates, or watch mode.
 - No case-insensitive or smart-case mode.
 - Wildcard matching is byte-oriented rather than Unicode-scalar-oriented.
-- Windows paths with characters not representable by the current lossy matching view are not fully byte-preserving.
+- Matching is byte-oriented on native platform encodings, not Unicode-scalar or grapheme-oriented. On Windows the matcher uses `OsStr::as_encoded_bytes` rather than a lossy UTF-16 conversion.
+- Human-readable Windows output can replace unpaired UTF-16 surrogates. JSON Lines includes `path_utf16` for a non-UTF-8-encodable path; Unix JSON Lines includes `path_bytes` as lowercase hex. In both cases the companion field is the lossless representation.
+- Newline-delimited plain output cannot unambiguously represent a filename containing a newline. Use JSON Lines when Unix paths may contain non-UTF-8 bytes or control characters.
 
 Compatibility claims apply only to the supported table and are not a claim of drop-in replacement behavior.

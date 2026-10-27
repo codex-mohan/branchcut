@@ -1,23 +1,45 @@
-Branchcut dependency proof
-===========================
+Branchcut core dependency proof
+==============================
+
+Verification snapshot: modular post-competition source, 2026-10-28.
 
 Command:
-  cargo metadata --no-deps --format-version 1
+  cargo metadata --locked --format-version 1
 
-Observed package dependency field:
-  "name": "branchcut"
-  "dependencies": []
+Observed package:
+  name: branchcut
+  version: 0.1.0
+  dependencies: []
+
+Command:
+  cargo tree --locked -e normal
+
+Observed production dependency tree:
+  branchcut v0.1.0
 
 Manifest:
   [dependencies]
+  (empty)
 
-Source-file command:
-  file extension scan -> src/main.rs
-
-Observed source file:
+Rust source inventory (`rg --files src -g '*.rs'`):
+  src/cli/args.rs
+  src/cli/exec.rs
+  src/cli/mod.rs
+  src/cli/output.rs
+  src/error.rs
+  src/filters.rs
+  src/ignore.rs
+  src/lib.rs
   src/main.rs
+  src/path.rs
+  src/pattern/mod.rs
+  src/pattern/parse.rs
+  src/pattern/program.rs
+  src/query.rs
+  src/stats.rs
+  src/tests.rs
+  src/walk/mod.rs
+  src/walk/parallel.rs
+  src/walk/sequential.rs
 
-Release command:
-  cargo build --release
-
-No third-party runtime package is declared, linked, vendored, or invoked by the binary.
+No third-party crate is part of the Cargo production dependency graph. The CLI's explicit `--exec` option can launch a user-selected command through `std::process::Command`; that child process is not a Branchcut implementation dependency. Development oracle tools are run separately and are not linked into the binary.

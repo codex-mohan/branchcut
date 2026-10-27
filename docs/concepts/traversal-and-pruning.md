@@ -37,8 +37,8 @@ Ignore rules influence traversal before opening children. Re-inclusion makes the
 
 ## Metadata avoidance
 
-Branchcut uses `DirEntry::file_type()` for entry classification. Current query features do not request size or modification-time metadata, so the engine avoids per-entry `metadata()` calls. One root metadata check establishes the starting path.
+Branchcut uses `DirEntry::file_type()` for entry classification. Current query features do not request size or modification-time metadata, so the engine avoids per-entry metadata calls for those predicates. The traversal `metadata_calls` statistic counts root-prefix checks used to validate each path component and avoid traversing through symlinks. A pattern with an empty literal prefix generally checks only the query root; a narrowed prefix can check several ancestors. CLI parallel-mode selection also probes the planned root before traversal, and that dispatch probe is not part of the traversal counter.
 
 ## Stack behavior
 
-Sequential traversal is iterative and depth-first. Deep trees therefore do not consume the Rust call stack. The test suite includes a deep-tree regression.
+Sequential traversal is recursive and depth-first. Its depth therefore uses the Rust call stack. The regression suite exercises a 64-component tree; that test does not guarantee safe traversal of arbitrarily deep filesystem trees. An explicit-stack traversal is a future robustness improvement if real workloads warrant it.

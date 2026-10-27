@@ -20,13 +20,14 @@ query
           └── node_modules/ ─────────────────────╳ cut
 ```
 
-Branchcut is a single-file, zero-crate Rust filesystem query engine. It compiles the whole query into one traversal plan, then avoids opening directories that cannot contribute to the result.
+Branchcut is a modular, zero-crate Rust filesystem query engine. Its reusable library compiles the whole query into one traversal plan, then avoids opening directories that cannot contribute to the result. The preserved hackathon submission was single-file; current development is not constrained to that layout.
 
 <Cards>
   <Card title="Quick start" description="Build Branchcut and run the first useful query." href="/docs/getting-started/quick-start" />
   <Card title="Query planning" description="See how patterns become traversal decisions." href="/docs/guides/query-planning" />
   <Card title="CLI reference" description="Every option, interaction, and constraint." href="/docs/reference/cli" />
   <Card title="Evidence" description="Correctness, benchmark methodology, and honest limitations." href="/docs/evidence/benchmarks" />
+  <Card title="Post-competition baseline" description="Starting revision, verified local checks, and inherited benchmark limits." href="/docs/evidence/post-competition-baseline" />
 </Cards>
 
 ## The premise
