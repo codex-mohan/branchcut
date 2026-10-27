@@ -20,7 +20,9 @@ cargo clippy -- -D warnings
 cargo metadata --no-deps --format-version 1
 ```
 
-Confirm that `Cargo.toml` has an empty dependency table and that `src/main.rs` is the only Rust implementation file.
+The core library and ordinary CLI must not depend on third-party crates. Confirm the production dependency graph with `cargo tree -e normal` and inspect `Cargo.toml`. Optional integrations and development tools must be clearly separated from the core.
+
+The one-source-file requirement belongs to the completed competition artifact. New Rust modules are expected in current development.
 
 ## Real queries
 
@@ -35,6 +37,8 @@ branchcut --glob '**/*.rs' --json
 branchcut --glob '**/*.rs' --threads 4 --count --stats
 ```
 
+Run focused tests and the supported-semantics differential harness for query behavior changes. Check sequential and parallel results where applicable. For path-sensitive changes, run platform-specific tests on each supported operating system through CI.
+
 ## Documentation site gates
 
 From `website/`:
@@ -45,4 +49,4 @@ npm run types:check
 npm run build
 ```
 
-The build automatically synchronizes canonical files from root `docs/` into generated Fumadocs content.
+The build automatically synchronizes canonical files from root `docs/` into generated Fumadocs content. Run these site checks when editing documentation or website sources.

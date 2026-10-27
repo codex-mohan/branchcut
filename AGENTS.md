@@ -1,5 +1,48 @@
 # AGENTS.md — Branchcut
 
+## Post-competition instructions (take precedence over the historical hackathon brief below)
+
+The Zero Dependency 72-Hour Hackathon is over. Branchcut is now being developed as a maintainable filesystem query tool for everyday search, development, and power-user workflows. Preserve the tagged competition submission and its history as evidence; do not rewrite its tag or retroactively change its constraints.
+
+The competition sections below remain historical context for the submission. Where they conflict with this section, this section governs current work.
+
+### Current product and architecture rules
+
+- Keep the core engine and ordinary CLI free of third-party crates. Optional, separately built integrations may use dependencies when a concrete user need justifies them; keep integration dependencies out of the core dependency graph.
+- End the single-source-file constraint. Use one Cargo package initially, with a library crate and a thin binary. Introduce modules according to stable responsibilities rather than splitting code mechanically.
+- Keep query compilation, matching, traversal, filtering, ignores, paths, and execution results independent from CLI parsing and presentation. Preserve streaming behavior and metadata avoidance when a query does not request metadata.
+- Preserve the simple filename-search experience while adding composable filters for people who need them.
+- Correctness and documented semantics come before new syntax or performance claims. Every confirmed regression needs a test. Benchmark every performance claim and retain representative losing results.
+- Do not copy third-party implementations. External projects may still serve as documented behavioral or benchmark references.
+- Do not expand into content search, indexing, a GUI, or other products until user evidence supports that scope.
+
+### Post-competition sequence
+
+1. Record a reproducible baseline and confirmed defects while preserving the competition artifact.
+2. Fix matching, sorting, ignore, path, command-execution, and error-semantics correctness. Strengthen cross-platform test gates.
+3. Extract the engine into a library and focused modules without combining the refactor with new query behavior.
+4. Add high-value everyday filters such as size, modification time, case mode, and depth, with explicit semantics and no unnecessary metadata calls.
+5. Add useful explanations and reusable project queries after the query model is stable.
+6. Improve selected-file workflows, including lossless pipeline output and well-defined command execution.
+7. Optimize measured bottlenecks on reproducible representative workloads.
+8. Improve distribution, examples, release quality, and contributor onboarding.
+
+The current implementation effort is limited to phases 1–3 in [ROADMAP.md](ROADMAP.md). Later phases are planned, not claims about shipped behavior. Keep [COMPATIBILITY.md](COMPATIBILITY.md) and user-facing documentation aligned with implementation status.
+
+### Current implementation gates
+
+Run before implementation commits:
+
+```bash
+cargo fmt -- --check
+cargo test --locked
+cargo clippy --locked --all-targets -- -D warnings
+```
+
+When a change touches matching, traversal, exclusions, ignore rules, output paths, or command execution, run its focused regression tests and the supported-semantics differential suite. Run the cross-platform CI matrix before declaring a platform-sensitive fix complete. Record any environment limitation plainly.
+
+Confirm the core remains free of third-party dependencies with `Cargo.toml` and `cargo tree -e normal`; development-only tools and separately built optional integrations must be identified as such. Keep benchmark methods and raw samples in the repository. Do not edit, stage, or remove unrelated user files.
+
 > **Branchcut — compile the query, cut the tree.**
 >
 > Zero-dependency, single-source-file Rust filesystem query engine for the Zero Dependency 72-Hour Hackathon.
