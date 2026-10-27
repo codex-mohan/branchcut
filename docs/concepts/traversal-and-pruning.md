@@ -37,7 +37,7 @@ Ignore rules influence traversal before opening children. Re-inclusion makes the
 
 ## Metadata avoidance
 
-Branchcut uses `DirEntry::file_type()` for entry classification. Current query features do not request size or modification-time metadata, so the engine avoids per-entry metadata calls for those predicates. The traversal `metadata_calls` statistic counts root-prefix checks used to validate each path component and avoid traversing through symlinks. A pattern with an empty literal prefix generally checks only the query root; a narrowed prefix can check several ancestors. CLI parallel-mode selection also probes the planned root before traversal, and that dispatch probe is not part of the traversal counter.
+Branchcut uses `DirEntry::file_type()` for entry classification. Current query features do not request size or modification-time metadata, so the engine avoids per-entry metadata calls for those predicates. The traversal `metadata_calls` statistic counts root-prefix checks used to validate each path component and avoid traversing through symlinks. A pattern with an empty literal prefix generally checks only the query root; a narrowed prefix can check several ancestors. Both sequential and parallel queries use this same root preparation.
 
 ## Stack behavior
 

@@ -120,6 +120,7 @@ pub(crate) fn prepare_root<V: Visitor>(
         let (ignored, may_reinclude) = ignored_by_rules(&ignore_rules, &relative);
         if ignored && !(file_type.is_dir() && may_reinclude) {
             if file_type.is_dir() {
+                stats.dirs_seen += 1;
                 stats.dirs_pruned_ignore += 1;
             }
             return Ok(None);

@@ -1,4 +1,4 @@
-use super::{CollectedMatches, ErrorCollector, FilesystemError, Visitor, prepare_root, report};
+use super::{CollectedMatches, ErrorCollector, FilesystemError, prepare_root, report};
 use crate::ignore::{IgnoreRule, ignored_by_rules, load_ignore_rules};
 use crate::path::is_hidden;
 use crate::{CompiledQuery, EntryType, Stats};
@@ -191,16 +191,8 @@ impl<'a> ParallelWorker<'a> {
 
     pub(crate) fn run(mut self) -> ParallelWorkerResult {
         while let Some(task) = self.queue.pop(self.id) {
-            let path = task.absolute.clone();
             if let Err(error) = self.process(task) {
-                self.stats.errors += 1;
-                self.errors.push(FilesystemError {
-                    path,
-                    error: io::Error::new(error.kind(), error.to_string()),
-                });
-                if self.strict {
-                    self.queue.cancel(error);
-                }
+                self.queue.cancel(error);
             }
             self.queue.task_done();
         }
@@ -209,6 +201,21 @@ impl<'a> ParallelWorker<'a> {
             output: self.output,
             errors: self.errors,
         }
+    }
+
+    fn record_error(&mut self, path: &std::path::Path, error: io::Error) -> io::Result<()> {
+        self.stats.errors += 1;
+        if self.strict {
+            return Err(io::Error::new(
+                error.kind(),
+                format!("{}: {error}", path.display()),
+            ));
+        }
+        self.errors.push(FilesystemError {
+            path: path.to_owned(),
+            error,
+        });
+        Ok(())
     }
 
     pub(crate) fn process(&mut self, task: ParallelTask) -> io::Result<()> {
@@ -234,16 +241,24 @@ impl<'a> ParallelWorker<'a> {
         }
         let mut ignore_rules = task.ignore_rules.clone();
         if self.plan.gitignore {
-            ignore_rules.extend(load_ignore_rules(
-                &task.absolute.join(".gitignore"),
-                &task.relative,
-            )?);
+            let path = task.absolute.join(".gitignore");
+            match load_ignore_rules(&path, &task.relative) {
+                Ok(rules) => ignore_rules.extend(rules),
+                Err(error) => self.record_error(&path, error)?,
+            }
         }
         self.entries.clear();
-        for entry in fs::read_dir(&task.absolute)? {
-            self.entries.push(entry?);
-        }
+        let entries = match fs::read_dir(&task.absolute) {
+            Ok(entries) => entries,
+            Err(error) => return self.record_error(&task.absolute, error),
+        };
         self.stats.dirs_opened += 1;
+        for entry in entries {
+            match entry {
+                Ok(entry) => self.entries.push(entry),
+                Err(error) => self.record_error(&task.absolute, error)?,
+            }
+        }
         self.stats.entries_seen += self.entries.len() as u64;
         let entries = std::mem::take(&mut self.entries);
         for entry in entries {
@@ -266,7 +281,10 @@ impl<'a> ParallelWorker<'a> {
         if !self.plan.hidden && is_hidden(&name) {
             return Ok(());
         }
-        let file_type = entry.file_type()?;
+        let file_type = match entry.file_type() {
+            Ok(file_type) => file_type,
+            Err(error) => return self.record_error(&entry.path(), error),
+        };
         let relative = parent.relative.join(&name);
         if self.plan.gitignore {
             let (ignored, may_reinclude) = ignored_by_rules(ignore_rules, &relative);
@@ -328,7 +346,14 @@ pub(crate) fn run_parallel(
 ) -> io::Result<CollectedMatches> {
     let mut initial_stats = Stats::default();
     let mut errors = ErrorCollector::default();
-    let Some(start) = prepare_root(plan, &mut initial_stats, &mut errors)? else {
+    let start = prepare_root(plan, &mut initial_stats, &mut errors)?;
+    if strict && let Some(error) = errors.0.first() {
+        return Err(io::Error::new(
+            error.error.kind(),
+            format!("{}: {}", error.path.display(), error.error),
+        ));
+    }
+    let Some(start) = start else {
         return Ok(CollectedMatches {
             paths: Vec::new(),
             report: report(initial_stats, false),
@@ -336,10 +361,26 @@ pub(crate) fn run_parallel(
         });
     };
     if !start.file_type.is_dir() {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "parallel traversal requires a directory root",
-        ));
+        let (positive, negative) = plan.root_states();
+        let name = plan.root.file_name().unwrap_or_default();
+        let type_matches = match plan.wanted_type {
+            EntryType::File => start.file_type.is_file(),
+            EntryType::Dir => false,
+            EntryType::Symlink => start.file_type.is_symlink(),
+        };
+        let mut paths = Vec::new();
+        if type_matches
+            && plan.states_match(&positive, &negative, name)
+            && plan.extension_matches(name)
+        {
+            paths.push(plan.root_relative.clone());
+            initial_stats.matches = 1;
+        }
+        return Ok(CollectedMatches {
+            paths,
+            report: report(initial_stats, false),
+            errors: errors.0,
+        });
     }
     let worker_count = requested_threads.clamp(1, 64);
     let queue = Arc::new(ParallelQueue::new(worker_count));
@@ -364,26 +405,16 @@ pub(crate) fn run_parallel(
         main_worker.output.push(plan.root_relative.clone());
         main_worker.stats.matches += 1;
     }
-    let root_path = root.absolute.clone();
     if let Err(error) = main_worker.process(root) {
-        main_worker.stats.errors += 1;
-        errors.error(&root_path, &error)?;
-        if strict {
-            queue.cancel(error);
-        }
+        queue.cancel(error);
     }
     while worker_count > 1 && queue.queued_count() <= 2 && !queue.cancelled.load(Ordering::Acquire)
     {
         let Some(task) = queue.try_pop(0) else {
             break;
         };
-        let task_path = task.absolute.clone();
         if let Err(error) = main_worker.process(task) {
-            main_worker.stats.errors += 1;
-            errors.error(&task_path, &error)?;
-            if strict {
-                queue.cancel(error);
-            }
+            queue.cancel(error);
         }
         queue.task_done();
     }

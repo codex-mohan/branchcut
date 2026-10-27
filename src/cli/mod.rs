@@ -15,9 +15,7 @@ pub(crate) fn execute<W: Write>(
     options: &Options,
     sink: &mut Output<W>,
 ) -> io::Result<Stats> {
-    let mut stats = if options.threads > 1
-        && std::fs::symlink_metadata(&plan.root).is_ok_and(|metadata| metadata.is_dir())
-    {
+    let mut stats = if options.threads > 1 {
         let collected = plan.collect_parallel(options.threads.min(64), options.strict)?;
         for error in &collected.errors {
             sink.error(&error.path, &error.error)?;

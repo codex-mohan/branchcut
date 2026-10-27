@@ -229,3 +229,49 @@ fn narrowed_query_reports_invalid_ancestor_gitignore_and_incomplete_status() {
     assert_eq!(parallel.errors.len(), 1);
     assert_eq!(parallel.errors[0].path, fixture.0.join(".gitignore"));
 }
+
+#[test]
+fn parallel_best_effort_keeps_matches_after_an_ignore_file_error() {
+    let fixture = Fixture::new();
+    fs::create_dir(fixture.0.join(".gitignore")).unwrap();
+    fixture.write("src/file.rs");
+    let query = Query {
+        gitignore: true,
+        ..fixture.query(&["**/*.rs"])
+    }
+    .compile()
+    .unwrap();
+    let mut visitor = RecordingVisitor::default();
+    query.visit(&mut visitor).unwrap();
+    let parallel = query.collect_parallel(2, false).unwrap();
+    assert_eq!(parallel.paths, visitor.paths);
+    assert_eq!(parallel.errors.len(), 1);
+    assert_eq!(parallel.errors[0].path, fixture.0.join(".gitignore"));
+    assert_eq!(parallel.report.completion, Completion::Incomplete);
+}
+
+#[test]
+fn parallel_strict_mode_rejects_ancestor_ignore_errors() {
+    let fixture = Fixture::new();
+    fs::create_dir(fixture.0.join(".gitignore")).unwrap();
+    fixture.write("src/file.rs");
+    let query = Query {
+        gitignore: true,
+        ..fixture.query(&["src/**/*.rs"])
+    }
+    .compile()
+    .unwrap();
+    assert!(query.collect_parallel(2, true).is_err());
+}
+
+#[test]
+fn parallel_collection_handles_literal_files_and_missing_roots() {
+    let fixture = Fixture::new();
+    fixture.write("src/file.rs");
+    for pattern in ["src/file.rs", "missing.rs"] {
+        let query = fixture.query(&[pattern]).compile().unwrap();
+        let parallel = query.collect_parallel(2, false).unwrap();
+        assert_eq!(parallel.paths, stream(&query));
+        assert_eq!(parallel.report.completion, Completion::Complete);
+    }
+}
