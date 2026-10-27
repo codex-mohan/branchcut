@@ -1,5 +1,5 @@
 {
   "title": "How it works",
   "icon": "Network",
-  "pages": ["query-compiler", "traversal-and-pruning", "parallelism", "path-semantics"]
+  "pages": ["library-and-modules", "query-compiler", "traversal-and-pruning", "parallelism", "path-semantics"]
 }

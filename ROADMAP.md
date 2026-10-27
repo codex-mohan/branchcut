@@ -6,7 +6,7 @@ This roadmap is a plan, not a statement that listed features are implemented. Th
 
 ## Phase 1 — Establish and verify the baseline
 
-**Status: in progress.** The starting revision and Windows source/build/test snapshot are recorded. Reproducible benchmark tooling is still being added.
+**Status: implemented and locally verified.** The starting revision and original submission tag are recorded. Deterministic oracle and benchmark runners and raw before/after records are checked in.
 
 - Preserve the competition tag and record the exact starting revision.
 - Capture current compiler, platform, build, test, and benchmark context.
@@ -17,7 +17,7 @@ This roadmap is a plan, not a statement that listed features are implemented. Th
 
 ## Phase 2 — Make queries and paths trustworthy
 
-**Status: in progress.**
+**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** Matching, sorted limits, ancestor ignores, native paths, command roots, and parallel best-effort/strict error handling have regression coverage. Sequential traversal remains recursive; its tested depth and limitations are documented honestly.
 
 - Add regressions and fix shared-pattern globstar state leakage.
 - Make `--sort --limit` implement global sorted selection as documented.
@@ -31,7 +31,7 @@ This roadmap is a plan, not a statement that listed features are implemented. Th
 
 ## Phase 3 — Extract a maintainable library
 
-**Status: planned after the correctness gate.**
+**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** `src/main.rs` is a three-line entry point. The public library, focused core modules, CLI adapter, and external-consumer tests are in place. See [library and modules](docs/concepts/library-and-modules.md).
 
 - Create `src/lib.rs` and keep `src/main.rs` as a thin executable entry point.
 - Separate the typed query and compiled plan, pattern parser/program, sequential and parallel traversal, ignore rules, filters, native path handling, statistics, errors, and CLI.

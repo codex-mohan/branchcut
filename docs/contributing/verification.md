@@ -10,8 +10,8 @@ Run before submitting implementation changes:
 
 ```bash
 cargo fmt -- --check
-cargo test
-cargo clippy -- -D warnings
+cargo test --locked
+cargo clippy --locked --all-targets -- -D warnings
 ```
 
 ## Constraint proof
@@ -38,6 +38,16 @@ branchcut --glob '**/*.rs' --threads 4 --count --stats
 ```
 
 Run focused tests and the supported-semantics differential harness for query behavior changes. Check sequential and parallel results where applicable. For path-sensitive changes, run platform-specific tests on each supported operating system through CI.
+
+The oracle is a development-only tool installed outside the production package:
+
+```bash
+npm install --prefix target/oracle --ignore-scripts --no-audit --no-fund fast-glob@3.3.3
+cargo build --release --locked
+node scripts/verify.mjs --binary target/release/branchcut --oracle-dir target/oracle
+```
+
+On Windows, use `target/release/branchcut.exe`. The runner rejects a different oracle version and compares complete result sets in both sequential and parallel modes. The CI matrix runs these gates on Windows, Linux, and macOS.
 
 ## Documentation site gates
 

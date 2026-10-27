@@ -23,6 +23,7 @@ This directory is the canonical source for Branchcut documentation. The Fumadocs
 
 ## Understand the engine
 
+- [Library and modules](concepts/library-and-modules.md)
 - [Query compiler](concepts/query-compiler.md)
 - [Traversal and pruning](concepts/traversal-and-pruning.md)
 - [Parallel traversal](concepts/parallelism.md)
@@ -37,6 +38,7 @@ This directory is the canonical source for Branchcut documentation. The Fumadocs
 
 ## Inspect the evidence
 
+- [Post-competition baseline](evidence/post-competition-baseline.md)
 - [Benchmarks](evidence/benchmarks.md)
 - [Correctness](evidence/correctness.md)
 - [Standard-library ledger](evidence/stdlib.md)

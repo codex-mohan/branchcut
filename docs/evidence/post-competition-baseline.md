@@ -46,3 +46,13 @@ These items were identified during code and behavior review. Each needs a regres
 - Documentation describes sequential traversal as iterative; confirm the actual stack behavior and align the claim or implementation.
 
 The pre-existing release executable used during the earlier review was not tied to a known source commit. Treat its observed results as diagnostic leads, not proof about a given revision.
+
+## Foundation implementation follow-up
+
+The initial work queue above is retained as the starting record. Source-built regressions now cover the matching, sorting, ancestor-ignore, native-path, and command-root corrections. Sequential traversal is still recursive; the documentation now states its tested depth and call-stack limitation.
+
+`810fafd` extracts the library and CLI modules after the selection fixes in `28109b1`. `d1acf84` follows with precise best-effort parallel errors, strict ancestor-ignore failures, and literal-root collection regressions. The current local Windows gates pass 48 Rust tests including the doctest, all 14 pinned-oracle cases in sequential and parallel modes, formatting, Clippy, API documentation, and install/query/uninstall smoke checks. No third-party production crates appear in `cargo tree -e normal`.
+
+Cross-platform CI is configured to run Rust, native-path, oracle, and installer checks on Windows, Linux, and macOS. The Linux/macOS jobs were not executed from this Windows checkout; platform-wide completion remains contingent on those jobs.
+
+The reproducible module-extraction measurements and raw samples are linked from [BENCHMARKS.md](../../BENCHMARKS.md). Historical timing claims remain separate from these new records.
