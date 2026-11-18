@@ -127,7 +127,7 @@ jobs:
             throw "Release binary was not created: $binary"
           }
           if ($env:CROSS_COMPILE -eq 'true') {
-            & lipo -verify_arch arm64 $binary
+            & lipo $binary -verify_arch arm64
             if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon binary architecture verification failed.' }
             & codesign --force --sign - $binary
             if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon ad-hoc signing failed.' }

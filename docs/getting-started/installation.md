@@ -221,7 +221,7 @@ PowerShell example:
 branchcut --cwd C:\path\to\project --glob "**/*.rs" --first
 ```
 
-The version command should print `branchcut 0.2.0`. The final command should print at most one matching Rust path and exit successfully.
+The version command should print `branchcut 0.2.1`. The final command should print at most one matching Rust path and exit successfully.
 
 ## Upgrade
 

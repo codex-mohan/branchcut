@@ -1,6 +1,8 @@
-# Branchcut v0.2.0
+# Branchcut v0.2.1
 
 The first post-competition release turns Branchcut into a modular filesystem query engine with a reusable Rust library and a thin CLI. The core and ordinary CLI remain free of third-party crates.
+
+This patch corrects the release architecture-check command. The `v0.2.0` tag is retained unchanged; its release job stopped before publishing assets. Engine functionality is unchanged from that tag.
 
 ## Highlights
 

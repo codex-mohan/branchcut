@@ -19,11 +19,11 @@ Each archive contains the executable, `LICENSE`, and English and translated READ
 
 ## Release a version
 
-Update the version in `Cargo.toml`, ensure the release commit passes the repository gates, and push a tag whose version exactly matches the package version. For example, if the package version is `0.2.0`:
+Update the version in `Cargo.toml`, ensure the release commit passes the repository gates, and push a tag whose version exactly matches the package version. For example, if the package version is `0.2.1`:
 
 ```sh
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.2.1
+git push origin v0.2.1
 ```
 
 The workflow only runs for pushed `v*` tags. It rejects tags that do not match `Cargo.toml`, validates the native toolchain or the explicitly supported Intel-to-ARM macOS cross-build, and waits for all platform jobs to pass before publishing. The build matrix runs `cargo fmt -- --check`, `cargo test --locked`, and `cargo clippy --locked --all-targets -- -D warnings` before each release build; the ARM job also checks target-specific source and tests. The GitHub release is created with the four archives, checksums, and prepared release notes only after every build succeeds.
@@ -49,7 +49,7 @@ shasum -a 256 --check SHA256SUMS
 On Windows PowerShell, compare the archive hash with its matching line in `SHA256SUMS`:
 
 ```powershell
-(Get-FileHash .\branchcut-v0.2.0-x86_64-pc-windows-msvc.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+(Get-FileHash .\branchcut-v0.2.1-x86_64-pc-windows-msvc.zip -Algorithm SHA256).Hash.ToLowerInvariant()
 Get-Content .\SHA256SUMS
 ```
 
