@@ -4,15 +4,39 @@ set -eu
 repository=${BRANCHCUT_REPOSITORY:-https://github.com/codex-mohan/branchcut.git}
 branch=${BRANCHCUT_BRANCH:-master}
 install_root=${BRANCHCUT_INSTALL_ROOT:-${CARGO_HOME:-"$HOME/.cargo"}}
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd || pwd)
-repository_root=$(CDPATH= cd -- "$script_dir/.." 2>/dev/null && pwd || printf '%s' '')
+repository_root=''
+
+if [ -n "${0:-}" ] && [ -f "$0" ]; then
+    script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd || pwd)
+    if [ -f "$script_dir/../Cargo.toml" ]; then
+        repository_root=$(CDPATH= cd -- "$script_dir/.." 2>/dev/null && pwd || printf '%s' '')
+    fi
+fi
 
 if ! command -v cargo >/dev/null 2>&1; then
-    printf '%s\n' 'error: Cargo was not found. Install Rust from https://rustup.rs/ and run this installer again.' >&2
+    if ! command -v curl >/dev/null 2>&1; then
+        printf '%s\n' 'error: curl is required to install Rust automatically.' >&2
+        exit 1
+    fi
+
+    printf '%s\n' 'Cargo was not found. Installing a minimal stable Rust toolchain with rustup...'
+    rustup_installer=$(mktemp)
+    curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs -o "$rustup_installer"
+    sh "$rustup_installer" -y --profile minimal --default-toolchain stable
+    rm -f "$rustup_installer"
+
+    cargo_env="${CARGO_HOME:-$HOME/.cargo}/env"
+    if [ -f "$cargo_env" ]; then
+        . "$cargo_env"
+    fi
+fi
+
+if ! command -v cargo >/dev/null 2>&1; then
+    printf '%s\n' 'error: Cargo is still unavailable after rustup completed. Open a new terminal and run this installer again.' >&2
     exit 1
 fi
 
-if [ -n "$repository_root" ] && [ -f "$repository_root/Cargo.toml" ]; then
+if [ -n "$repository_root" ]; then
     printf 'Installing Branchcut from %s\n' "$repository_root"
     cargo install --locked --force --root "$install_root" --path "$repository_root"
 else

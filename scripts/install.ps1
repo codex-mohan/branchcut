@@ -12,15 +12,34 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
-    throw 'Cargo was not found. Install Rust from https://rustup.rs/ and run this installer again.'
+    Write-Host 'Cargo was not found. Installing a minimal stable Rust toolchain with rustup...'
+    $architecture = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'aarch64' } else { 'x86_64' }
+    $rustupInstaller = Join-Path $env:TEMP 'rustup-init.exe'
+    Invoke-WebRequest -UseBasicParsing -Uri "https://win.rustup.rs/$architecture" -OutFile $rustupInstaller
+    & $rustupInstaller -y --profile minimal --default-toolchain stable
+    if ($LASTEXITCODE -ne 0) {
+        throw "rustup failed with exit code $LASTEXITCODE"
+    }
+
+    $rustCargoHome = if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $HOME '.cargo' }
+    $env:Path = "$(Join-Path $rustCargoHome 'bin');$env:Path"
+}
+
+if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
+    throw 'Cargo is still unavailable after rustup completed. Open a new terminal and run this installer again.'
 }
 
 $installRootPath = [System.IO.Path]::GetFullPath($InstallRoot)
-$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$manifest = Join-Path $repositoryRoot 'Cargo.toml'
-$arguments = @('install', '--locked', '--force', '--root', $installRootPath)
+$repositoryRoot = $null
+if ($PSScriptRoot) {
+    $candidateRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+    if (Test-Path -LiteralPath (Join-Path $candidateRoot 'Cargo.toml') -PathType Leaf) {
+        $repositoryRoot = $candidateRoot
+    }
+}
 
-if (Test-Path -LiteralPath $manifest -PathType Leaf) {
+$arguments = @('install', '--locked', '--force', '--root', $installRootPath)
+if ($repositoryRoot) {
     $arguments += @('--path', $repositoryRoot)
     Write-Host "Installing Branchcut from $repositoryRoot"
 }

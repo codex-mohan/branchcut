@@ -1,0 +1,188 @@
+name: Build and publish release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-tag:
+    name: Validate version tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Confirm tag matches Cargo package version
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -notmatch '^refs/tags/v(.+)$') {
+            throw "Releases must run from a v-prefixed version tag. Got $env:GITHUB_REF"
+          }
+          $tagVersion = $Matches[1]
+          $metadata = cargo metadata --no-deps --format-version 1 | ConvertFrom-Json
+          $package = @($metadata.packages | Where-Object { $_.name -eq 'branchcut' })
+          if ($package.Count -ne 1) {
+            throw "Expected exactly one branchcut package in Cargo metadata."
+          }
+          if ($tagVersion -cne $package[0].version) {
+            throw "Tag version v$tagVersion does not match Cargo version $($package[0].version)."
+          }
+          "version=$($package[0].version)" >> $env:GITHUB_OUTPUT
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: validate-tag
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            runner: windows-2025
+            extension: zip
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+            extension: tar.gz
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+            extension: tar.gz
+          - target: aarch64-apple-darwin
+            runner: macos-15
+            extension: tar.gz
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    env:
+      TARGET: ${{ matrix.target }}
+      VERSION: ${{ needs.validate-tag.outputs.version }}
+      ARCHIVE_EXTENSION: ${{ matrix.extension }}
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Verify native runner matches release target
+        shell: pwsh
+        run: |
+          $hostLine = (rustc -vV | Select-String '^host: ').ToString()
+          $hostTarget = [regex]::Match($hostLine, '^host: (.+)$').Groups[1].Value
+          if ($hostTarget -cne $env:TARGET) {
+            throw "Runner Rust host $hostTarget does not match requested target $env:TARGET."
+          }
+          rustc --version
+          cargo --version
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Run tests
+        run: cargo test --locked
+
+      - name: Run Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Build native release binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Verify binary and prepare archive
+        id: package
+        shell: pwsh
+        run: |
+          $binaryName = if ($env:RUNNER_OS -eq 'Windows') { 'branchcut.exe' } else { 'branchcut' }
+          $binary = Join-Path $env:GITHUB_WORKSPACE "target/$env:TARGET/release/$binaryName"
+          if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
+            throw "Release binary was not created: $binary"
+          }
+          $versionOutput = (& $binary --version | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or $versionOutput -cne "branchcut $env:VERSION") {
+            throw "Unexpected binary version output: $versionOutput"
+          }
+
+          $dist = Join-Path $env:RUNNER_TEMP 'branchcut-release'
+          New-Item -ItemType Directory -Path $dist -Force | Out-Null
+          Copy-Item -LiteralPath $binary -Destination (Join-Path $dist $binaryName)
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'LICENSE') -Destination $dist
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'README.md') -Destination $dist
+          $archiveName = "branchcut-v$env:VERSION-$env:TARGET.$env:ARCHIVE_EXTENSION"
+          $archivePath = Join-Path $env:RUNNER_TEMP $archiveName
+          if ($env:ARCHIVE_EXTENSION -eq 'zip') {
+            Compress-Archive -Path (Join-Path $dist '*') -DestinationPath $archivePath -CompressionLevel Optimal
+          } else {
+            tar -czf $archivePath -C $dist branchcut LICENSE README.md
+            if ($LASTEXITCODE -ne 0) { throw 'Could not create the release tarball.' }
+          }
+          "archive=$archivePath" >> $env:GITHUB_OUTPUT
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: ${{ steps.package.outputs.archive }}
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish GitHub release
+    needs:
+      - validate-tag
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all platform archives
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create SHA-256 checksum file
+        shell: pwsh
+        run: |
+          $assets = @(Get-ChildItem -LiteralPath 'release-assets' -File | Sort-Object Name)
+          if ($assets.Count -ne 4) {
+            throw "Expected four platform archives, found $($assets.Count)."
+          }
+          $lines = foreach ($asset in $assets) {
+            $hash = (Get-FileHash -LiteralPath $asset.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($asset.Name)"
+          }
+          [IO.File]::WriteAllLines(
+            (Join-Path (Get-Location) 'release-assets/SHA256SUMS'),
+            [string[]]$lines,
+            [Text.UTF8Encoding]::new($false)
+          )
+
+      - name: Publish assets and generated release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: pwsh
+        run: |
+          $assets = @(Get-ChildItem -LiteralPath 'release-assets' -File | Sort-Object Name | ForEach-Object FullName)
+          $arguments = @(
+            'release', 'create', $env:GITHUB_REF_NAME,
+            '--verify-tag',
+            '--title', $env:GITHUB_REF_NAME,
+            '--generate-notes'
+          ) + $assets
+          & gh @arguments
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub release creation failed.' }
