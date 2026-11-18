@@ -2,7 +2,15 @@
 
 The competition-era results below are retained as historical evidence. Current development uses the checked-in [benchmark and oracle runners](docs/contributing/benchmarking.md). Raw post-competition records live in [benchmarks/results](benchmarks/results/).
 
+The [2026-11-11 native-tool investigation](docs/evidence/search-performance.md) includes fresh ripgrep/fd/fast-glob comparisons, equal-worker controls, and source references. That early snapshot preceded the adaptive-worker default and should not be used as the current out-of-box ranking.
+
+The [same-session direct CLI comparison](docs/evidence/cli-comparison.md) uses official `zlob`, `rg`, `fd`, fast-glob, and tinyglobby entry points without a lower-level walker adapter. It records all tested worker configurations and verifies every selected path set.
+
 ## Post-competition module extraction
+
+For the later 48-workload matrix and bounded sorted-selection tradeoff, see [Phase 7 measurements](docs/evidence/phase7.md). The first-ten result improves on the tested synthetic tree while large sorted selections lose time. These before/after records do not establish a competitor ranking.
+
+The subsequent [Rust-level optimization pass](docs/evidence/rust-optimizations.md) records 52 workloads across 10,000- and 100,000-file trees. On the larger tree, broad count improved 1.43x, broad streamed output 1.30x, ignore-heavy traversal 1.35x, and four-worker output 1.36x. Metadata filtering is effectively unchanged, and unlimited sorting remains slightly slower. The raw record includes every workload and both named count/output versions. The current CLI subsequently made adaptive worker selection the default; use the direct CLI comparison for current out-of-box results.
 
 On 2026-10-28, the same runner measured the preserved pre-module binary and the extracted-library binary on Windows/NTFS. Both returned the same 10,000 paths on a generated 16,000-file corpus before timing. Each engine used two fresh-process warmups and ten samples, alternating execution order. Filesystem cache state was uncontrolled.
 

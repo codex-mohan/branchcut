@@ -1,5 +1,16 @@
 {
   "title": "Evidence",
   "icon": "ChartNoAxesCombined",
-  "pages": ["benchmarks", "correctness", "stdlib", "post-competition-baseline"]
+  "pages": [
+    "gap-closure",
+    "current-cli-comparison",
+    "benchmarks",
+    "cli-comparison",
+    "phase7",
+    "rust-optimizations",
+    "search-performance",
+    "correctness",
+    "stdlib",
+    "post-competition-baseline"
+  ]
 }

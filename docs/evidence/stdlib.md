@@ -18,9 +18,10 @@ icon: Boxes
 | `rayon` | bounded `std::thread` workers |
 | `serde_json` | streaming JSON Lines escaping |
 | shell helpers | `std::process::Command` |
+| size / duration parsing crates | Checked whole-number and fixed-unit parsers in `src/metadata.rs` |
 
 ## Boundary
 
 The documentation site has JavaScript dependencies because it is a separate Fumadocs application. Those packages are not linked into, invoked by, or required to distribute the Branchcut executable.
 
-The project does not pad this ledger with unimplemented substitutions. Metadata predicates, an async runtime, and JSON arrays are not claimed.
+The project does not pad this ledger with unimplemented substitutions. An async runtime and JSON arrays are not claimed.

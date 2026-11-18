@@ -1,0 +1,5450 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-18T04:24:34.736Z",
+  "scope": "Official CLI/API comparison. No lower-level zlob walker adapter is used.",
+  "method": "Fresh process per sample; every tool searches the same fixture and serializes matching paths. Filesystem cache state is uncontrolled. Combinations without an implemented equivalent invocation in this runner are not measured; this is not a feature-absence claim. ripgrep is measured only in --files mode, not content search.",
+  "correctness": "Complete normalized path sets are checked against a deterministic fixture manifest before timing and after every sample. Limited selections are verified for exact count, membership, and uniqueness.",
+  "system": {
+    "os": "Windows_NT 10.0.26200 x64",
+    "cpu": "Intel(R) Core(TM) 5 210H",
+    "logical_cpus": 12,
+    "ram_bytes": 16788987904,
+    "node": "v25.2.1",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)"
+  },
+  "tools": {
+    "branchcut": "branchcut 0.1.0",
+    "zlob": "zlob 1.7.0",
+    "rg": "ripgrep 15.1.0 (rev af60c2de9d)",
+    "fd": "fd 10.4.2",
+    "fast_glob": "3.3.3",
+    "tinyglobby": "0.2.14"
+  },
+  "executable_sha256": {
+    "branchcut": "dd1cdf5ca113d258a7622605a944bc0ddb3d3814761e8e413c017a0333fa0cd2",
+    "zlob": "86b221e94edc87572ee63f3125195ff105fbea5af9c974839ab764e9eb6bec27",
+    "rg": "decdd4992f3f1b9a5ef9898f1b40ab16886d579d6516b4efd3d5eaa19364e408",
+    "fd": "4c9d082ee20f0d9e44881ac4e92adf765efc314d82103c53d7f576bd78dc5761"
+  },
+  "source": {
+    "commit": "5ec8cb13b955344599b8dbbf9f47294d1df9b4f5",
+    "dirty": true,
+    "source_manifest": [
+      {
+        "file": "Cargo.lock",
+        "sha256": "04a2973eb78f0e347884141f6e1c7bd33a3608fa54a82a8007a3e7923ea183c4"
+      },
+      {
+        "file": "Cargo.toml",
+        "sha256": "82f30abf904d914e0a864908007001e3d39b849cbd9b73268b327ce2f60edec5"
+      },
+      {
+        "file": "scripts/compare-cli.mjs",
+        "sha256": "fda03afb26313ef8187cbd9f5b88a771fc8b12540650a7b09613ef394d066178"
+      },
+      {
+        "file": "scripts/measure-process.ps1",
+        "sha256": "df93cc7fef71fb301b92418a6c1f83dc6dea309005fbe6cefd365f1380e9bd78"
+      },
+      {
+        "file": "src/cli/args.rs",
+        "sha256": "318923b8e43d11f4ff446d4f21c80d3d8e4210f4c6367260dc615141fd657f83"
+      },
+      {
+        "file": "src/cli/completions.rs",
+        "sha256": "f3c1deb83c9e3d923d2d39d451989fd7106e314bcd21fbed27a5e6e302ce4f69"
+      },
+      {
+        "file": "src/cli/config.rs",
+        "sha256": "b2636df618d8dc3953114a78a0274acac2211d2083092e8826b24d1cf63cf487"
+      },
+      {
+        "file": "src/cli/exec.rs",
+        "sha256": "ec721e4fcda6dc436df4e378199a419ad964aed9d2417b6c3ee60b71cd8b5538"
+      },
+      {
+        "file": "src/cli/mod.rs",
+        "sha256": "5d119271b42946260a2410908cfb3b75191240cafe22f9460f2f7a17c50fbbc1"
+      },
+      {
+        "file": "src/cli/output.rs",
+        "sha256": "5f7b7aba6c34e20f0dbd56cc6f66b49706d0b1447bbf6582d32561fe013b6da7"
+      },
+      {
+        "file": "src/diagnostic.rs",
+        "sha256": "d5d93fdd2a73c49add06ad5ee203b989ed9f771963fbec663ceb87b746900219"
+      },
+      {
+        "file": "src/entries.rs",
+        "sha256": "39820bb919f610091b29a2ea23816a65b679938cc1964c304c75e6e4fa3c6856"
+      },
+      {
+        "file": "src/error.rs",
+        "sha256": "fe5d0c402fa50eded3963c78183a31546451ee23b8a2aa0973cd4d642b6897a9"
+      },
+      {
+        "file": "src/filters.rs",
+        "sha256": "30c01cefceac871afa386b2d2ad9774e69a1640f3d5ad8f00cdabd4904ab2f13"
+      },
+      {
+        "file": "src/ignore.rs",
+        "sha256": "f76669edd2ad7c52108d9dc1dba03a0309d526434a3b2d9336818f9b1f27a683"
+      },
+      {
+        "file": "src/ignore/sources.rs",
+        "sha256": "16da6f91974a70414e0933649db2bcdbfb75a43652b1fb61be27712e749dbc8f"
+      },
+      {
+        "file": "src/lib.rs",
+        "sha256": "5d87f0b6448fe7f722f46ecdff15f7eea63742e73d25af833a80e469538c7423"
+      },
+      {
+        "file": "src/main.rs",
+        "sha256": "99f4885c633e060eb889ceada55c9f03382b9c11ffac74043d03118f9e0057ec"
+      },
+      {
+        "file": "src/matcher.rs",
+        "sha256": "55b61607e7be864d079e26f516b01278093df087c15feb09fd9d3aab8b1e25a5"
+      },
+      {
+        "file": "src/metadata.rs",
+        "sha256": "0c5bdb791727c5ede3250135c2a0038247d2cced509babcec5b1d9a7899f4266"
+      },
+      {
+        "file": "src/multi_root.rs",
+        "sha256": "d7ca6bd2e3883faed18c176b713534f7286880e0b69247f8e321358a7a3fb7be"
+      },
+      {
+        "file": "src/path.rs",
+        "sha256": "6d3e15318520a80de4cd52d4d74e9e3b2751b82fdd9aeec2b38c1e3e7c6ef045"
+      },
+      {
+        "file": "src/pattern/case_tests.rs",
+        "sha256": "301c18e85821c213d78936b68079b14bbc7fe75c569d8d885414d4afc643c427"
+      },
+      {
+        "file": "src/pattern/extglob.rs",
+        "sha256": "0d5c141306a36afe356a11efb610a3df99fc2a88e65d1ad70af3e5d0c07903b7"
+      },
+      {
+        "file": "src/pattern/mod.rs",
+        "sha256": "c6765c117467dd22848009b811dc71ad0b0573292a4b3651507103a090c1a95a"
+      },
+      {
+        "file": "src/pattern/parse.rs",
+        "sha256": "ab4fc19a8db586996478489776c0bbf9730c2fc52a24932fe65f9a3e25ae7d2f"
+      },
+      {
+        "file": "src/pattern/program.rs",
+        "sha256": "35cb2f16c5866cc79aa8a2b3378a199e31bfd5f390aa8726b424cda65b1212f4"
+      },
+      {
+        "file": "src/query.rs",
+        "sha256": "50a8ef17cff1bdd2b9c9babd2034d8f4e7e9e5b15bdd31870c97fbd87ad6b678"
+      },
+      {
+        "file": "src/stats.rs",
+        "sha256": "82b4b784e69d770f9b06a710a62589adfe344849188a17db9ff0db5baf717f69"
+      },
+      {
+        "file": "src/tests.rs",
+        "sha256": "48fee7a92cbef3f5455555e09d1cdb7c268f98d3dff030950f664dbb81d25c6a"
+      },
+      {
+        "file": "src/walk/mod.rs",
+        "sha256": "4878ba276495b67d72a538fe336c26969f00ee09d2b15f0a7ce1fe0c5600015f"
+      },
+      {
+        "file": "src/walk/parallel.rs",
+        "sha256": "5c15a7b0df1350e446f304704245b7c41bf8f64417f54204cc7b62eabf279d1b"
+      },
+      {
+        "file": "src/walk/sequential.rs",
+        "sha256": "6b39cf20c5cf404811fda301234dda656ec9ed9e07706ec57b48a317f3b58335"
+      }
+    ],
+    "source_manifest_sha256": "39845a3594322e433a842f9d5d2b8c6fa4710678e6604c70bacb84bf22d1cf0d"
+  },
+  "sizes": [
+    100000
+  ],
+  "warmups": 3,
+  "iterations": 9,
+  "memory_samples_per_broad_configuration": 3,
+  "memory_method": "Separate fresh-process runs of the same invocations. Windows peak working set sampled every 1 ms; captures are result-checked. Includes Node runtime for JavaScript APIs; excludes the PowerShell measurement parent. Not Unix peak RSS and not used for wall-clock ranking.",
+  "raw_workloads": [
+    {
+      "name": "broad-files",
+      "corpus_files": 100000,
+      "expected_matches": 100002,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*",
+            "--threads",
+            "0"
+          ]
+        },
+        "rg": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "**/*",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            "."
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*"
+          ]
+        },
+        "zlob": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "zlob",
+            "-a",
+            "-G",
+            "**/*",
+            "."
+          ]
+        },
+        "fast_glob": {
+          "api": "fast-glob",
+          "patterns": [
+            "**/*"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        },
+        "tinyglobby": {
+          "api": "tinyglobby",
+          "patterns": [
+            "**/*"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        },
+        "rg_1": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "**/*",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            ".",
+            "--threads",
+            "1"
+          ]
+        },
+        "rg_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "**/*",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            ".",
+            "--threads",
+            "4"
+          ]
+        },
+        "fd_1": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*",
+            "--threads",
+            "1"
+          ]
+        },
+        "fd_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*",
+            "--threads",
+            "4"
+          ]
+        }
+      },
+      "not_covered": {
+        "zlob": null,
+        "rg": null,
+        "fd": null,
+        "fast_glob": null,
+        "tinyglobby": null
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 68.87410000000091,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 80.45230000000447,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 77.5118999999977,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 80.16270000000077,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 68.74529999999504,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 72.71169999999984,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 76.63180000000284,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 76.39400000000023,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 69.45879999999306,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "rg": [
+          {
+            "elapsed_ms": 113.15240000000631,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 94.01639999999315,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 108.79580000000715,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 96.11010000000533,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 109.90119999999297,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 111.4719000000041,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 108.77980000000389,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 118.77689999999711,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 101.06599999999162,
+            "stdout_bytes": 3462551
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 124.0570000000007,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 110.9951000000001,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 103.59180000000924,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 117.34670000000915,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 125.06599999999162,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 111.35319999999774,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 108.86510000000999,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 118.61520000000019,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 114.50220000000263,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "zlob": [
+          {
+            "elapsed_ms": 108.45769999999902,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 119.6414999999979,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 123.64419999999518,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 111.02460000000428,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 108.44929999999295,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 129.12970000000496,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 112.04450000000361,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 94.79940000000352,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 123.88820000000123,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "fast_glob": [
+          {
+            "elapsed_ms": 412.025999999998,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 343.65969999998924,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 349.7474999999977,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 357.70990000000165,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 348.4395999999979,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 353.26220000001194,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 396.2468999999983,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 408.2243000000017,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 367.4176000000007,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "tinyglobby": [
+          {
+            "elapsed_ms": 234.17220000000088,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 236.6414000000077,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 219.56440000000293,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 224.6261000000086,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 238.3021000000008,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 245.79240000000573,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 247.79009999999835,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 262.6160000000091,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 238.28659999999218,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 93.14160000000265,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 100.50190000000293,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 89.68409999999858,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 99.88999999999942,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 99.33209999999963,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 89.76660000000265,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 92.25969999999506,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 98.08640000000014,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 94.09200000000419,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 67.86809999999241,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 77.44700000000012,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 66.87169999998878,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 76.73070000000007,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 74.36539999999513,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 78.25690000000759,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 88.2158999999956,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 73.693299999999,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 67.58220000000438,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "rg_1": [
+          {
+            "elapsed_ms": 227.47759999999835,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 244.1987999999983,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 261.63700000000244,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 202.33879999999772,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 228.24229999999807,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 211.91210000000137,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 220.9189999999944,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 214.15419999998994,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 220.38790000000154,
+            "stdout_bytes": 3462551
+          }
+        ],
+        "rg_4": [
+          {
+            "elapsed_ms": 126.06919999999809,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 128.4198000000033,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 131.25950000000012,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 137.03049999999348,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 137.07390000000305,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 138.74149999998917,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 120.53429999999935,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 130.26410000000033,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 117.46710000000894,
+            "stdout_bytes": 3462551
+          }
+        ],
+        "fd_1": [
+          {
+            "elapsed_ms": 222.18339999999444,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 232.80199999999604,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 231.06570000000647,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 250.40129999999772,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 231.59730000000854,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 220.15180000000692,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 239.83060000000114,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 259.3267000000051,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 235.67999999999302,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "fd_4": [
+          {
+            "elapsed_ms": 118.42069999998785,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 130.04179999999178,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 134.3179999999993,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 131.85179999998945,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 142.21799999999348,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 131.05590000000666,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 130.0165999999881,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 131.87249999999767,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 139.97699999999895,
+            "stdout_bytes": 3262547
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 76.39400000000023,
+          "p90_ms": 80.45230000000447,
+          "p95_ms": 80.45230000000447,
+          "standard_deviation_ms": 4.447929188281947,
+          "dispersion_percent": 5.966436278533786
+        },
+        "rg": {
+          "median_ms": 108.79580000000715,
+          "p90_ms": 118.77689999999711,
+          "p95_ms": 118.77689999999711,
+          "standard_deviation_ms": 7.700180274771076,
+          "dispersion_percent": 7.203382961325554
+        },
+        "fd": {
+          "median_ms": 114.50220000000263,
+          "p90_ms": 125.06599999999162,
+          "p95_ms": 125.06599999999162,
+          "standard_deviation_ms": 6.6604925411391,
+          "dispersion_percent": 5.795135256734864
+        },
+        "zlob": {
+          "median_ms": 112.04450000000361,
+          "p90_ms": 129.12970000000496,
+          "p95_ms": 129.12970000000496,
+          "standard_deviation_ms": 9.952791126681733,
+          "dispersion_percent": 8.687511961025624
+        },
+        "fast_glob": {
+          "median_ms": 357.70990000000165,
+          "p90_ms": 412.025999999998,
+          "p95_ms": 412.025999999998,
+          "standard_deviation_ms": 25.642496783636062,
+          "dispersion_percent": 6.91641862377944
+        },
+        "tinyglobby": {
+          "median_ms": 238.28659999999218,
+          "p90_ms": 262.6160000000091,
+          "p95_ms": 262.6160000000091,
+          "standard_deviation_ms": 11.991627812101315,
+          "dispersion_percent": 5.024913282259338
+        },
+        "branchcut_4": {
+          "median_ms": 94.09200000000419,
+          "p90_ms": 100.50190000000293,
+          "p95_ms": 100.50190000000293,
+          "standard_deviation_ms": 4.076607998487891,
+          "dispersion_percent": 4.282379172653306
+        },
+        "branchcut_auto": {
+          "median_ms": 74.36539999999513,
+          "p90_ms": 88.2158999999956,
+          "p95_ms": 88.2158999999956,
+          "standard_deviation_ms": 6.381984946321857,
+          "dispersion_percent": 8.55964141710522
+        },
+        "rg_1": {
+          "median_ms": 220.9189999999944,
+          "p90_ms": 261.63700000000244,
+          "p95_ms": 261.63700000000244,
+          "standard_deviation_ms": 16.87710586850102,
+          "dispersion_percent": 7.477790978338823
+        },
+        "rg_4": {
+          "median_ms": 130.26410000000033,
+          "p90_ms": 138.74149999998917,
+          "p95_ms": 138.74149999998917,
+          "standard_deviation_ms": 7.00050475529009,
+          "dispersion_percent": 5.399495071997165
+        },
+        "fd_1": {
+          "median_ms": 232.80199999999604,
+          "p90_ms": 259.3267000000051,
+          "p95_ms": 259.3267000000051,
+          "standard_deviation_ms": 11.842615051677692,
+          "dispersion_percent": 5.020329136947415
+        },
+        "fd_4": {
+          "median_ms": 131.85179999998945,
+          "p90_ms": 142.21799999999348,
+          "p95_ms": 142.21799999999348,
+          "standard_deviation_ms": 6.378431776401029,
+          "dispersion_percent": 4.824947259875819
+        }
+      },
+      "memory_samples": {
+        "branchcut": [
+          {
+            "cpu_ms": 78.125,
+            "observed_peak_working_set_bytes": 6729728,
+            "elapsed_ms": 111.6978,
+            "stdout_bytes": 3262547,
+            "memory_sample_interval_ms": 1,
+            "stderr": "",
+            "exit_code": 0
+          },
+          {
+            "cpu_ms": 500,
+            "elapsed_ms": 106.7631,
+            "stderr": "",
+            "observed_peak_working_set_bytes": 6610944,
+            "memory_sample_interval_ms": 1,
+            "stdout_bytes": 3262547,
+            "exit_code": 0
+          },
+          {
+            "cpu_ms": 531.25,
+            "elapsed_ms": 102.0141,
+            "exit_code": 0,
+            "stderr": "",
+            "observed_peak_working_set_bytes": 6643712,
+            "stdout_bytes": 3262547,
+            "memory_sample_interval_ms": 1
+          }
+        ],
+        "rg": [
+          {
+            "stderr": "",
+            "stdout_bytes": 3462551,
+            "memory_sample_interval_ms": 1,
+            "elapsed_ms": 105.0925,
+            "observed_peak_working_set_bytes": 35962880,
+            "exit_code": 0,
+            "cpu_ms": 531.25
+          },
+          {
+            "cpu_ms": 578.125,
+            "memory_sample_interval_ms": 1,
+            "observed_peak_working_set_bytes": 17743872,
+            "exit_code": 0,
+            "elapsed_ms": 122.5873,
+            "stdout_bytes": 3462551,
+            "stderr": ""
+          },
+          {
+            "exit_code": 0,
+            "stderr": "",
+            "observed_peak_working_set_bytes": 22908928,
+            "stdout_bytes": 3462551,
+            "elapsed_ms": 117.7379,
+            "memory_sample_interval_ms": 1,
+            "cpu_ms": 468.75
+          }
+        ],
+        "fd": [
+          {
+            "exit_code": 0,
+            "elapsed_ms": 130.2677,
+            "stdout_bytes": 3262547,
+            "memory_sample_interval_ms": 1,
+            "cpu_ms": 390.625,
+            "stderr": "",
+            "observed_peak_working_set_bytes": 18780160
+          },
+          {
+            "memory_sample_interval_ms": 1,
+            "observed_peak_working_set_bytes": 19423232,
+            "stdout_bytes": 3262547,
+            "cpu_ms": 359.375,
+            "exit_code": 0,
+            "stderr": "",
+            "elapsed_ms": 112.2793
+          },
+          {
+            "stderr": "",
+            "cpu_ms": 250,
+            "stdout_bytes": 3262547,
+            "memory_sample_interval_ms": 1,
+            "exit_code": 0,
+            "observed_peak_working_set_bytes": 18194432,
+            "elapsed_ms": 116.2118
+          }
+        ],
+        "zlob": [
+          {
+            "stdout_bytes": 3262547,
+            "observed_peak_working_set_bytes": 21151744,
+            "stderr": "",
+            "memory_sample_interval_ms": 1,
+            "elapsed_ms": 149.4399,
+            "exit_code": 0,
+            "cpu_ms": 109.375
+          },
+          {
+            "cpu_ms": 93.75,
+            "elapsed_ms": 145.2441,
+            "exit_code": 0,
+            "observed_peak_working_set_bytes": 19320832,
+            "memory_sample_interval_ms": 1,
+            "stdout_bytes": 3262547,
+            "stderr": ""
+          },
+          {
+            "elapsed_ms": 157.1825,
+            "memory_sample_interval_ms": 1,
+            "observed_peak_working_set_bytes": 21155840,
+            "stdout_bytes": 3262547,
+            "cpu_ms": 109.375,
+            "stderr": "",
+            "exit_code": 0
+          }
+        ],
+        "fast_glob": [
+          {
+            "elapsed_ms": 479.0817,
+            "cpu_ms": 703.125,
+            "stdout_bytes": 3262547,
+            "stderr": "",
+            "exit_code": 0,
+            "memory_sample_interval_ms": 1,
+            "observed_peak_working_set_bytes": 117633024
+          },
+          {
+            "observed_peak_working_set_bytes": 123863040,
+            "memory_sample_interval_ms": 1,
+            "elapsed_ms": 423.06,
+            "exit_code": 0,
+            "stdout_bytes": 3262547,
+            "cpu_ms": 562.5,
+            "stderr": ""
+          },
+          {
+            "exit_code": 0,
+            "stdout_bytes": 3262547,
+            "observed_peak_working_set_bytes": 115474432,
+            "elapsed_ms": 388.2251,
+            "memory_sample_interval_ms": 1,
+            "cpu_ms": 546.875,
+            "stderr": ""
+          }
+        ],
+        "tinyglobby": [
+          {
+            "stdout_bytes": 3262547,
+            "stderr": "",
+            "observed_peak_working_set_bytes": 89219072,
+            "elapsed_ms": 240.2942,
+            "memory_sample_interval_ms": 1,
+            "exit_code": 0,
+            "cpu_ms": 218.75
+          },
+          {
+            "stderr": "",
+            "stdout_bytes": 3262547,
+            "exit_code": 0,
+            "memory_sample_interval_ms": 1,
+            "cpu_ms": 265.625,
+            "observed_peak_working_set_bytes": 88997888,
+            "elapsed_ms": 236.8044
+          },
+          {
+            "stderr": "",
+            "cpu_ms": 421.875,
+            "observed_peak_working_set_bytes": 89227264,
+            "stdout_bytes": 3262547,
+            "exit_code": 0,
+            "memory_sample_interval_ms": 1,
+            "elapsed_ms": 262.3974
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 119.7527,
+            "stderr": "",
+            "memory_sample_interval_ms": 1,
+            "cpu_ms": 234.375,
+            "observed_peak_working_set_bytes": 6139904,
+            "exit_code": 0,
+            "stdout_bytes": 3262547
+          },
+          {
+            "stderr": "",
+            "stdout_bytes": 3262547,
+            "memory_sample_interval_ms": 1,
+            "cpu_ms": 296.875,
+            "exit_code": 0,
+            "observed_peak_working_set_bytes": 6209536,
+            "elapsed_ms": 118.804
+          },
+          {
+            "observed_peak_working_set_bytes": 6209536,
+            "cpu_ms": 171.875,
+            "elapsed_ms": 115.2581,
+            "stdout_bytes": 3262547,
+            "memory_sample_interval_ms": 1,
+            "stderr": "",
+            "exit_code": 0
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "exit_code": 0,
+            "stdout_bytes": 3262547,
+            "observed_peak_working_set_bytes": 6672384,
+            "elapsed_ms": 105.902,
+            "memory_sample_interval_ms": 1,
+            "stderr": "",
+            "cpu_ms": 562.5
+          },
+          {
+            "stderr": "",
+            "memory_sample_interval_ms": 1,
+            "cpu_ms": 171.875,
+            "stdout_bytes": 3262547,
+            "exit_code": 0,
+            "elapsed_ms": 107.8114,
+            "observed_peak_working_set_bytes": 6750208
+          },
+          {
+            "elapsed_ms": 107.6481,
+            "memory_sample_interval_ms": 1,
+            "observed_peak_working_set_bytes": 6729728,
+            "cpu_ms": 265.625,
+            "stderr": "",
+            "stdout_bytes": 3262547,
+            "exit_code": 0
+          }
+        ],
+        "rg_1": [
+          {
+            "exit_code": 0,
+            "memory_sample_interval_ms": 1,
+            "observed_peak_working_set_bytes": 6746112,
+            "stdout_bytes": 3462551,
+            "stderr": "",
+            "elapsed_ms": 267.061,
+            "cpu_ms": 218.75
+          },
+          {
+            "memory_sample_interval_ms": 1,
+            "stdout_bytes": 3462551,
+            "exit_code": 0,
+            "elapsed_ms": 247.4193,
+            "observed_peak_working_set_bytes": 6778880,
+            "cpu_ms": 218.75,
+            "stderr": ""
+          },
+          {
+            "cpu_ms": 218.75,
+            "stdout_bytes": 3462551,
+            "exit_code": 0,
+            "stderr": "",
+            "memory_sample_interval_ms": 1,
+            "observed_peak_working_set_bytes": 6754304,
+            "elapsed_ms": 243.4866
+          }
+        ],
+        "rg_4": [
+          {
+            "exit_code": 0,
+            "cpu_ms": 453.125,
+            "observed_peak_working_set_bytes": 13172736,
+            "stderr": "",
+            "stdout_bytes": 3462551,
+            "memory_sample_interval_ms": 1,
+            "elapsed_ms": 156.3044
+          },
+          {
+            "cpu_ms": 468.75,
+            "stderr": "",
+            "elapsed_ms": 137.9856,
+            "memory_sample_interval_ms": 1,
+            "exit_code": 0,
+            "stdout_bytes": 3462551,
+            "observed_peak_working_set_bytes": 13742080
+          },
+          {
+            "observed_peak_working_set_bytes": 12845056,
+            "memory_sample_interval_ms": 1,
+            "elapsed_ms": 155.6911,
+            "stdout_bytes": 3462551,
+            "stderr": "",
+            "cpu_ms": 437.5,
+            "exit_code": 0
+          }
+        ],
+        "fd_1": [
+          {
+            "stderr": "",
+            "memory_sample_interval_ms": 1,
+            "stdout_bytes": 3262547,
+            "elapsed_ms": 248.1111,
+            "observed_peak_working_set_bytes": 11599872,
+            "cpu_ms": 296.875,
+            "exit_code": 0
+          },
+          {
+            "memory_sample_interval_ms": 1,
+            "elapsed_ms": 265.5779,
+            "observed_peak_working_set_bytes": 11304960,
+            "exit_code": 0,
+            "stdout_bytes": 3262547,
+            "cpu_ms": 281.25,
+            "stderr": ""
+          },
+          {
+            "stderr": "",
+            "exit_code": 0,
+            "observed_peak_working_set_bytes": 11538432,
+            "elapsed_ms": 234.8174,
+            "memory_sample_interval_ms": 1,
+            "cpu_ms": 250,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "fd_4": [
+          {
+            "stdout_bytes": 3262547,
+            "exit_code": 0,
+            "elapsed_ms": 155.7034,
+            "cpu_ms": 390.625,
+            "stderr": "",
+            "memory_sample_interval_ms": 1,
+            "observed_peak_working_set_bytes": 13680640
+          },
+          {
+            "elapsed_ms": 154.1852,
+            "cpu_ms": 359.375,
+            "stdout_bytes": 3262547,
+            "stderr": "",
+            "observed_peak_working_set_bytes": 13418496,
+            "exit_code": 0,
+            "memory_sample_interval_ms": 1
+          },
+          {
+            "exit_code": 0,
+            "observed_peak_working_set_bytes": 13979648,
+            "stdout_bytes": 3262547,
+            "memory_sample_interval_ms": 1,
+            "elapsed_ms": 139.9616,
+            "cpu_ms": 359.375,
+            "stderr": ""
+          }
+        ]
+      },
+      "memory_summary": {
+        "branchcut": {
+          "median_peak_working_set_bytes": 6643712,
+          "min_peak_working_set_bytes": 6610944,
+          "max_peak_working_set_bytes": 6729728
+        },
+        "rg": {
+          "median_peak_working_set_bytes": 22908928,
+          "min_peak_working_set_bytes": 17743872,
+          "max_peak_working_set_bytes": 35962880
+        },
+        "fd": {
+          "median_peak_working_set_bytes": 18780160,
+          "min_peak_working_set_bytes": 18194432,
+          "max_peak_working_set_bytes": 19423232
+        },
+        "zlob": {
+          "median_peak_working_set_bytes": 21151744,
+          "min_peak_working_set_bytes": 19320832,
+          "max_peak_working_set_bytes": 21155840
+        },
+        "fast_glob": {
+          "median_peak_working_set_bytes": 117633024,
+          "min_peak_working_set_bytes": 115474432,
+          "max_peak_working_set_bytes": 123863040
+        },
+        "tinyglobby": {
+          "median_peak_working_set_bytes": 89219072,
+          "min_peak_working_set_bytes": 88997888,
+          "max_peak_working_set_bytes": 89227264
+        },
+        "branchcut_4": {
+          "median_peak_working_set_bytes": 6209536,
+          "min_peak_working_set_bytes": 6139904,
+          "max_peak_working_set_bytes": 6209536
+        },
+        "branchcut_auto": {
+          "median_peak_working_set_bytes": 6729728,
+          "min_peak_working_set_bytes": 6672384,
+          "max_peak_working_set_bytes": 6750208
+        },
+        "rg_1": {
+          "median_peak_working_set_bytes": 6754304,
+          "min_peak_working_set_bytes": 6746112,
+          "max_peak_working_set_bytes": 6778880
+        },
+        "rg_4": {
+          "median_peak_working_set_bytes": 13172736,
+          "min_peak_working_set_bytes": 12845056,
+          "max_peak_working_set_bytes": 13742080
+        },
+        "fd_1": {
+          "median_peak_working_set_bytes": 11538432,
+          "min_peak_working_set_bytes": 11304960,
+          "max_peak_working_set_bytes": 11599872
+        },
+        "fd_4": {
+          "median_peak_working_set_bytes": 13680640,
+          "min_peak_working_set_bytes": 13418496,
+          "max_peak_working_set_bytes": 13979648
+        }
+      }
+    },
+    {
+      "name": "fixed-prefix-rust",
+      "corpus_files": 100000,
+      "expected_matches": 1250,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "packages/p00/src/**/*.rs"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "packages/p00/src/**/*.rs",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "packages/p00/src/**/*.rs",
+            "--threads",
+            "0"
+          ]
+        },
+        "rg": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "packages/p00/src/**/*.rs",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            "."
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*.rs",
+            "packages/p00/src"
+          ]
+        },
+        "zlob": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "zlob",
+            "-a",
+            "-G",
+            "packages/p00/src/**/*.rs",
+            "."
+          ]
+        },
+        "fast_glob": {
+          "api": "fast-glob",
+          "patterns": [
+            "packages/p00/src/**/*.rs"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        },
+        "tinyglobby": {
+          "api": "tinyglobby",
+          "patterns": [
+            "packages/p00/src/**/*.rs"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        },
+        "rg_1": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "packages/p00/src/**/*.rs",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            ".",
+            "--threads",
+            "1"
+          ]
+        },
+        "rg_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "packages/p00/src/**/*.rs",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            ".",
+            "--threads",
+            "4"
+          ]
+        },
+        "fd_1": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*.rs",
+            "packages/p00/src",
+            "--threads",
+            "1"
+          ]
+        },
+        "fd_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*.rs",
+            "packages/p00/src",
+            "--threads",
+            "4"
+          ]
+        }
+      },
+      "not_covered": {
+        "zlob": null,
+        "rg": null,
+        "fd": null,
+        "fast_glob": null,
+        "tinyglobby": null
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 45.01889999999548,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 44.60409999999683,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 40.88529999999446,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 41.90279999998165,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 39.658599999995204,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 40.6984999999986,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 37.89459999999963,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 40.41829999999027,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 35.274600000004284,
+            "stdout_bytes": 41250
+          }
+        ],
+        "rg": [
+          {
+            "elapsed_ms": 79.95019999999204,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 70.92149999999674,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 86.26889999999548,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 91.09130000000005,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 76.53820000000997,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 85.58859999998822,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 72.85360000000219,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 80.3065999999817,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 81.7614000000176,
+            "stdout_bytes": 43750
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 49.314199999993434,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 50.44039999999222,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 41.91080000001239,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 47.64540000000852,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 42.756300000008196,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 54.96779999998398,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 47.074700000026496,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 47.30380000002333,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 43.20790000000852,
+            "stdout_bytes": 41250
+          }
+        ],
+        "zlob": [
+          {
+            "elapsed_ms": 35.77959999997984,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 43.283599999995204,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 27.085499999986496,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 38.07990000001155,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 40.12339999998221,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 40.68070000002626,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 39.97260000000824,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 39.62799999999697,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 38.57420000000275,
+            "stdout_bytes": 43750
+          }
+        ],
+        "fast_glob": [
+          {
+            "elapsed_ms": 266.83540000001085,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 207.38430000000517,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 251.67089999999735,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 219.29159999999683,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 230.63959999999497,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 227.1707999999926,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 195.31640000001062,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 226.46060000002035,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 218.56530000001658,
+            "stdout_bytes": 41250
+          }
+        ],
+        "tinyglobby": [
+          {
+            "elapsed_ms": 148.60540000000037,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 147.85229999999865,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 176.19309999997495,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 171.71959999998217,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 172.80999999999767,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 163.71749999999884,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 140.57589999999618,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 168.83250000001863,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 162.40580000000773,
+            "stdout_bytes": 41250
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 40.45079999999143,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 43.931099999987055,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 31.407399999996414,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 27.335499999986496,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 42.48910000000615,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 29.57190000000992,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 36.09519999998156,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 42.97980000000098,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 32.59580000001006,
+            "stdout_bytes": 41250
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 39.54320000001462,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 43.85899999999674,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 42.99729999998817,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 32.86249999998836,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 29.665399999998044,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 38.19959999999264,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 41.58919999998761,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 38.68460000000778,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 42.16800000000512,
+            "stdout_bytes": 41250
+          }
+        ],
+        "rg_1": [
+          {
+            "elapsed_ms": 189.91800000000512,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 198.09910000002128,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 221.53700000001118,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 185.35369999997783,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 220.21359999998822,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 222.51230000000214,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 195.64459999999963,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 209.2284000000218,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 194.79040000002715,
+            "stdout_bytes": 43750
+          }
+        ],
+        "rg_4": [
+          {
+            "elapsed_ms": 99.15129999999772,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 86.58099999997648,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 80.03919999999925,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 80.48730000000796,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 86.4661999999953,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 87.9837000000116,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 101.28270000001066,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 113.08910000001197,
+            "stdout_bytes": 43750
+          },
+          {
+            "elapsed_ms": 106.7550999999803,
+            "stdout_bytes": 43750
+          }
+        ],
+        "fd_1": [
+          {
+            "elapsed_ms": 50.73939999999129,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 44.05160000000615,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 50.06349999998929,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 37.53159999998752,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 50.236000000004424,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 49.55319999999483,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 37.14930000001914,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 39.66819999998552,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 40.82009999998263,
+            "stdout_bytes": 41250
+          }
+        ],
+        "fd_4": [
+          {
+            "elapsed_ms": 52.22030000001541,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 51.67029999999795,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 56.10459999999148,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 50.617499999993015,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 51.210599999991246,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 51.33289999997942,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 49.634799999999814,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 50.30329999999958,
+            "stdout_bytes": 41250
+          },
+          {
+            "elapsed_ms": 48.9317999999912,
+            "stdout_bytes": 41250
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 40.6984999999986,
+          "p90_ms": 45.01889999999548,
+          "p95_ms": 45.01889999999548,
+          "standard_deviation_ms": 2.864431660687695,
+          "dispersion_percent": 7.036845597377719
+        },
+        "rg": {
+          "median_ms": 80.3065999999817,
+          "p90_ms": 91.09130000000005,
+          "p95_ms": 91.09130000000005,
+          "standard_deviation_ms": 6.138438173236667,
+          "dispersion_percent": 7.6171851846977265
+        },
+        "fd": {
+          "median_ms": 47.30380000002333,
+          "p90_ms": 54.96779999998398,
+          "p95_ms": 54.96779999998398,
+          "standard_deviation_ms": 3.932613308131423,
+          "dispersion_percent": 8.33531426077261
+        },
+        "zlob": {
+          "median_ms": 39.62799999999697,
+          "p90_ms": 43.283599999995204,
+          "p95_ms": 43.283599999995204,
+          "standard_deviation_ms": 4.351034533181344,
+          "dispersion_percent": 11.409806253835738
+        },
+        "fast_glob": {
+          "median_ms": 226.46060000002035,
+          "p90_ms": 266.83540000001085,
+          "p95_ms": 266.83540000001085,
+          "standard_deviation_ms": 20.353150291862956,
+          "dispersion_percent": 8.964675963140577
+        },
+        "tinyglobby": {
+          "median_ms": 163.71749999999884,
+          "p90_ms": 176.19309999997495,
+          "p95_ms": 176.19309999997495,
+          "standard_deviation_ms": 12.009377155195267,
+          "dispersion_percent": 7.440179950091917
+        },
+        "branchcut_4": {
+          "median_ms": 36.09519999998156,
+          "p90_ms": 43.931099999987055,
+          "p95_ms": 43.931099999987055,
+          "standard_deviation_ms": 5.978804740822164,
+          "dispersion_percent": 16.462645290749645
+        },
+        "branchcut_auto": {
+          "median_ms": 39.54320000001462,
+          "p90_ms": 43.85899999999674,
+          "p95_ms": 43.85899999999674,
+          "standard_deviation_ms": 4.496167791644509,
+          "dispersion_percent": 11.575835751017538
+        },
+        "rg_1": {
+          "median_ms": 198.09910000002128,
+          "p90_ms": 222.51230000000214,
+          "p95_ms": 222.51230000000214,
+          "standard_deviation_ms": 13.645182139966693,
+          "dispersion_percent": 6.684092586860155
+        },
+        "rg_4": {
+          "median_ms": 87.9837000000116,
+          "p90_ms": 113.08910000001197,
+          "p95_ms": 113.08910000001197,
+          "standard_deviation_ms": 11.206275913815501,
+          "dispersion_percent": 11.980543852545624
+        },
+        "fd_1": {
+          "median_ms": 44.05160000000615,
+          "p90_ms": 50.73939999999129,
+          "p95_ms": 50.73939999999129,
+          "standard_deviation_ms": 5.456363476021387,
+          "dispersion_percent": 12.282562989887845
+        },
+        "fd_4": {
+          "median_ms": 51.210599999991246,
+          "p90_ms": 56.10459999999148,
+          "p95_ms": 56.10459999999148,
+          "standard_deviation_ms": 1.9409617844998854,
+          "dispersion_percent": 3.7808807901762504
+        }
+      }
+    },
+    {
+      "name": "rust-toml-exclusions",
+      "corpus_files": 100000,
+      "expected_matches": 37501,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.{rs,toml}",
+            "--exclude",
+            "**/target/**",
+            "--exclude",
+            "**/node_modules/**"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.{rs,toml}",
+            "--exclude",
+            "**/target/**",
+            "--exclude",
+            "**/node_modules/**",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.{rs,toml}",
+            "--exclude",
+            "**/target/**",
+            "--exclude",
+            "**/node_modules/**",
+            "--threads",
+            "0"
+          ]
+        },
+        "rg": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "**/*.rs",
+            "--glob",
+            "**/*.toml",
+            "--glob",
+            "!**/target/**",
+            "--glob",
+            "!**/node_modules/**",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            "."
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--extension",
+            "rs",
+            "--extension",
+            "toml",
+            "--exclude",
+            "target",
+            "--exclude",
+            "node_modules"
+          ]
+        },
+        "fast_glob": {
+          "api": "fast-glob",
+          "patterns": [
+            "**/*.{rs,toml}"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": [
+              "**/target/**",
+              "**/node_modules/**"
+            ]
+          }
+        },
+        "tinyglobby": {
+          "api": "tinyglobby",
+          "patterns": [
+            "**/*.{rs,toml}"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": [
+              "**/target/**",
+              "**/node_modules/**"
+            ]
+          }
+        },
+        "rg_1": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "**/*.rs",
+            "--glob",
+            "**/*.toml",
+            "--glob",
+            "!**/target/**",
+            "--glob",
+            "!**/node_modules/**",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            ".",
+            "--threads",
+            "1"
+          ]
+        },
+        "rg_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "**/*.rs",
+            "--glob",
+            "**/*.toml",
+            "--glob",
+            "!**/target/**",
+            "--glob",
+            "!**/node_modules/**",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            ".",
+            "--threads",
+            "4"
+          ]
+        },
+        "fd_1": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--extension",
+            "rs",
+            "--extension",
+            "toml",
+            "--exclude",
+            "target",
+            "--exclude",
+            "node_modules",
+            "--threads",
+            "1"
+          ]
+        },
+        "fd_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--extension",
+            "rs",
+            "--extension",
+            "toml",
+            "--exclude",
+            "target",
+            "--exclude",
+            "node_modules",
+            "--threads",
+            "4"
+          ]
+        }
+      },
+      "not_covered": {
+        "zlob": "equivalent invocation not implemented in this runner",
+        "rg": null,
+        "fd": null,
+        "fast_glob": null,
+        "tinyglobby": null
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 69,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 64.67389999999432,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 69.77230000001146,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 73.08670000001439,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 60.15690000000177,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 62.54310000000987,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 71.0734999999986,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 68.52599999998347,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 67.39280000000144,
+            "stdout_bytes": 1187516
+          }
+        ],
+        "rg": [
+          {
+            "elapsed_ms": 90.05689999999595,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 89.91779999999562,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 89.8924999999872,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 88.56090000001132,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 82.47539999999572,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 82.64449999999488,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 81.20120000001043,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 85.63020000001416,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 89.02919999998994,
+            "stdout_bytes": 1262518
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 101.56500000000233,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 99.24060000001919,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 87.01440000001458,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 83.22390000001178,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 97.51529999999912,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 102.80580000000191,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 103.31090000001132,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 97.84739999999874,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 99.41649999999208,
+            "stdout_bytes": 1187516
+          }
+        ],
+        "fast_glob": [
+          {
+            "elapsed_ms": 305.0200999999943,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 290.65729999999166,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 289.5199000000139,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 314.5898000000161,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 301.9122999999963,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 297.5313000000024,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 334.30869999999413,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 361.42559999998775,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 370.3761999999988,
+            "stdout_bytes": 1187516
+          }
+        ],
+        "tinyglobby": [
+          {
+            "elapsed_ms": 207.4823000000033,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 208.84170000001905,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 196.39079999999376,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 211.34989999997197,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 206.6576000000059,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 201.15079999997397,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 188.71859999999288,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 240.96940000000177,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 199.35949999999139,
+            "stdout_bytes": 1187516
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 75.26820000002044,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 83.66790000000037,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 77.4380999999994,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 60.490400000009686,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 70.94570000001113,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 67.90529999998398,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 55.443800000008196,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 69.20910000000731,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 80.04060000000754,
+            "stdout_bytes": 1187516
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 65.43499999999767,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 64.23780000000261,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 69.04399999999441,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 72.2835999999952,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 61.56130000000121,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 67.89710000000196,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 66.34309999999823,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 72.16169999999693,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 66.10929999998189,
+            "stdout_bytes": 1187516
+          }
+        ],
+        "rg_1": [
+          {
+            "elapsed_ms": 187.0743000000075,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 186.78669999999693,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 156.94130000000587,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 191.43419999998878,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 169.64400000000023,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 176.33009999999194,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 165.06629999997676,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 187.63959999999497,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 159.7167999999947,
+            "stdout_bytes": 1262518
+          }
+        ],
+        "rg_4": [
+          {
+            "elapsed_ms": 106.37100000001374,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 88.77139999999781,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 108.74230000001262,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 101.82490000000689,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 100.22269999998389,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 97.94620000000577,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 107.9549999999872,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 106.31340000001364,
+            "stdout_bytes": 1262518
+          },
+          {
+            "elapsed_ms": 101.41379999998026,
+            "stdout_bytes": 1262518
+          }
+        ],
+        "fd_1": [
+          {
+            "elapsed_ms": 212.86679999998887,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 237.15520000000834,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 196.78850000002421,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 228.35640000001877,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 234.87210000000778,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 210.140699999989,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 245.0733000000182,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 226.99970000001485,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 205.4780000000028,
+            "stdout_bytes": 1187516
+          }
+        ],
+        "fd_4": [
+          {
+            "elapsed_ms": 117.34249999999884,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 106.59980000002543,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 116.81609999999637,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 128.3409999999858,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 113.00310000000172,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 104.45110000000568,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 105.05270000000019,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 122.7494000000006,
+            "stdout_bytes": 1187516
+          },
+          {
+            "elapsed_ms": 111.37640000000829,
+            "stdout_bytes": 1187516
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 68.52599999998347,
+          "p90_ms": 73.08670000001439,
+          "p95_ms": 73.08670000001439,
+          "standard_deviation_ms": 3.926503708592324,
+          "dispersion_percent": 5.829274892784071
+        },
+        "rg": {
+          "median_ms": 88.56090000001132,
+          "p90_ms": 90.05689999999595,
+          "p95_ms": 90.05689999999595,
+          "standard_deviation_ms": 3.4365761840984206,
+          "dispersion_percent": 3.9682889894833053
+        },
+        "fd": {
+          "median_ms": 99.24060000001919,
+          "p90_ms": 103.31090000001132,
+          "p95_ms": 103.31090000001132,
+          "standard_deviation_ms": 6.629778158846202,
+          "dispersion_percent": 6.843133371089648
+        },
+        "fast_glob": {
+          "median_ms": 305.0200999999943,
+          "p90_ms": 370.3761999999988,
+          "p95_ms": 370.3761999999988,
+          "standard_deviation_ms": 28.50031331968235,
+          "dispersion_percent": 8.95191190065398
+        },
+        "tinyglobby": {
+          "median_ms": 206.6576000000059,
+          "p90_ms": 240.96940000000177,
+          "p95_ms": 240.96940000000177,
+          "standard_deviation_ms": 13.80602981785284,
+          "dispersion_percent": 6.677032236661717
+        },
+        "branchcut_4": {
+          "median_ms": 70.94570000001113,
+          "p90_ms": 83.66790000000037,
+          "p95_ms": 83.66790000000037,
+          "standard_deviation_ms": 8.608062587029226,
+          "dispersion_percent": 12.097355156767325
+        },
+        "branchcut_auto": {
+          "median_ms": 66.34309999999823,
+          "p90_ms": 72.2835999999952,
+          "p95_ms": 72.2835999999952,
+          "standard_deviation_ms": 3.3324692372587275,
+          "dispersion_percent": 4.956794980461036
+        },
+        "rg_1": {
+          "median_ms": 176.33009999999194,
+          "p90_ms": 191.43419999998878,
+          "p95_ms": 191.43419999998878,
+          "standard_deviation_ms": 12.4715613081015,
+          "dispersion_percent": 7.101207583878974
+        },
+        "rg_4": {
+          "median_ms": 101.82490000000689,
+          "p90_ms": 108.74230000001262,
+          "p95_ms": 108.74230000001262,
+          "standard_deviation_ms": 5.900313459368379,
+          "dispersion_percent": 5.774803244018074
+        },
+        "fd_1": {
+          "median_ms": 226.99970000001485,
+          "p90_ms": 245.0733000000182,
+          "p95_ms": 245.0733000000182,
+          "standard_deviation_ms": 15.368783427296858,
+          "dispersion_percent": 6.923808641758705
+        },
+        "fd_4": {
+          "median_ms": 113.00310000000172,
+          "p90_ms": 128.3409999999858,
+          "p95_ms": 128.3409999999858,
+          "standard_deviation_ms": 7.711367852715463,
+          "dispersion_percent": 6.766124475819526
+        }
+      }
+    },
+    {
+      "name": "hidden-rust",
+      "corpus_files": 100000,
+      "expected_matches": 37503,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--hidden"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--hidden",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--hidden",
+            "--threads",
+            "0"
+          ]
+        },
+        "rg": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--hidden",
+            "--glob",
+            "**/*.rs",
+            "."
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--hidden",
+            "--glob",
+            "*.rs"
+          ]
+        },
+        "zlob": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "zlob",
+            "-a",
+            "-G",
+            "-H",
+            "**/*.rs",
+            "."
+          ]
+        },
+        "fast_glob": {
+          "api": "fast-glob",
+          "patterns": [
+            "**/*.rs"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": true,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        },
+        "tinyglobby": {
+          "api": "tinyglobby",
+          "patterns": [
+            "**/*.rs"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": true,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        }
+      },
+      "not_covered": {
+        "zlob": null,
+        "rg": null,
+        "fd": null,
+        "fast_glob": null,
+        "tinyglobby": null
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 62.843900000007125,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 61.24689999999828,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 60.74880000000121,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 65.7448999999906,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 76.82300000000396,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 66.12609999999404,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 64.1541000000143,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 74.66130000000703,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 78.99530000000959,
+            "stdout_bytes": 1275075
+          }
+        ],
+        "rg": [
+          {
+            "elapsed_ms": 76.79279999999562,
+            "stdout_bytes": 1350081
+          },
+          {
+            "elapsed_ms": 74.80580000000191,
+            "stdout_bytes": 1350081
+          },
+          {
+            "elapsed_ms": 73.7609999999986,
+            "stdout_bytes": 1350081
+          },
+          {
+            "elapsed_ms": 73.65069999999832,
+            "stdout_bytes": 1350081
+          },
+          {
+            "elapsed_ms": 74.80399999997462,
+            "stdout_bytes": 1350081
+          },
+          {
+            "elapsed_ms": 85.37919999999576,
+            "stdout_bytes": 1350081
+          },
+          {
+            "elapsed_ms": 83.16659999999683,
+            "stdout_bytes": 1350081
+          },
+          {
+            "elapsed_ms": 91.28099999998813,
+            "stdout_bytes": 1350081
+          },
+          {
+            "elapsed_ms": 80.55669999998645,
+            "stdout_bytes": 1350081
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 76.66310000000522,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 83.81300000002375,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 87.90260000000126,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 96.6310999999987,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 110.33059999998659,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 94.06930000000284,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 104.58430000001681,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 115.50769999998738,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 106.60629999998491,
+            "stdout_bytes": 1275075
+          }
+        ],
+        "zlob": [
+          {
+            "elapsed_ms": 108.44800000000396,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 98.6190999999817,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 93.05950000000303,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 95.5048999999999,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 102.08170000000973,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 94.33729999998468,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 94.22789999999804,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 112.9706999999762,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 103.4091999999946,
+            "stdout_bytes": 1275075
+          }
+        ],
+        "fast_glob": [
+          {
+            "elapsed_ms": 359.83699999999953,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 320.898199999996,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 303.27049999998417,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 322.8808999999892,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 319.7595999999903,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 309.82280000002356,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 320.2250000000058,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 370.20800000001327,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 354.9265000000014,
+            "stdout_bytes": 1275075
+          }
+        ],
+        "tinyglobby": [
+          {
+            "elapsed_ms": 237.62080000000424,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 224.83689999999478,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 240.68479999998817,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 215.29889999999432,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 214.77309999999125,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 226.89899999997579,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 219.78609999999753,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 226.42989999998827,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 197.6981000000087,
+            "stdout_bytes": 1275075
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 96.70530000000144,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 94.7607999999891,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 75.08679999999003,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 92.273600000015,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 85.20939999999246,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 91.62109999998938,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 93.59979999999632,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 93.2730000000156,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 89.05750000002445,
+            "stdout_bytes": 1275075
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 62.666199999977835,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 61.79199999998673,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 64.86689999999362,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 66.461100000015,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 70.62200000000303,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 70.05270000000019,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 78.88370000000577,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 73.06279999998515,
+            "stdout_bytes": 1275075
+          },
+          {
+            "elapsed_ms": 72.44810000000871,
+            "stdout_bytes": 1275075
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 65.7448999999906,
+          "p90_ms": 78.99530000000959,
+          "p95_ms": 78.99530000000959,
+          "standard_deviation_ms": 6.593133209656574,
+          "dispersion_percent": 9.70618338748012
+        },
+        "rg": {
+          "median_ms": 76.79279999999562,
+          "p90_ms": 91.28099999998813,
+          "p95_ms": 91.28099999998813,
+          "standard_deviation_ms": 5.833775251725162,
+          "dispersion_percent": 7.351461635072404
+        },
+        "fd": {
+          "median_ms": 96.6310999999987,
+          "p90_ms": 115.50769999998738,
+          "p95_ms": 115.50769999998738,
+          "standard_deviation_ms": 12.238116289773876,
+          "dispersion_percent": 12.571857192031569
+        },
+        "zlob": {
+          "median_ms": 98.6190999999817,
+          "p90_ms": 112.9706999999762,
+          "p95_ms": 112.9706999999762,
+          "standard_deviation_ms": 6.586563490923415,
+          "dispersion_percent": 6.567166270815202
+        },
+        "fast_glob": {
+          "median_ms": 320.898199999996,
+          "p90_ms": 370.20800000001327,
+          "p95_ms": 370.20800000001327,
+          "standard_deviation_ms": 22.52958705509235,
+          "dispersion_percent": 6.800065245061241
+        },
+        "tinyglobby": {
+          "median_ms": 224.83689999999478,
+          "p90_ms": 240.68479999998817,
+          "p95_ms": 240.68479999998817,
+          "standard_deviation_ms": 12.171839070846124,
+          "dispersion_percent": 5.466319507656394
+        },
+        "branchcut_4": {
+          "median_ms": 92.273600000015,
+          "p90_ms": 96.70530000000144,
+          "p95_ms": 96.70530000000144,
+          "standard_deviation_ms": 6.191897196070428,
+          "dispersion_percent": 6.866430113511251
+        },
+        "branchcut_auto": {
+          "median_ms": 70.05270000000019,
+          "p90_ms": 78.88370000000577,
+          "p95_ms": 78.88370000000577,
+          "standard_deviation_ms": 5.221970888709165,
+          "dispersion_percent": 7.569835170725605
+        }
+      }
+    },
+    {
+      "name": "gitignore-rust",
+      "corpus_files": 100000,
+      "expected_matches": 25000,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--gitignore"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--gitignore",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--gitignore",
+            "--threads",
+            "0"
+          ]
+        },
+        "rg": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-require-git",
+            "--no-hidden",
+            "--glob",
+            "**/*.rs",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            "."
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-hidden",
+            "--no-require-git",
+            "--glob",
+            "*.rs"
+          ]
+        },
+        "zlob": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "zlob",
+            "-a",
+            "**/*.rs",
+            "."
+          ]
+        }
+      },
+      "not_covered": {
+        "zlob": null,
+        "rg": null,
+        "fd": null,
+        "fast_glob": "equivalent package invocation not implemented in this runner",
+        "tinyglobby": "equivalent package invocation not implemented in this runner"
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 75.58009999999194,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 72.01239999997779,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 70.81349999998929,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 72.3006999999925,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 68.7501999999804,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 73.27069999999367,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 67.03900000001886,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 70.11629999999423,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 67.1032000000123,
+            "stdout_bytes": 825000
+          }
+        ],
+        "rg": [
+          {
+            "elapsed_ms": 87.29889999999432,
+            "stdout_bytes": 875000
+          },
+          {
+            "elapsed_ms": 84.45829999999842,
+            "stdout_bytes": 875000
+          },
+          {
+            "elapsed_ms": 79.36329999999725,
+            "stdout_bytes": 875000
+          },
+          {
+            "elapsed_ms": 75.3350999999966,
+            "stdout_bytes": 875000
+          },
+          {
+            "elapsed_ms": 78.41889999998966,
+            "stdout_bytes": 875000
+          },
+          {
+            "elapsed_ms": 76.60019999998622,
+            "stdout_bytes": 875000
+          },
+          {
+            "elapsed_ms": 82.44450000001234,
+            "stdout_bytes": 875000
+          },
+          {
+            "elapsed_ms": 71.7558999999892,
+            "stdout_bytes": 875000
+          },
+          {
+            "elapsed_ms": 76.91709999999148,
+            "stdout_bytes": 875000
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 107.18289999998524,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 99.01350000000093,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 123.74350000001141,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 98.72070000000531,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 96.09880000000703,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 101.17949999999837,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 111.08079999999609,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 112.1698000000033,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 104.99400000000605,
+            "stdout_bytes": 825000
+          }
+        ],
+        "zlob": [
+          {
+            "elapsed_ms": 95.83720000000903,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 87.64980000001378,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 83.6646999999939,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 85.30100000000675,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 80.52439999999478,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 94.47370000000228,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 96.18849999998929,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 92.79209999999148,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 86.88959999999497,
+            "stdout_bytes": 825000
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 112.3922999999777,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 110.03740000000107,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 104.5966999999946,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 104.42259999999078,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 98.36560000001919,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 109.8570999999938,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 100.74859999999171,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 101.59289999998873,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 101.94389999998384,
+            "stdout_bytes": 825000
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 80.58110000001034,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 76.50690000000759,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 78.465200000006,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 73.7669000000169,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 65.99910000001546,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 74.95129999998608,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 71.40140000000247,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 69.91349999999511,
+            "stdout_bytes": 825000
+          },
+          {
+            "elapsed_ms": 69.9206000000122,
+            "stdout_bytes": 825000
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 70.81349999998929,
+          "p90_ms": 75.58009999999194,
+          "p95_ms": 75.58009999999194,
+          "standard_deviation_ms": 2.6905473272111635,
+          "dispersion_percent": 3.801484199561393
+        },
+        "rg": {
+          "median_ms": 78.41889999998966,
+          "p90_ms": 87.29889999999432,
+          "p95_ms": 87.29889999999432,
+          "standard_deviation_ms": 4.554891581209653,
+          "dispersion_percent": 5.752802827604546
+        },
+        "fd": {
+          "median_ms": 104.99400000000605,
+          "p90_ms": 123.74350000001141,
+          "p95_ms": 123.74350000001141,
+          "standard_deviation_ms": 8.193430107979017,
+          "dispersion_percent": 7.7281645482037895
+        },
+        "zlob": {
+          "median_ms": 87.64980000001378,
+          "p90_ms": 96.18849999998929,
+          "p95_ms": 96.18849999998929,
+          "standard_deviation_ms": 5.399849182347681,
+          "dispersion_percent": 6.049716444749901
+        },
+        "branchcut_4": {
+          "median_ms": 104.42259999999078,
+          "p90_ms": 112.3922999999777,
+          "p95_ms": 112.3922999999777,
+          "standard_deviation_ms": 4.558579872859642,
+          "dispersion_percent": 4.346301209635409
+        },
+        "branchcut_auto": {
+          "median_ms": 73.7669000000169,
+          "p90_ms": 80.58110000001034,
+          "p95_ms": 80.58110000001034,
+          "standard_deviation_ms": 4.376158240841004,
+          "dispersion_percent": 5.953902786606007
+        }
+      }
+    },
+    {
+      "name": "directories",
+      "corpus_files": 100000,
+      "expected_matches": 202,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*",
+            "--type",
+            "dir"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*",
+            "--type",
+            "dir",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*",
+            "--type",
+            "dir",
+            "--threads",
+            "0"
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "directory",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*"
+          ]
+        },
+        "zlob": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "zlob",
+            "-a",
+            "-G",
+            "-d",
+            "**/*",
+            "."
+          ]
+        },
+        "fast_glob": {
+          "api": "fast-glob",
+          "patterns": [
+            "**/*"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": true,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        },
+        "tinyglobby": {
+          "api": "tinyglobby",
+          "patterns": [
+            "**/*"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": true,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        }
+      },
+      "not_covered": {
+        "zlob": null,
+        "rg": "equivalent file-list invocation not implemented in this runner",
+        "fd": null,
+        "fast_glob": null,
+        "tinyglobby": null
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 57.16149999998743,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 58.204899999982445,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 59.35920000000624,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 57.37260000000242,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 57.8980000000156,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 59.77610000001732,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 53.81030000001192,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 55.99790000001667,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 56.904799999989336,
+            "stdout_bytes": 4537
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 83.08520000000135,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 85.41330000001471,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 90.48240000000806,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 75.20530000000144,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 80.41440000000875,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 81.80199999999604,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 80.28769999998622,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 79.22269999998389,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 80.83870000002207,
+            "stdout_bytes": 4739
+          }
+        ],
+        "zlob": [
+          {
+            "elapsed_ms": 84.60839999999735,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 115.50289999999222,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 109.72989999997662,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 90.60719999999856,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 87.32240000000456,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 96.0566000000108,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 112.24480000001495,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 91.42280000000028,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 88.41650000002119,
+            "stdout_bytes": 4537
+          }
+        ],
+        "fast_glob": [
+          {
+            "elapsed_ms": 270.3537999999826,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 327.87180000002263,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 323.58619999999064,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 321.3537999999826,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 353.99299999998766,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 297.2936000000045,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 312.6426999999967,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 294.0679999999993,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 273.84460000001127,
+            "stdout_bytes": 4537
+          }
+        ],
+        "tinyglobby": [
+          {
+            "elapsed_ms": 149.07420000000275,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 174.78190000000177,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 156.4989999999816,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 164.98480000000563,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 179.25209999998333,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 173.85460000002058,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 147.90869999999995,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 156.2390000000014,
+            "stdout_bytes": 4739
+          },
+          {
+            "elapsed_ms": 144.8018999999913,
+            "stdout_bytes": 4739
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 76.32869999998366,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 76.57860000000801,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 79.18530000001192,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 71.75719999999274,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 69.93369999999413,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 81.31049999999232,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 64.83650000000489,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 73.27249999999185,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 76.2841999999946,
+            "stdout_bytes": 4537
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 58.376799999998184,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 58.336699999985285,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 57.017299999977695,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 59.592600000003586,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 58.374600000010105,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 66.92390000002342,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 55.759299999976065,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 56.43670000002021,
+            "stdout_bytes": 4537
+          },
+          {
+            "elapsed_ms": 56.95629999999073,
+            "stdout_bytes": 4537
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 57.37260000000242,
+          "p90_ms": 59.77610000001732,
+          "p95_ms": 59.77610000001732,
+          "standard_deviation_ms": 1.6843531109796397,
+          "dispersion_percent": 2.935064753791811
+        },
+        "fd": {
+          "median_ms": 80.83870000002207,
+          "p90_ms": 90.48240000000806,
+          "p95_ms": 90.48240000000806,
+          "standard_deviation_ms": 4.018312390382116,
+          "dispersion_percent": 4.908683822981058
+        },
+        "zlob": {
+          "median_ms": 91.42280000000028,
+          "p90_ms": 115.50289999999222,
+          "p95_ms": 115.50289999999222,
+          "standard_deviation_ms": 11.203258152178424,
+          "dispersion_percent": 11.511359694398795
+        },
+        "fast_glob": {
+          "median_ms": 312.6426999999967,
+          "p90_ms": 353.99299999998766,
+          "p95_ms": 353.99299999998766,
+          "standard_deviation_ms": 25.483334629865794,
+          "dispersion_percent": 8.264842947948573
+        },
+        "tinyglobby": {
+          "median_ms": 156.4989999999816,
+          "p90_ms": 179.25209999998333,
+          "p95_ms": 179.25209999998333,
+          "standard_deviation_ms": 12.12355331117619,
+          "dispersion_percent": 7.5385011927339995
+        },
+        "branchcut_4": {
+          "median_ms": 76.2841999999946,
+          "p90_ms": 81.31049999999232,
+          "p95_ms": 81.31049999999232,
+          "standard_deviation_ms": 4.741461330058656,
+          "dispersion_percent": 6.3740056524649855
+        },
+        "branchcut_auto": {
+          "median_ms": 58.336699999985285,
+          "p90_ms": 66.92390000002342,
+          "p95_ms": 66.92390000002342,
+          "standard_deviation_ms": 3.133742707585496,
+          "dispersion_percent": 5.343892211531039
+        }
+      }
+    },
+    {
+      "name": "sorted-rust",
+      "corpus_files": 100000,
+      "expected_matches": 37501,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--sort"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--sort",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--sort",
+            "--threads",
+            "0"
+          ]
+        },
+        "rg": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--sort",
+            "path",
+            "--glob",
+            "**/*.rs",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            "."
+          ]
+        },
+        "zlob": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "zlob",
+            "-a",
+            "-G",
+            "-s",
+            "**/*.rs",
+            "."
+          ]
+        }
+      },
+      "not_covered": {
+        "zlob": null,
+        "rg": null,
+        "fd": "equivalent invocation not implemented in this runner",
+        "fast_glob": "equivalent package invocation not implemented in this runner",
+        "tinyglobby": "equivalent package invocation not implemented in this runner"
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 106.92479999997886,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 96.55989999999292,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 110.95310000001336,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 102.71889999997802,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 105.58869999996386,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 111.8756000000285,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 118.00069999997504,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 107.43920000002254,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 107.83319999999367,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "rg": [
+          {
+            "elapsed_ms": 232.03530000001774,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 245.0981000000029,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 255.28609999999753,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 249.285200000013,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 257.6076999999932,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 243.631699999969,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 277.3010999999824,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 281.0676000000094,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 236.13920000003418,
+            "stdout_bytes": 1350018
+          }
+        ],
+        "zlob": [
+          {
+            "elapsed_ms": 119.08770000000368,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 118.57120000000577,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 116.33999999999651,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 122.13790000000154,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 106.97809999994934,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 122.57779999997001,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 101.56300000002375,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 123.27379999996629,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 112.75460000004387,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 130.21729999998934,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 123.01540000000386,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 125.46910000001662,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 128.83770000000368,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 128.72879999998258,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 123.56520000001183,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 138.95720000000438,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 112.03610000002664,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 117.0676000000094,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 104.10980000000563,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 101.55079999999725,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 104.53080000000773,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 115.38730000000214,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 116.69470000005094,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 130.96059999999125,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 102.17540000000736,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 96.07280000002356,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 105.8411999999662,
+            "stdout_bytes": 1275016
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 107.43920000002254,
+          "p90_ms": 118.00069999997504,
+          "p95_ms": 118.00069999997504,
+          "standard_deviation_ms": 5.656466948833694,
+          "dispersion_percent": 5.259687246725241
+        },
+        "rg": {
+          "median_ms": 249.285200000013,
+          "p90_ms": 281.0676000000094,
+          "p95_ms": 281.0676000000094,
+          "standard_deviation_ms": 15.960291396997649,
+          "dispersion_percent": 6.307163557035565
+        },
+        "zlob": {
+          "median_ms": 118.57120000000577,
+          "p90_ms": 123.27379999996629,
+          "p95_ms": 123.27379999996629,
+          "standard_deviation_ms": 7.0742672987018675,
+          "dispersion_percent": 6.102691077945039
+        },
+        "branchcut_4": {
+          "median_ms": 125.46910000001662,
+          "p90_ms": 138.95720000000438,
+          "p95_ms": 138.95720000000438,
+          "standard_deviation_ms": 7.355479581003272,
+          "dispersion_percent": 5.86928317305473
+        },
+        "branchcut_auto": {
+          "median_ms": 104.53080000000773,
+          "p90_ms": 130.96059999999125,
+          "p95_ms": 130.96059999999125,
+          "standard_deviation_ms": 10.021178116307144,
+          "dispersion_percent": 9.228327393650812
+        }
+      }
+    },
+    {
+      "name": "limit-10-rust",
+      "corpus_files": 100000,
+      "expected_matches": 10,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--limit",
+            "10"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--limit",
+            "10",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--limit",
+            "10",
+            "--threads",
+            "0"
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--max-results",
+            "10",
+            "--glob",
+            "*.rs"
+          ]
+        },
+        "zlob": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "zlob",
+            "-n",
+            "10",
+            "-G",
+            "**/*.rs",
+            "."
+          ]
+        }
+      },
+      "not_covered": {
+        "zlob": null,
+        "rg": "equivalent file-list invocation not implemented in this runner",
+        "fd": null,
+        "fast_glob": "equivalent package invocation not implemented in this runner",
+        "tinyglobby": "equivalent package invocation not implemented in this runner"
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 38.291199999977835,
+            "stdout_bytes": 259
+          },
+          {
+            "elapsed_ms": 37.556099999987055,
+            "stdout_bytes": 259
+          },
+          {
+            "elapsed_ms": 41.82400000002235,
+            "stdout_bytes": 259
+          },
+          {
+            "elapsed_ms": 36.722500000032596,
+            "stdout_bytes": 259
+          },
+          {
+            "elapsed_ms": 43.59500000003027,
+            "stdout_bytes": 259
+          },
+          {
+            "elapsed_ms": 38.177700000000186,
+            "stdout_bytes": 259
+          },
+          {
+            "elapsed_ms": 39.115300000004936,
+            "stdout_bytes": 259
+          },
+          {
+            "elapsed_ms": 37.98519999999553,
+            "stdout_bytes": 259
+          },
+          {
+            "elapsed_ms": 34.556599999952596,
+            "stdout_bytes": 259
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 41.00069999997504,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 55.20179999998072,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 48.22319999994943,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 45.33279999997467,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 59.62400000001071,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 50.213999999978114,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 43.40509999997448,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 47.666099999973085,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 57.2778999999864,
+            "stdout_bytes": 340
+          }
+        ],
+        "zlob": [
+          {
+            "elapsed_ms": 99.1926000000094,
+            "stdout_bytes": 360
+          },
+          {
+            "elapsed_ms": 104.7329000000027,
+            "stdout_bytes": 360
+          },
+          {
+            "elapsed_ms": 111.34139999997569,
+            "stdout_bytes": 360
+          },
+          {
+            "elapsed_ms": 87.46380000002682,
+            "stdout_bytes": 360
+          },
+          {
+            "elapsed_ms": 98.897799999977,
+            "stdout_bytes": 360
+          },
+          {
+            "elapsed_ms": 107.66889999998966,
+            "stdout_bytes": 360
+          },
+          {
+            "elapsed_ms": 103.43839999998454,
+            "stdout_bytes": 360
+          },
+          {
+            "elapsed_ms": 108.98620000004303,
+            "stdout_bytes": 360
+          },
+          {
+            "elapsed_ms": 109.75170000002254,
+            "stdout_bytes": 360
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 33.98570000001928,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 44.93940000003204,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 42.27179999998771,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 38.194900000002235,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 49.60519999999087,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 42.22110000002431,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 43.08240000001388,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 44.085000000020955,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 43.28980000002775,
+            "stdout_bytes": 340
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 40.853699999977835,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 50.43869999999879,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 37.23479999997653,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 40.16680000000633,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 47.425800000026356,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 37.149700000009034,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 40.477299999969546,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 43.71610000001965,
+            "stdout_bytes": 340
+          },
+          {
+            "elapsed_ms": 40.84959999995772,
+            "stdout_bytes": 340
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 38.177700000000186,
+          "p90_ms": 43.59500000003027,
+          "p95_ms": 43.59500000003027,
+          "standard_deviation_ms": 2.521139258367981,
+          "dispersion_percent": 6.523494474012577
+        },
+        "fd": {
+          "median_ms": 48.22319999994943,
+          "p90_ms": 59.62400000001071,
+          "p95_ms": 59.62400000001071,
+          "standard_deviation_ms": 6.028559275104494,
+          "dispersion_percent": 12.112415765656445
+        },
+        "zlob": {
+          "median_ms": 104.7329000000027,
+          "p90_ms": 111.34139999997569,
+          "p95_ms": 111.34139999997569,
+          "standard_deviation_ms": 7.043253940671971,
+          "dispersion_percent": 6.80526841134061
+        },
+        "branchcut_4": {
+          "median_ms": 43.08240000001388,
+          "p90_ms": 49.60519999999087,
+          "p95_ms": 49.60519999999087,
+          "standard_deviation_ms": 4.095949478038834,
+          "dispersion_percent": 9.658352348799625
+        },
+        "branchcut_auto": {
+          "median_ms": 40.84959999995772,
+          "p90_ms": 50.43869999999879,
+          "p95_ms": 50.43869999999879,
+          "standard_deviation_ms": 4.191715564409906,
+          "dispersion_percent": 9.972031080044925
+        }
+      }
+    },
+    {
+      "name": "broad-files-nul",
+      "corpus_files": 100000,
+      "expected_matches": 100002,
+      "output_mode": "nul",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*",
+            "--print0"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*",
+            "--print0",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*",
+            "--print0",
+            "--threads",
+            "0"
+          ]
+        },
+        "rg": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--null",
+            "--glob",
+            "**/*",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            "."
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--print0",
+            "--glob",
+            "*"
+          ]
+        }
+      },
+      "not_covered": {
+        "zlob": "equivalent invocation not implemented in this runner",
+        "rg": null,
+        "fd": null,
+        "fast_glob": "equivalent package invocation not implemented in this runner",
+        "tinyglobby": "equivalent package invocation not implemented in this runner"
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 88.41809999995166,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 104.33770000003278,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 74.33699999999953,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 66.9199999999837,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 81.1533000000054,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 103.19819999998435,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 102.22430000000168,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 73.17719999997644,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 101.4323999999906,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "rg": [
+          {
+            "elapsed_ms": 105.75870000000577,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 147.00809999997728,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 94.70110000000568,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 104.10070000000997,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 107.52210000000196,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 127.25030000001425,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 107.09230000001844,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 99.43900000001304,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 121.40759999997681,
+            "stdout_bytes": 3462551
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 135.59090000001015,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 96.41110000002664,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 112.46880000003148,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 111.9271000000299,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 119.38709999999264,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 118.32949999999255,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 99.58970000001136,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 137.3969999999972,
+            "stdout_bytes": 3462551
+          },
+          {
+            "elapsed_ms": 138.96820000000298,
+            "stdout_bytes": 3462551
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 96.23379999998724,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 84.5728999999701,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 104.54689999995753,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 114.74080000002868,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 101.07080000004498,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 91.32000000000698,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 92.00950000004377,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 106.28100000001723,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 119.6817999999621,
+            "stdout_bytes": 3262547
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 84.56110000004992,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 81.57110000000102,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 86.94969999999739,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 74.961100000015,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 78.39409999997588,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 101.58400000003166,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 92.95679999998538,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 99.76620000001276,
+            "stdout_bytes": 3262547
+          },
+          {
+            "elapsed_ms": 97.14069999998901,
+            "stdout_bytes": 3262547
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 88.41809999995166,
+          "p90_ms": 104.33770000003278,
+          "p95_ms": 104.33770000003278,
+          "standard_deviation_ms": 14.052839902722507,
+          "dispersion_percent": 15.904910137436717
+        },
+        "rg": {
+          "median_ms": 107.09230000001844,
+          "p90_ms": 147.00809999997728,
+          "p95_ms": 147.00809999997728,
+          "standard_deviation_ms": 15.437257545221284,
+          "dispersion_percent": 13.697926766269191
+        },
+        "fd": {
+          "median_ms": 118.32949999999255,
+          "p90_ms": 138.96820000000298,
+          "p95_ms": 138.96820000000298,
+          "standard_deviation_ms": 14.879667009483102,
+          "dispersion_percent": 12.514796057651592
+        },
+        "branchcut_4": {
+          "median_ms": 101.07080000004498,
+          "p90_ms": 119.6817999999621,
+          "p95_ms": 119.6817999999621,
+          "standard_deviation_ms": 10.776287972527959,
+          "dispersion_percent": 10.652511704582547
+        },
+        "branchcut_auto": {
+          "median_ms": 86.94969999999739,
+          "p90_ms": 101.58400000003166,
+          "p95_ms": 101.58400000003166,
+          "standard_deviation_ms": 9.090832092097939,
+          "dispersion_percent": 10.254298468760842
+        }
+      }
+    },
+    {
+      "name": "recursive-basename-rust",
+      "corpus_files": 100000,
+      "expected_matches": 37501,
+      "output_mode": "paths",
+      "queries": {
+        "branchcut": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs"
+          ]
+        },
+        "branchcut_4": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--threads",
+            "4"
+          ]
+        },
+        "branchcut_auto": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "branchcut",
+            "--cwd",
+            "$FIXTURE",
+            "--glob",
+            "**/*.rs",
+            "--threads",
+            "0"
+          ]
+        },
+        "rg": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "rg",
+            "--files",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*.rs",
+            "--glob",
+            "!**/.*",
+            "--glob",
+            "!.*",
+            "."
+          ]
+        },
+        "fd": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "fd",
+            "--type",
+            "file",
+            "--no-ignore",
+            "--no-hidden",
+            "--glob",
+            "*.rs"
+          ]
+        },
+        "zlob": {
+          "cwd": "$FIXTURE",
+          "argv": [
+            "zlob",
+            "-a",
+            "-G",
+            "-b",
+            "*.rs",
+            "."
+          ]
+        },
+        "fast_glob": {
+          "api": "fast-glob",
+          "patterns": [
+            "**/*.rs"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        },
+        "tinyglobby": {
+          "api": "tinyglobby",
+          "patterns": [
+            "**/*.rs"
+          ],
+          "options": {
+            "cwd": "$FIXTURE",
+            "dot": false,
+            "onlyFiles": true,
+            "onlyDirectories": false,
+            "unique": true,
+            "followSymbolicLinks": false,
+            "ignore": []
+          }
+        }
+      },
+      "not_covered": {
+        "zlob": null,
+        "rg": null,
+        "fd": null,
+        "fast_glob": null,
+        "tinyglobby": null
+      },
+      "raw_samples": {
+        "branchcut": [
+          {
+            "elapsed_ms": 59.130400000023656,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 78.27720000001136,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 69.8473000000231,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 72.44150000001537,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 74.3300000000163,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 65.15189999999711,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 63.19980000000214,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 72.73869999998715,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 66.2895000000135,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "rg": [
+          {
+            "elapsed_ms": 88.08800000004703,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 77.93399999995017,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 101.45240000000922,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 81.71800000005169,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 88.57069999998203,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 94.56419999996433,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 101.63740000000689,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 84.06659999996191,
+            "stdout_bytes": 1350018
+          },
+          {
+            "elapsed_ms": 86.37979999999516,
+            "stdout_bytes": 1350018
+          }
+        ],
+        "fd": [
+          {
+            "elapsed_ms": 105.64890000002924,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 97.36939999996684,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 141.50829999998678,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 91.47689999995055,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 107.10460000002058,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 118.45679999998538,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 105.55079999996815,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 89.45089999999618,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 109.89769999997225,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "zlob": [
+          {
+            "elapsed_ms": 117.1087000000407,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 128.44209999998566,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 103.18869999999879,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 109.81210000003921,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 104.14430000004359,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 118.31409999995958,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 116.11310000001686,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 109.70319999998901,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 123.37689999997383,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "fast_glob": [
+          {
+            "elapsed_ms": 360.46890000003623,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 356.7105000000447,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 357.1057000000146,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 367.35009999998147,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 392.1621000000159,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 372.3841999999713,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 410.757900000026,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 344.6352000000188,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 397.69089999998687,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "tinyglobby": [
+          {
+            "elapsed_ms": 226.98009999998612,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 220.37959999998566,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 243.2621999999974,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 217.6582000000053,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 221.50870000000577,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 253.13630000001285,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 259.2957999999635,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 236.2689000000246,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 243.52799999999115,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "branchcut_4": [
+          {
+            "elapsed_ms": 103.26339999999618,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 96.81150000001071,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 99.55650000000605,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 98.49880000000121,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 106.09029999998165,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 102.34250000002794,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 85.92540000000736,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 93.0971000000136,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 86.91859999997541,
+            "stdout_bytes": 1275016
+          }
+        ],
+        "branchcut_auto": [
+          {
+            "elapsed_ms": 69.6814000000013,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 79.54739999998128,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 75.351399999985,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 65.25640000001295,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 83.66800000000512,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 81.17109999997774,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 61.057299999985844,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 71.68210000003455,
+            "stdout_bytes": 1275016
+          },
+          {
+            "elapsed_ms": 64.36479999998119,
+            "stdout_bytes": 1275016
+          }
+        ]
+      },
+      "summary": {
+        "branchcut": {
+          "median_ms": 69.8473000000231,
+          "p90_ms": 78.27720000001136,
+          "p95_ms": 78.27720000001136,
+          "standard_deviation_ms": 5.717446233941483,
+          "dispersion_percent": 8.280736147262415
+        },
+        "rg": {
+          "median_ms": 88.08800000004703,
+          "p90_ms": 101.63740000000689,
+          "p95_ms": 101.63740000000689,
+          "standard_deviation_ms": 7.8325349057604345,
+          "dispersion_percent": 8.763282126744233
+        },
+        "fd": {
+          "median_ms": 105.64890000002924,
+          "p90_ms": 141.50829999998678,
+          "p95_ms": 141.50829999998678,
+          "standard_deviation_ms": 14.812782798637759,
+          "dispersion_percent": 13.79409929448578
+        },
+        "zlob": {
+          "median_ms": 116.11310000001686,
+          "p90_ms": 128.44209999998566,
+          "p95_ms": 128.44209999998566,
+          "standard_deviation_ms": 8.009010281159831,
+          "dispersion_percent": 6.996783986929489
+        },
+        "fast_glob": {
+          "median_ms": 367.35009999998147,
+          "p90_ms": 410.757900000026,
+          "p95_ms": 410.757900000026,
+          "standard_deviation_ms": 20.85341129454145,
+          "dispersion_percent": 5.586956483519021
+        },
+        "tinyglobby": {
+          "median_ms": 236.2689000000246,
+          "p90_ms": 259.2957999999635,
+          "p95_ms": 259.2957999999635,
+          "standard_deviation_ms": 14.209418011153055,
+          "dispersion_percent": 6.026564060884841
+        },
+        "branchcut_4": {
+          "median_ms": 98.49880000000121,
+          "p90_ms": 106.09029999998165,
+          "p95_ms": 106.09029999998165,
+          "standard_deviation_ms": 6.655911001009024,
+          "dispersion_percent": 6.865663898780514
+        },
+        "branchcut_auto": {
+          "median_ms": 71.68210000003455,
+          "p90_ms": 83.66800000000512,
+          "p95_ms": 83.66800000000512,
+          "standard_deviation_ms": 7.570784353821684,
+          "dispersion_percent": 10.453998226149473
+        }
+      }
+    }
+  ],
+  "status": "complete"
+}

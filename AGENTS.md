@@ -27,7 +27,7 @@ The competition sections below remain historical context for the submission. Whe
 7. Optimize measured bottlenecks on reproducible representative workloads.
 8. Improve distribution, examples, release quality, and contributor onboarding.
 
-The current implementation effort is limited to phases 1–3 in [ROADMAP.md](ROADMAP.md). Later phases are planned, not claims about shipped behavior. Keep [COMPATIBILITY.md](COMPATIBILITY.md) and user-facing documentation aligned with implementation status.
+The owner has authorized phases 4–7 after the foundation work. Follow the implementation and validation status in [ROADMAP.md](ROADMAP.md); planned features are not claims about shipped behavior. Keep [COMPATIBILITY.md](COMPATIBILITY.md) and user-facing documentation aligned with implementation status.
 
 ### Current implementation gates
 

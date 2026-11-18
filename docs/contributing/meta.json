@@ -1,5 +1,5 @@
 {
   "title": "Contributing",
   "icon": "Wrench",
-  "pages": ["verification", "benchmarking", "documentation"]
+  "pages": ["verification", "benchmarking", "documentation", "releases"]
 }

@@ -4,10 +4,12 @@
     "index",
     "README",
     "getting-started",
+    "tutorials",
     "guides",
     "concepts",
     "reference",
     "evidence",
-    "contributing"
+    "contributing",
+    "project"
   ]
 }

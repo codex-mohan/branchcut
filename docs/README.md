@@ -1,58 +1,87 @@
 ---
 title: Documentation map
-description: The canonical index for Branchcut documentation in this repository.
+description: Choose the path that matches what you are trying to do with Branchcut.
 icon: Map
 ---
 
-This directory is the canonical source for Branchcut documentation. The Fumadocs application in [`website/`](../website/) renders these files directly; prose should not be duplicated inside the web application.
+The documentation is organized around jobs rather than source folders. Use search for a specific option, or start with one of the routes below.
 
-## Start here
+## Choose by what you have
 
-- [Documentation home](index.mdx)
-- [Installation](getting-started/installation.md)
-- [Quick start](getting-started/quick-start.md)
-- [Mental model](getting-started/mental-model.md)
+| You have | Start with | You will learn |
+|---|---|---|
+| Branchcut installed and want a first result | [Your first query](tutorials/first-query) | Literal search, globs, exclusions, plans, and statistics |
+| A monorepo and repeated file-selection work | [Plan a monorepo search](tutorials/monorepo) | Prefix narrowing, pruning, limits, and saved profiles |
+| Shell scripts, tools, or a coding agent | [Automate a workflow](tutorials/automation) | JSON Lines, NUL output, native paths, commands, and exit behavior |
+| A Rust application that needs file selection | [Use Branchcut from Rust](tutorials/rust-library) | Query compilation, streaming visitors, cancellation, and parallelism |
+| A command in mind and need the exact flag | [CLI reference](reference/cli) | Complete option meanings and interactions |
+| A source tree that is behaving unexpectedly | [Query planning](guides/query-planning) | `--explain`, `--why`, and real work counters |
 
-## Use Branchcut
+## Learn the model
 
-- [Simple search](guides/simple-search.md)
-- [Globs and exclusions](guides/globs-and-exclusions.md)
-- [Query planning](guides/query-planning.md)
-- [Ignore and hidden paths](guides/ignore-and-hidden.md)
-- [Output and command execution](guides/output-and-exec.md)
+```text
+query input
+    |
+    v
+compile patterns + exclusions + policy + filters + termination
+    |
+    v
+narrow the root and prune impossible subtrees
+    |
+    v
+stream native paths, diagnostics, and commands
+```
 
-## Understand the engine
+- [Mental model](getting-started/mental-model) explains the compiler-as-filesystem-machine idea.
+- [Query compiler](concepts/query-compiler) covers parsing and shared pattern state.
+- [Traversal and pruning](concepts/traversal-and-pruning) explains how plans change filesystem work.
+- [Library and modules](concepts/library-and-modules) maps the Rust source boundaries.
+- [Path semantics](concepts/path-semantics) covers native paths and platform differences.
 
-- [Library and modules](concepts/library-and-modules.md)
-- [Query compiler](concepts/query-compiler.md)
-- [Traversal and pruning](concepts/traversal-and-pruning.md)
-- [Parallel traversal](concepts/parallelism.md)
-- [Path semantics](concepts/path-semantics.md)
+## Use the command
 
-## Look things up
+| Job | Guide |
+|---|---|
+| Find one filename without glob syntax | [Simple search](guides/simple-search) |
+| Combine size, time, depth, and case filters | [Everyday search](guides/everyday-search) |
+| Compose patterns and exclusions | [Globs and exclusions](guides/globs-and-exclusions) |
+| Understand hidden paths and `.gitignore` policy | [Ignore and hidden paths](guides/ignore-and-hidden) |
+| Stream, count, sort, serialize, or execute commands | [Output and command execution](guides/output-and-exec) |
+| Save a query for repeated project use | [Saved project queries](guides/project-queries) |
+| Inspect why a path matched or was excluded | [Query planning](guides/query-planning) |
 
-- [CLI reference](reference/cli.md)
-- [Glob syntax](reference/glob-syntax.md)
-- [Exit behavior](reference/exit-behavior.md)
-- [Compatibility](reference/compatibility.md)
+## Look up a fact
+
+| Need | Reference |
+|---|---|
+| Every CLI option and allowed combination | [CLI reference](reference/cli) |
+| Copy-ready common commands | [Cheat sheet](reference/cheatsheet) |
+| Supported wildcard grammar | [Glob syntax](reference/glob-syntax) |
+| Exit codes, strict mode, and broken pipes | [Exit behavior](reference/exit-behavior) |
+| Implemented surface, alternatives, and gaps | [Feature status](reference/feature-status) |
+| Compatibility boundaries | [Compatibility](reference/compatibility) |
+| Product terminology | [Glossary](project/glossary) |
 
 ## Inspect the evidence
 
-- [Post-competition baseline](evidence/post-competition-baseline.md)
-- [Benchmarks](evidence/benchmarks.md)
-- [Correctness](evidence/correctness.md)
-- [Standard-library ledger](evidence/stdlib.md)
+- [Benchmark guide](evidence/benchmarks) explains datasets, metrics, and limits.
+- [Direct CLI comparison](evidence/cli-comparison) contains the cross-tool matrix.
+- [Correctness](evidence/correctness) explains result equivalence and regression strategy.
+- [Search performance investigation](evidence/search-performance) records profiling and losing results.
+- [Rust-level optimization pass](evidence/rust-optimizations) records measured implementation changes.
+- [Standard-library ledger](evidence/stdlib) maps the zero-crate core to normal dependencies.
 
-## Contribute
+## Work on Branchcut
 
-- [Verification](contributing/verification.md)
-- [Benchmarking](contributing/benchmarking.md)
-- [Documentation](contributing/documentation.md)
+1. Read [Verification](contributing/verification) before changing behavior.
+2. Read [Benchmarking](contributing/benchmarking) before making a performance claim.
+3. Read [Documentation](contributing/documentation) before adding a page or changing compatibility language.
+4. Check the [Roadmap](project/roadmap) for delivery status rather than treating planned work as shipped.
+5. Use the [FAQ](project/faq) for recurring scope and integration questions.
 
-## Documentation rules
+## Documentation conventions
 
-1. Keep claims aligned with the current CLI and [`COMPATIBILITY.md`](../COMPATIBILITY.md).
-2. Use runnable commands and state the shell when syntax differs.
-3. Explain planner behavior in terms of filesystem work avoided.
-4. Keep benchmark claims tied to exact datasets, competitors, versions, and result-set checks.
-5. Prefer small ASCII diagrams when they clarify traversal or state flow.
+- Runnable commands appear in code blocks with their shell noted when syntax differs.
+- Performance claims identify the dataset, environment, exact query, and correctness check.
+- “Planned,” “supported,” and “tested” retain their literal meanings.
+- External comparisons describe behavior; they do not imply copied implementations.

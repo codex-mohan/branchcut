@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-14T17:30:21.2010414Z",
+  "scope": "Cross-tool process memory on one 13,000-file Windows/NTFS fixture.",
+  "method": "One warmup then three fresh child processes per tool. Peak working set is polled every 1 ms while the process is alive. Newline-delimited output is drained concurrently for every configuration.",
+  "correctness": "All six tools returned the same 13,000 unique normalized paths; sorted UTF-8 output SHA-256 was d3ff1451204b9c51c48880af1c8b737631a02014d994c34991bd53f5d57ddb16.",
+  "fixture": {
+    "working_directory": "$FIXTURE",
+    "layout": "packages/p00..p12/group0..9/{src,deep}/file000..099.ext",
+    "directories": 143,
+    "files": 13000
+  },
+  "environment": {
+    "node": "v25.2.1",
+    "cpu": "Intel(R) Core(TM) 5 210H",
+    "runtime": "PowerShell 7 7.6.9",
+    "os": "Microsoft Windows NT 10.0.26200.0"
+  },
+  "limitations": [
+    "Windows resource probe only.",
+    "Process peak working set includes runtime and output buffers; it is not allocator usage.",
+    "Filesystem cache state is uncontrolled.",
+    "Node comparisons include process startup and module loading."
+  ],
+  "results": [
+    {
+      "tool": "Branchcut",
+      "binary": "<REPO>\\target\\release\\branchcut.exe",
+      "arguments": [
+        "--cwd",
+        "<REPO>\\target\\memory-bench-20261114\\fixture",
+        "--glob",
+        "**/*",
+        "--type",
+        "file",
+        "--threads",
+        "0"
+      ],
+      "working_directory": "$FIXTURE",
+      "samples": [
+        {
+          "stderr": "",
+          "exit_code": 0,
+          "observed_peak_working_set_bytes": 6369280,
+          "stdout_bytes": 466700,
+          "cpu_ms": 125,
+          "elapsed_ms": 45.181,
+          "memory_sample_interval_ms": 1
+        },
+        {
+          "elapsed_ms": 57.1509,
+          "observed_peak_working_set_bytes": 6512640,
+          "exit_code": 0,
+          "stderr": "",
+          "memory_sample_interval_ms": 1,
+          "stdout_bytes": 466700,
+          "cpu_ms": 15.625
+        },
+        {
+          "stderr": "",
+          "stdout_bytes": 466700,
+          "cpu_ms": 140.625,
+          "memory_sample_interval_ms": 1,
+          "elapsed_ms": 56.5584,
+          "exit_code": 0,
+          "observed_peak_working_set_bytes": 6418432
+        }
+      ],
+      "median_observed_peak_working_set_bytes": 6418432,
+      "median_mib": 6.12,
+      "median_elapsed_ms": 56.5584,
+      "median_cpu_ms": 125
+    },
+    {
+      "tool": "zlob",
+      "binary": "<REPO>\\target\\perf-reference\\zlob\\zig-out\\bin\\zlob.exe",
+      "arguments": [
+        "-a",
+        "**/*.*"
+      ],
+      "working_directory": "$FIXTURE",
+      "samples": [
+        {
+          "observed_peak_working_set_bytes": 7073792,
+          "memory_sample_interval_ms": 1,
+          "stdout_bytes": 466700,
+          "stderr": "",
+          "exit_code": 0,
+          "cpu_ms": 46.875,
+          "elapsed_ms": 86.8755
+        },
+        {
+          "stderr": "",
+          "exit_code": 0,
+          "elapsed_ms": 81.109,
+          "memory_sample_interval_ms": 1,
+          "stdout_bytes": 466700,
+          "cpu_ms": 31.25,
+          "observed_peak_working_set_bytes": 7401472
+        },
+        {
+          "cpu_ms": 46.875,
+          "elapsed_ms": 85.9748,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout_bytes": 466700,
+          "observed_peak_working_set_bytes": 6242304,
+          "memory_sample_interval_ms": 1
+        }
+      ],
+      "median_observed_peak_working_set_bytes": 7073792,
+      "median_mib": 6.75,
+      "median_elapsed_ms": 85.9748,
+      "median_cpu_ms": 46.875
+    },
+    {
+      "tool": "ripgrep",
+      "binary": "<USERPROFILE>\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\\ripgrep-15.1.0-x86_64-pc-windows-msvc\\rg.exe",
+      "arguments": [
+        "--files",
+        "-g",
+        "**/*"
+      ],
+      "working_directory": "$FIXTURE",
+      "samples": [
+        {
+          "observed_peak_working_set_bytes": 9408512,
+          "stderr": "",
+          "exit_code": 0,
+          "memory_sample_interval_ms": 1,
+          "cpu_ms": 203.125,
+          "elapsed_ms": 85.1763,
+          "stdout_bytes": 466700
+        },
+        {
+          "cpu_ms": 390.625,
+          "observed_peak_working_set_bytes": 9097216,
+          "stderr": "",
+          "memory_sample_interval_ms": 1,
+          "exit_code": 0,
+          "stdout_bytes": 466700,
+          "elapsed_ms": 98.4
+        },
+        {
+          "stderr": "",
+          "memory_sample_interval_ms": 1,
+          "exit_code": 0,
+          "observed_peak_working_set_bytes": 9502720,
+          "stdout_bytes": 466700,
+          "elapsed_ms": 99.6235,
+          "cpu_ms": 312.5
+        }
+      ],
+      "median_observed_peak_working_set_bytes": 9408512,
+      "median_mib": 8.97,
+      "median_elapsed_ms": 98.4,
+      "median_cpu_ms": 312.5
+    },
+    {
+      "tool": "fd",
+      "binary": "<USERPROFILE>\\AppData\\Local\\Microsoft\\WinGet\\Packages\\sharkdp.fd_Microsoft.Winget.Source_8wekyb3d8bbwe\\fd-v10.4.2-x86_64-pc-windows-msvc\\fd.exe",
+      "arguments": [
+        "--glob",
+        "--type",
+        "f"
+      ],
+      "working_directory": "$FIXTURE",
+      "samples": [
+        {
+          "elapsed_ms": 97.2186,
+          "cpu_ms": 375,
+          "memory_sample_interval_ms": 1,
+          "exit_code": 0,
+          "stderr": "",
+          "observed_peak_working_set_bytes": 11833344,
+          "stdout_bytes": 466700
+        },
+        {
+          "memory_sample_interval_ms": 1,
+          "exit_code": 0,
+          "stderr": "",
+          "observed_peak_working_set_bytes": 12386304,
+          "elapsed_ms": 101.1289,
+          "stdout_bytes": 466700,
+          "cpu_ms": 234.375
+        },
+        {
+          "stderr": "",
+          "cpu_ms": 375,
+          "exit_code": 0,
+          "elapsed_ms": 102.4073,
+          "observed_peak_working_set_bytes": 12701696,
+          "stdout_bytes": 466700,
+          "memory_sample_interval_ms": 1
+        }
+      ],
+      "median_observed_peak_working_set_bytes": 12386304,
+      "median_mib": 11.81,
+      "median_elapsed_ms": 101.1289,
+      "median_cpu_ms": 375
+    },
+    {
+      "tool": "tinyglobby",
+      "binary": "C:\\Program Files\\nodejs\\node.exe",
+      "arguments": [
+        "<REPO>\\target\\memory-bench-20261114\\tinyglobby.cjs"
+      ],
+      "working_directory": "$FIXTURE",
+      "samples": [
+        {
+          "cpu_ms": 125,
+          "exit_code": 0,
+          "observed_peak_working_set_bytes": 67158016,
+          "memory_sample_interval_ms": 1,
+          "elapsed_ms": 163.6568,
+          "stdout_bytes": 466700,
+          "stderr": ""
+        },
+        {
+          "observed_peak_working_set_bytes": 67330048,
+          "cpu_ms": 187.5,
+          "stdout_bytes": 466700,
+          "exit_code": 0,
+          "memory_sample_interval_ms": 1,
+          "stderr": "",
+          "elapsed_ms": 159.4839
+        },
+        {
+          "observed_peak_working_set_bytes": 67698688,
+          "elapsed_ms": 163.6517,
+          "exit_code": 0,
+          "stderr": "",
+          "memory_sample_interval_ms": 1,
+          "stdout_bytes": 466700,
+          "cpu_ms": 187.5
+        }
+      ],
+      "median_observed_peak_working_set_bytes": 67330048,
+      "median_mib": 64.21,
+      "median_elapsed_ms": 163.6517,
+      "median_cpu_ms": 187.5
+    },
+    {
+      "tool": "fast-glob",
+      "binary": "C:\\Program Files\\nodejs\\node.exe",
+      "arguments": [
+        "<REPO>\\target\\memory-bench-20261114\\fast-glob.cjs"
+      ],
+      "working_directory": "$FIXTURE",
+      "samples": [
+        {
+          "elapsed_ms": 249.9008,
+          "observed_peak_working_set_bytes": 73977856,
+          "cpu_ms": 281.25,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout_bytes": 466700,
+          "memory_sample_interval_ms": 1
+        },
+        {
+          "stdout_bytes": 466700,
+          "memory_sample_interval_ms": 1,
+          "stderr": "",
+          "observed_peak_working_set_bytes": 74211328,
+          "cpu_ms": 343.75,
+          "elapsed_ms": 307.6076,
+          "exit_code": 0
+        },
+        {
+          "exit_code": 0,
+          "memory_sample_interval_ms": 1,
+          "observed_peak_working_set_bytes": 74702848,
+          "cpu_ms": 265.625,
+          "elapsed_ms": 290.631,
+          "stdout_bytes": 466700,
+          "stderr": ""
+        }
+      ],
+      "median_observed_peak_working_set_bytes": 74211328,
+      "median_mib": 70.77,
+      "median_elapsed_ms": 290.631,
+      "median_cpu_ms": 281.25
+    }
+  ],
+  "path_redaction": "Repository and user-profile prefixes were redacted for privacy; arguments and measurement samples are otherwise unchanged."
+}

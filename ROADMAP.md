@@ -17,7 +17,7 @@ This roadmap is a plan, not a statement that listed features are implemented. Th
 
 ## Phase 2 — Make queries and paths trustworthy
 
-**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** Matching, sorted limits, ancestor ignores, native paths, command roots, and parallel best-effort/strict error handling have regression coverage. Sequential traversal remains recursive; its tested depth and limitations are documented honestly.
+**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** Matching, sorted limits, ancestor ignores, native paths, command roots, and parallel best-effort/strict error handling have regression coverage. Sequential traversal now uses directory frames, tested at 600 levels; parallel queue-overflow recursion remains documented.
 
 - Add regressions and fix shared-pattern globstar state leakage.
 - Make `--sort --limit` implement global sorted selection as documented.
@@ -45,7 +45,7 @@ Start inside one Cargo package. Keep core and CLI dependencies empty. Add worksp
 
 ## Phase 4 — Complete everyday search
 
-**Status: planned.**
+**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** Size, modification-time, case, path-search, and depth filters are exposed through both the CLI and library. Candidate-first metadata evaluation and the existing no-metadata fast path have focused regression coverage.
 
 Add high-value, composable file-size and modification-time predicates, explicit case behavior and smart case for simple search, depth limits, and clear filename versus full-path matching. Decide units, comparison boundaries, time interpretation, and cross-platform case behavior before implementation. Query planning must fetch metadata only when a predicate needs it.
 
@@ -53,7 +53,7 @@ Add high-value, composable file-size and modification-time predicates, explicit 
 
 ## Phase 5 — Explain and reuse selections
 
-**Status: planned.**
+**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** `--why PATH` explains the ordered candidate checks and identifies the decisive `.gitignore` rule and source line. Named profiles in explicit config files load before command-line options, and `--explain` prints the fully resolved query.
 
 Extend the existing plan explanation with `--why PATH` and ignore-rule provenance. Then consider small saved project queries with explicit precedence and a command that prints the fully resolved query. Keep configuration behavior visible and stable.
 
@@ -61,7 +61,7 @@ Extend the existing plan explanation with `--why PATH` and ignore-rule provenanc
 
 ## Phase 6 — Improve selected-file workflows
 
-**Status: planned.**
+**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** Native NUL output, resolved absolute paths, and bounded shell-free batch execution now cover pipeline and external-tool handoff workflows. Batch composition respects both a path-count limit and a conservative command-size budget.
 
 Add NUL-delimited output and explicit path forms for dependable pipelines. Improve command invocation with native argument handling, well-defined working-directory semantics, safe batching, and clear failure reporting. Treat command preview as a possible follow-up if users need it.
 
@@ -69,7 +69,7 @@ Add NUL-delimited output and explicit path forms for dependable pipelines. Impro
 
 ## Phase 7 — Optimize measured bottlenecks
 
-**Status: planned; benchmark infrastructure starts in Phase 1.**
+**Status: two measured passes implemented and verified on Windows.** The [48-workload Phase 7 record](docs/evidence/phase7.md) covers 10k/100k trees and retains losses. A later [52-workload Rust-level pass](docs/evidence/rust-optimizations.md) adds pathless counts, borrowed streaming paths, reusable matcher scratch, shared ignore contexts, universal-plan short-circuiting, metadata-path avoidance, and parallel count batching. Sorted limits retain at most N native paths while preserving full-scan semantics. Public-repository, batch-execution, and Linux/macOS measurements remain open.
 
 Expand reproducible workloads before choosing optimization work. Measure shared and unrelated pattern scaling, narrow and broad queries, ignored trees, metadata filters, early limits, and parallel traversal. Track elapsed time, memory, time to first result, opened/pruned directories, inspected entries, and metadata calls. Investigate multiple traversal roots, reusable matching state, shared ignore context, count-only memory, parallel streaming, and bounded sorted selection only where measurements identify a bottleneck.
 
@@ -77,7 +77,9 @@ Expand reproducible workloads before choosing optimization work. Measure shared 
 
 ## Phase 8 — Improve adoption and release quality
 
-**Status: planned.**
+The owner also authorized closing filesystem-search gaps. Bounded richer braces, component-local extglobs, Git-oracle ignore corrections, explicit sequential frames, and bounded parallel streaming have been implemented after the initial Phase 7 snapshot. See [feature status](docs/reference/feature-status.md) for remaining gaps; these additions do not imply full Unicode or Git compatibility. Performance records identify their measured source manifests rather than attributing old results to later builds.
+
+**Status: implementation prepared; publication remains open.** The [filesystem gap-closure record](docs/evidence/gap-closure.md) tracks the subsequent ignore, matcher, traversal, filter, workflow and library work. Shell completions, source installers and a four-platform release/archive/checksum workflow are implemented. Native release CI, actual prebuilt assets and package-manager publication remain release gates.
 
 Publish prebuilt binaries, straightforward upgrade instructions, shell completion, and practical recipes. Validate everyday, developer, and power-user workflows with users. Let repeated friction guide follow-on features.
 

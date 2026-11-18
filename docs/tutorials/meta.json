@@ -1,0 +1,5 @@
+{
+  "title": "Tutorials",
+  "icon": "GraduationCap",
+  "pages": ["first-query", "monorepo", "automation", "rust-library"]
+}

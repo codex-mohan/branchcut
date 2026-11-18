@@ -1,5 +1,5 @@
 {
   "title": "Reference",
   "icon": "BookMarked",
-  "pages": ["cli", "glob-syntax", "exit-behavior", "compatibility"]
+  "pages": ["feature-status", "cli", "cheatsheet", "glob-syntax", "exit-behavior", "compatibility"]
 }

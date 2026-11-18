@@ -30,26 +30,47 @@ The CI checkout itself uses Git and the hosted Rust toolchain; it does not add a
 
 | Method | Best for | Requires a checkout? | Upgrade method |
 |---|---|:---:|---|
-| `cargo install --git` | Most users | No | Re-run with `--force` |
-| Platform installer | Users already in the repository | Yes | Re-run the installer |
+| Platform bootstrap | Clean Windows, Linux, or macOS setup | No | Re-run the platform command |
+| `cargo install --git` | Users who already have Rust and Cargo | No | Re-run with `--force` |
+| Checkout installer | Contributors working inside the repository | Yes | Update the checkout and re-run |
 | `cargo build --release` | Testing or portable/manual copies | Yes | Rebuild and replace manually |
 
 Prebuilt release archives are not required by any of these methods. Each method compiles for the operating system and CPU on which Cargo is running.
 
 ## Prerequisites
 
-Install a current stable Rust toolchain from [rustup.rs](https://rustup.rs/), then open a new terminal and confirm both commands are available:
+The repository scripts install Rust when Cargo is missing. For direct Cargo installation or contributor builds, install a current stable Rust toolchain from [rustup.rs](https://rustup.rs/), then open a new terminal and confirm both commands are available:
 
 ```bash
 rustc --version
 cargo --version
 ```
 
-Branchcut uses Rust edition 2024. Development and release gates have been exercised with Rust 1.96.0; the hackathon reference toolchain is Rust 1.98.0.
+Branchcut uses Rust edition 2024. Development and release gates have been exercised with Rust 1.96.0.
 
 If `cargo` is not recognized after installing Rust, restart the terminal before changing `PATH` manually.
 
-## Recommended: install directly from GitHub
+## Recommended: install with the repository script
+
+These commands start from any directory and point directly to the checked-in installer. Rust is installed only when Cargo is unavailable. Each script installs Branchcut into the active Cargo root and verifies the resulting executable.
+
+### Windows PowerShell
+
+```powershell
+irm https://raw.githubusercontent.com/codex-mohan/branchcut/master/scripts/install.ps1 | iex
+```
+
+Review the [PowerShell installer](https://github.com/codex-mohan/branchcut/blob/master/scripts/install.ps1) before running it.
+
+### Linux and macOS
+
+```sh
+curl --proto '=https' --tlsv1.2 -fsSL https://raw.githubusercontent.com/codex-mohan/branchcut/master/scripts/install.sh | sh
+```
+
+Review the [POSIX installer](https://github.com/codex-mohan/branchcut/blob/master/scripts/install.sh) before running it. Set `CARGO_HOME` or `BRANCHCUT_INSTALL_ROOT` before the command to choose a different installation root.
+
+## Direct Cargo install with an existing Rust toolchain
 
 This method does not require cloning the repository:
 
@@ -298,7 +319,7 @@ Remove or reorder older entries in `PATH`, then verify `branchcut --version` aga
 
 ### PowerShell blocks the installer
 
-Use the process-scoped bypass command shown in the Windows section, or use the direct `cargo install --git` method. The installer does not require administrator privileges.
+Use the direct `cargo install --git` method if your PowerShell policy blocks script execution. The installer does not require administrator privileges.
 
 ### Permission denied during installation
 

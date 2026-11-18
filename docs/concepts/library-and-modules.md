@@ -11,10 +11,14 @@ Branchcut is one Cargo package containing a zero-crate library and a thin execut
 | Module | Responsibility |
 |---|---|
 | `query` | Typed selection, immutable compilation, traversal-root selection |
+| `matcher` | Standalone filesystem-independent `PathMatcher` and `MatchOptions` |
+| `multi_root` | Independent root plans with lexical absolute-path deduplication |
+| `entries` | Selected-entry `EntryRecord` visitors and cooperative `CancellationToken` |
 | `pattern` | Segment parsing, specialized matching, shared pattern programs |
 | `walk` | Root preparation, sequential traversal, bounded parallel collection |
 | `ignore` | Scoped ignore rules and ordered overrides |
 | `path` | Native filename bytes and path components |
+| `metadata` | Exact size and modification-time predicates |
 | `filters` | Direct name predicates |
 | `stats`, `error` | Work counters and compilation errors |
 | `cli` | Arguments, sorting, counts, serialization, diagnostics, commands |
@@ -44,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Compilation does not snapshot the filesystem. Reusing the plan executes a fresh traversal each time. Positive patterns and search terms each use OR semantics within their group; exclusions and the remaining filters restrict the selected paths.
+Compilation does not snapshot the filesystem. Reusing the plan executes a fresh traversal each time; relative modification-time boundaries also use the execution's captured clock. Positive patterns and search terms each use OR semantics within their group; exclusions and the remaining filters restrict the selected paths.
 
 Return `ControlFlow::Break(())` from the visitor to stop immediately. Visitor errors propagate to the caller. Implement the `Visitor` trait directly to handle per-path filesystem errors through its `error` callback; the default callback discards diagnostics while the report still counts them.
 
@@ -62,7 +66,15 @@ Fatal traversal failures and visitor failures return `io::Error`. A clean no-mat
 
 Parallel results are buffered and unordered. Sort them in the consumer when necessary. In best-effort mode, a recoverable ignore or directory-entry error is recorded while other readable entries remain eligible. Strict mode returns an error for filesystem failures, including errors in ancestor ignore files encountered before the narrowed root.
 
-The sequential visitor is the interface for streaming and exact early stopping. Parallel streaming and count-only memory improvements are later roadmap work.
+For bounded delivery, use `compiled.visit_parallel(threads, strict, visitor)`. A coordinator invokes the same visitor interface through a bounded channel; callbacks may cancel or fail without stranding blocked workers. The visitor need not be `Send`. CLI threaded searches use this streaming API; `collect_parallel` remains the explicit full-result alternative.
+
+`visit_entries` and `visit_entries_parallel` provide opt-in metadata for selected matches. Each callback receives an `EntryRecord { path, metadata }`; explicit metadata requests are added to `stats.metadata_calls`. Ordinary `visit` callbacks continue to avoid metadata unless a query predicate needs it.
+
+To match an already supplied path without traversing the filesystem, use `PathMatcher::new` or `PathMatcher::with_options`. The latter accepts `MatchOptions` for case mode, Unicode scalar matching, and escaped pattern syntax. `matching_patterns` returns the original zero-based pattern indices that matched.
+
+`Query::compile_roots` creates a `MultiRootQuery`. Each root gets its own compiled plan; visitors receive absolute native paths and duplicate lexical paths are suppressed. Deduplication requires retaining a set proportional to the unique results, and symlink aliases remain separate paths.
+
+Set `Query.cancellation` to a cloned `CancellationToken` to let another thread request a cooperative stop. Cancelled executions report `Completion::Stopped`; cancellation is permanent for that token, so create another token for a later run.
 
 ## Verification
 

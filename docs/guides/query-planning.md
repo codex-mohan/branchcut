@@ -54,7 +54,9 @@ The requested file type and extension set. Specialized suffix matching handles c
 
 ### Metadata
 
-Current supported filters do not require per-entry `metadata()` calls. The root is inspected once; directory entries use `DirEntry::file_type()`.
+Size and time filters request metadata only after type, path, extension, and glob checks pass; one fetch is shared by the requested predicates. Queries without those filters avoid per-entry metadata calls. A size filter requires regular-file selection. A time filter on a directory affects that directory's result only and never removes its descendants from traversal.
+
+Case-insensitive matching disables literal-prefix root narrowing because directory names may differ in ASCII case on case-sensitive filesystems. `--explain` reports the disabled prefix. Depth is always relative to `--cwd`, even when traversal begins at a deeper literal-prefix root.
 
 ### Termination
 
@@ -62,7 +64,32 @@ Current supported filters do not require per-entry `metadata()` calls. The root 
 
 ### Strategy
 
-Sequential mode uses depth-first traversal with positive and exclusion pruning. `--threads N` selects bounded parallel root-task traversal with buffered output.
+Sequential mode uses depth-first directory frames with positive and exclusion pruning. Ordinary CLI queries use adaptive bounded parallel traversal by default; limits, `--first`, and per-match execution default to one worker unless you explicitly request multiple workers. Symlink following, one-filesystem traversal, contents-first output, and a `--max-open` below 64 select sequential traversal. In parallel mode, a full work queue falls back to a worker's iterative local directory stack.
+
+`--search-path` compiles an independent plan for each additional root. The underlying `MultiRootQuery` visitor API emits absolute native paths and lexically deduplicates them; the CLI strips the primary `--cwd` prefix when possible, while outside-root paths can remain absolute. `--absolute` always requests absolute CLI output. Deduplication retains a set proportional to distinct results. Symlink aliases are not canonicalized.
+
+## Explain one candidate
+
+`--why PATH` evaluates one path against the compiled query without walking unrelated directories:
+
+```bash
+branchcut \
+  --glob 'packages/**/src/**/*.rs' \
+  --exclude '**/target/**' \
+  --gitignore \
+  --why packages/core/src/lib.rs
+```
+
+The output starts with `MATCHED` or `EXCLUDED`, then reports hidden-path, enabled ignore-source, positive-pattern, exclusion, type, depth, extension, simple-search, and metadata checks. Each check is marked `PASS`, `FAIL`, or `SKIP`.
+
+Ignore explanations retain provenance:
+
+```text
+  [FAIL] ignore
+         excluded by `generated/` at .gitignore:1
+```
+
+The candidate path is interpreted relative to `--cwd`; an absolute path is accepted when it is below the textual query root. `--explain` and `--why` are separate diagnostics and cannot be combined. A candidate that is correctly excluded still exits successfully, because the command completed the explanation.
 
 ## Prove the plan with stats
 
@@ -71,3 +98,5 @@ Use `--explain` to see intended decisions and `--stats` to see what actually hap
 ```bash
 branchcut --glob '**/*.rs' --exclude '**/target/**' --stats
 ```
+
+`metadata_calls` includes query-required metadata checks and explicit metadata requested by the CLI output or library `visit_entries` APIs. A path-only library visitor avoids metadata unless a query predicate requires it.

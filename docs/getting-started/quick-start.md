@@ -1,34 +1,54 @@
 ---
 title: Quick start
-description: Build Branchcut and run your first planned filesystem query.
+description: Install Branchcut, run a useful query, inspect the plan, and check its work.
 icon: Zap
 ---
 
-## Build the release binary
+## 1. Install
+
+Use the complete platform command from [Installation](installation). The recommended Windows and Unix commands run the checked-in installer and verify the resulting executable.
+
+Confirm the command before searching:
 
 ```bash
-cargo build --release
+branchcut --version
+branchcut --help
 ```
 
-On Unix, the binary is written to `target/release/branchcut`. On Windows it is written to `target/release/branchcut.exe`.
+## 2. Run a simple search
 
-## Find Rust files
+From a project directory:
 
 ```bash
-branchcut --glob '**/*.rs'
+branchcut config
 ```
 
-## Exclude generated trees
+`config` is a literal filename search. Hidden paths are excluded by default. Repeated terms match with OR:
+
+```bash
+branchcut readme license
+```
+
+Use an explicit glob when path structure matters:
+
+```bash
+branchcut --glob 'src/**/*.{rs,toml}' --type file
+```
+
+## 3. Exclude generated trees
 
 ```bash
 branchcut \
   --glob '**/*.{rs,ts}' \
-  --exclude '**/{target,node_modules,dist}/**'
+  --exclude '**/target/**' \
+  --exclude '**/node_modules/**' \
+  --exclude '**/dist/**' \
+  --type file
 ```
 
-## Inspect the plan
+Positive patterns form a union. Exclusions remove matches and can prune a safely excluded subtree.
 
-Add `--explain` to print compiler decisions without traversing:
+## 4. Explain before walking
 
 ```bash
 branchcut \
@@ -38,12 +58,33 @@ branchcut \
   --explain
 ```
 
-## Measure the traversal
+The plan shows the root, shared pattern structure, exclusions, metadata requirement, and termination rule. `--explain` does not traverse.
 
-Add `--stats` to write real counters to standard error:
+## 5. Measure actual work
 
 ```bash
-branchcut --glob '**/*.rs' --exclude '**/target/**' --stats
+branchcut \
+  --glob '**/*.rs' \
+  --exclude '**/target/**' \
+  --limit 100 \
+  --stats
 ```
 
-Branchcut reports matches, directories considered and opened, pruning decisions, entries inspected, candidate files, metadata calls, filesystem errors, and elapsed time.
+Statistics are written to standard error so stdout remains suitable for a pipeline. Results stream while useful directories are traversed.
+
+## 6. Keep paths machine-safe
+
+```bash
+branchcut --glob '**/*.rs' --json
+branchcut --glob '**/*.rs' --print0
+```
+
+JSON Lines preserves unusual Windows names through a companion `path_utf16` field. NUL output preserves native Unix path bytes and pairs with `xargs -0`.
+
+## Where next
+
+<Cards>
+  <Card title="Your first query" description="A guided first pass with plan and statistics." href="/docs/tutorials/first-query" />
+  <Card title="Monorepo search" description="Narrow roots, prune generated trees, and save the query." href="/docs/tutorials/monorepo" />
+  <Card title="Cheat sheet" description="The options and semantic boundaries to keep nearby." href="/docs/reference/cheatsheet" />
+</Cards>

@@ -36,6 +36,8 @@ The temporary tree is created under the operating system's temporary directory. 
 
 ## Correctness gate
 
+For the expanded post-competition before/after workload matrix and warm library probe, see [Phase 7 measurements](../evidence/phase7.md). It records complete selection checks, raw samples, first-match latency, metadata/traversal counters, and separate Windows process-resource observations. Its results do not replace historical competitor records.
+
 Never time a query until result sets agree for the claimed semantics.
 
 ```text

@@ -6,6 +6,8 @@ icon: BrainCircuit
 
 Branchcut is easiest to understand as a small compiler whose target machine is a filesystem traversal.
 
+![Compile the query, prune impossible branches, stream matches](../media/branchcut-query-planning.png)
+
 ```text
 source query
     │

@@ -15,7 +15,7 @@ Branchcut's core library and ordinary CLI have no third-party crate dependencies
 | `rayon` | Bounded `std::thread` worker pool | Parallel collection is opt-in and buffers results. |
 | `serde_json` | JSON Lines output serializer in `src/cli/output.rs` | Core traversal exposes native `Path` values and leaves serialization to callers. |
 | `duct` / shell helpers | `std::process::Command` in `src/cli/exec.rs` | Only the explicit CLI `--exec` option launches the executable selected by the user; no shell is used. |
-| `humantime` | Not needed yet | Size and modification-time predicates are planned, not currently implemented. |
+| size / duration parsing crates | Small checked parsers in `src/metadata.rs` | Whole-number size units and fixed-duration units only; no fractions, months, or years. |
 
 ## Core library boundary
 

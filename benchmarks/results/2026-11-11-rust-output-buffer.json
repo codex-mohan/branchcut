@@ -1,0 +1,1452 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-11T15:31:03.446Z",
+  "method": "CLI: fresh process, stdout pipe drained and retained, alternating variant order; engine: compiled plan reused in one process, visitor count or explicit parallel delivery. Filesystem cache uncontrolled; warmups are not cold-disk control.",
+  "parallel_engine_delivery": "bounded streaming visitor",
+  "engine_order": "separate before and after blocks, order reversed by workload",
+  "correctness": "Complete CLI path sets checked against deterministic generator manifest before timing; every timed output/count checked. Engine counts checked against the same manifest.",
+  "limitations": [
+    "Engine variants run in separate blocks, reversing order between workloads.",
+    "First output chunk includes buffering and startup; it is not engine time to first match.",
+    "Windows resources are separate untimed samples; OS peak working set is sampled every 1 ms while alive and may miss the final peak. It is not allocator usage.",
+    "No external competitor speed claim; generated files are not a public-repository benchmark.",
+    "Batch child-process work is not timed by this suite."
+  ],
+  "system": {
+    "os": "Windows_NT 10.0.26200 x64",
+    "cpu": "Intel(R) Core(TM) 5 210H",
+    "logical_cpus": 12,
+    "ram_bytes": 16788987904,
+    "node": "v25.2.1",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "filesystem_type": 0
+  },
+  "harness_sha256": "bb4bd4bfbc687eeecfb761b8e3cb459526ef17d6110dc24ac28e3306206e6781",
+  "resource_probe_sha256": "1f563b43954bc7859a711775b87a7c06784663f011183aea72c95366a69fe2f7",
+  "variants": {
+    "before": {
+      "binary_sha256": "8b8096dcc8208b2edcf403139189e9bc5082bd0e5ea9061e614cf898185fc45f",
+      "engine_sha256": "fd36b0bd7d4c764a7c7eddbc6fe2ece4674fee44bd5ed4e78fc0ca1c2d925ed3",
+      "source": {
+        "commit": "5ec8cb13b955344599b8dbbf9f47294d1df9b4f5",
+        "dirty": true,
+        "source_manifest": [
+          {
+            "path": "Cargo.lock",
+            "sha256": "04a2973eb78f0e347884141f6e1c7bd33a3608fa54a82a8007a3e7923ea183c4"
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "82f30abf904d914e0a864908007001e3d39b849cbd9b73268b327ce2f60edec5"
+          },
+          {
+            "path": "examples/measure_engine.rs",
+            "sha256": "e65e5cc23bcd6d68636303f9e0628727ccbf74a4442d7b253d922b061a5bb768"
+          },
+          {
+            "path": "src/cli/args.rs",
+            "sha256": "2a7387613c25bc49748d39da99b1e8379a29cc73249e9b68ef17b75ac463b277"
+          },
+          {
+            "path": "src/cli/config.rs",
+            "sha256": "e151bfcd082c8f8fca5a93f0f2979477dec298ff2f8b6c4cb5534f7bf87345d1"
+          },
+          {
+            "path": "src/cli/exec.rs",
+            "sha256": "3f8bf2a07959cd10a9063f34b1fe1a7354b360778ac2f132ec5350b6ec18eacb"
+          },
+          {
+            "path": "src/cli/mod.rs",
+            "sha256": "1c77bbf93e78d2269fb14e09aca0fe50ce15750220c22a9196016bff4b6e2257"
+          },
+          {
+            "path": "src/cli/output.rs",
+            "sha256": "46ad439f0f4ba5d500c733efb9be05f5fb3c41961bdab5769b3f8b19ae693e52"
+          },
+          {
+            "path": "src/diagnostic.rs",
+            "sha256": "ad857c6703dec022948eee9156d717c4818b2fe1e40f1e0d51a10d276723b698"
+          },
+          {
+            "path": "src/error.rs",
+            "sha256": "fe5d0c402fa50eded3963c78183a31546451ee23b8a2aa0973cd4d642b6897a9"
+          },
+          {
+            "path": "src/filters.rs",
+            "sha256": "30c01cefceac871afa386b2d2ad9774e69a1640f3d5ad8f00cdabd4904ab2f13"
+          },
+          {
+            "path": "src/ignore.rs",
+            "sha256": "1112c565fd5fe153d89891ca7d70b8d9ad43587bbaff96ab6a019ee0ff9d56a1"
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "046daedaa8fcbfec44fe9d78b848c21de2869ea57b28ca4026688d64bbdc3351"
+          },
+          {
+            "path": "src/main.rs",
+            "sha256": "99f4885c633e060eb889ceada55c9f03382b9c11ffac74043d03118f9e0057ec"
+          },
+          {
+            "path": "src/metadata.rs",
+            "sha256": "9824e99633cd3dd1a7ecf834dedde1bf20a089e7908338f2277b30cf8ef03346"
+          },
+          {
+            "path": "src/path.rs",
+            "sha256": "6d3e15318520a80de4cd52d4d74e9e3b2751b82fdd9aeec2b38c1e3e7c6ef045"
+          },
+          {
+            "path": "src/pattern/case_tests.rs",
+            "sha256": "80447bf3b384a2c8434b5520b8bc11afa32789b94beab13dbeb630b3991ddfe0"
+          },
+          {
+            "path": "src/pattern/extglob.rs",
+            "sha256": "7ba621da07b9cd66fd86cbb6c1e692b2b4a017dd24fa8560d856fcc956726e0e"
+          },
+          {
+            "path": "src/pattern/mod.rs",
+            "sha256": "ffe9cf73843892339d81e205c837dba5b7853b3dcedb7e7ff8bb9df28432d562"
+          },
+          {
+            "path": "src/pattern/parse.rs",
+            "sha256": "2449f204f851b3dd701fff0c1e012bb55d1a6a1123338280fbe44583969a60b0"
+          },
+          {
+            "path": "src/pattern/program.rs",
+            "sha256": "083bca523b78f7c46db21991843e97b40699915350fe21ec2e7a8322cd58752d"
+          },
+          {
+            "path": "src/query.rs",
+            "sha256": "76ee0acc42914ac440590ebd8a98c381ac581d3d2f8bc179a9b228ea6d22e236"
+          },
+          {
+            "path": "src/stats.rs",
+            "sha256": "8333b4c921cd35c70d3df93626d7c3620ff67a72138d96c79c0d8e131f1617e9"
+          },
+          {
+            "path": "src/tests.rs",
+            "sha256": "48fee7a92cbef3f5455555e09d1cdb7c268f98d3dff030950f664dbb81d25c6a"
+          },
+          {
+            "path": "src/walk/mod.rs",
+            "sha256": "1581375cf88915c29389bf21ca280c493cf29ba9997a15219422bfa6b19f5f03"
+          },
+          {
+            "path": "src/walk/parallel.rs",
+            "sha256": "e7bac20c673a1b4b71293f0f132a9e4fabb9c65c3b9272dcb89abc92d9fa8387"
+          },
+          {
+            "path": "src/walk/sequential.rs",
+            "sha256": "d134377d4a5a73c0994dcbe4769e48eb693850fc0c54eec3f86f8c7b4ec29827"
+          }
+        ],
+        "source_sha256": "b7b0e681501b26a6949cc492f783f4560df4bbc23206826caaf51abab2e897f7"
+      }
+    },
+    "after": {
+      "binary_sha256": "d64086f5db4bdc329ac1daaf2d92021b2aee1b8c4b08e845e6f66e0543302419",
+      "engine_sha256": "4fd40ed081610982b97c3c11f0497b070bf7a8ab951e318e8ab734656e429413",
+      "source": {
+        "commit": "5ec8cb13b955344599b8dbbf9f47294d1df9b4f5",
+        "dirty": true,
+        "source_manifest": [
+          {
+            "path": "Cargo.lock",
+            "sha256": "04a2973eb78f0e347884141f6e1c7bd33a3608fa54a82a8007a3e7923ea183c4"
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "82f30abf904d914e0a864908007001e3d39b849cbd9b73268b327ce2f60edec5"
+          },
+          {
+            "path": "examples/measure_engine.rs",
+            "sha256": "e65e5cc23bcd6d68636303f9e0628727ccbf74a4442d7b253d922b061a5bb768"
+          },
+          {
+            "path": "src/cli/args.rs",
+            "sha256": "2a7387613c25bc49748d39da99b1e8379a29cc73249e9b68ef17b75ac463b277"
+          },
+          {
+            "path": "src/cli/config.rs",
+            "sha256": "e151bfcd082c8f8fca5a93f0f2979477dec298ff2f8b6c4cb5534f7bf87345d1"
+          },
+          {
+            "path": "src/cli/exec.rs",
+            "sha256": "3f8bf2a07959cd10a9063f34b1fe1a7354b360778ac2f132ec5350b6ec18eacb"
+          },
+          {
+            "path": "src/cli/mod.rs",
+            "sha256": "1c77bbf93e78d2269fb14e09aca0fe50ce15750220c22a9196016bff4b6e2257"
+          },
+          {
+            "path": "src/cli/output.rs",
+            "sha256": "00f43e4dea0f2edc256c2de18271f89d3b27e9e50ebe13383cad36d9a60f8a6e"
+          },
+          {
+            "path": "src/diagnostic.rs",
+            "sha256": "ad857c6703dec022948eee9156d717c4818b2fe1e40f1e0d51a10d276723b698"
+          },
+          {
+            "path": "src/error.rs",
+            "sha256": "fe5d0c402fa50eded3963c78183a31546451ee23b8a2aa0973cd4d642b6897a9"
+          },
+          {
+            "path": "src/filters.rs",
+            "sha256": "30c01cefceac871afa386b2d2ad9774e69a1640f3d5ad8f00cdabd4904ab2f13"
+          },
+          {
+            "path": "src/ignore.rs",
+            "sha256": "b28ed3746657254fdf911543c20ffcf34bbc5eb972d333ec843b485ac68aa5b8"
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "046daedaa8fcbfec44fe9d78b848c21de2869ea57b28ca4026688d64bbdc3351"
+          },
+          {
+            "path": "src/main.rs",
+            "sha256": "99f4885c633e060eb889ceada55c9f03382b9c11ffac74043d03118f9e0057ec"
+          },
+          {
+            "path": "src/metadata.rs",
+            "sha256": "9824e99633cd3dd1a7ecf834dedde1bf20a089e7908338f2277b30cf8ef03346"
+          },
+          {
+            "path": "src/path.rs",
+            "sha256": "6d3e15318520a80de4cd52d4d74e9e3b2751b82fdd9aeec2b38c1e3e7c6ef045"
+          },
+          {
+            "path": "src/pattern/case_tests.rs",
+            "sha256": "80447bf3b384a2c8434b5520b8bc11afa32789b94beab13dbeb630b3991ddfe0"
+          },
+          {
+            "path": "src/pattern/extglob.rs",
+            "sha256": "7ba621da07b9cd66fd86cbb6c1e692b2b4a017dd24fa8560d856fcc956726e0e"
+          },
+          {
+            "path": "src/pattern/mod.rs",
+            "sha256": "ffe9cf73843892339d81e205c837dba5b7853b3dcedb7e7ff8bb9df28432d562"
+          },
+          {
+            "path": "src/pattern/parse.rs",
+            "sha256": "2449f204f851b3dd701fff0c1e012bb55d1a6a1123338280fbe44583969a60b0"
+          },
+          {
+            "path": "src/pattern/program.rs",
+            "sha256": "df407c2c200e4dfef2138c326504d6f159e282c36e6e5cb5e54efca888660093"
+          },
+          {
+            "path": "src/query.rs",
+            "sha256": "ca1ed6f3fb7350276f43e6d1495ce2abd514b8d290c39ccc81c78ffe175c9ea3"
+          },
+          {
+            "path": "src/stats.rs",
+            "sha256": "8333b4c921cd35c70d3df93626d7c3620ff67a72138d96c79c0d8e131f1617e9"
+          },
+          {
+            "path": "src/tests.rs",
+            "sha256": "48fee7a92cbef3f5455555e09d1cdb7c268f98d3dff030950f664dbb81d25c6a"
+          },
+          {
+            "path": "src/walk/mod.rs",
+            "sha256": "90d9c98070e6e9d902ec3d4e8ff766f1b5df5a4655990a4701821a50cc00d9b9"
+          },
+          {
+            "path": "src/walk/parallel.rs",
+            "sha256": "e7bac20c673a1b4b71293f0f132a9e4fabb9c65c3b9272dcb89abc92d9fa8387"
+          },
+          {
+            "path": "src/walk/sequential.rs",
+            "sha256": "b59d4be487199948eb6d4a83ebf70f3e544b2c9f2b40426d81bfb0270932fb2d"
+          }
+        ],
+        "source_sha256": "b0638d42e973b3595ee7157d705c3ce12847f01be2efd9e65d06a0f51c82d665"
+      }
+    }
+  },
+  "iterations": 9,
+  "warmups": 2,
+  "workloads": [
+    {
+      "name": "broad-count",
+      "corpus_files": 100000,
+      "query": [
+        "--glob",
+        "**/*"
+      ],
+      "expected_matches": 100000,
+      "complete_selection_sha256": "766f87cd99266f1c9d5c6e573f9687a9b72c958ed5c1e361f94778307f4557e6",
+      "variants": {
+        "before": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 166.51020000000426,
+              "first_output_chunk_ms": 164.62190000000555,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 128.75
+              }
+            },
+            {
+              "elapsed_ms": 137.22899999999936,
+              "first_output_chunk_ms": 134.86260000000038,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 106.789
+              }
+            },
+            {
+              "elapsed_ms": 146.70769999999902,
+              "first_output_chunk_ms": 144.9079000000056,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 117.359
+              }
+            },
+            {
+              "elapsed_ms": 152.23799999999756,
+              "first_output_chunk_ms": 149.91500000000087,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 118.077
+              }
+            },
+            {
+              "elapsed_ms": 170.5610000000015,
+              "first_output_chunk_ms": 168.5627999999997,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 137.072
+              }
+            },
+            {
+              "elapsed_ms": 175.43800000000192,
+              "first_output_chunk_ms": 173.6385999999984,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 139.562
+              }
+            },
+            {
+              "elapsed_ms": 221.8876999999993,
+              "first_output_chunk_ms": 219.31979999999749,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 184.536
+              }
+            },
+            {
+              "elapsed_ms": 192.7268999999942,
+              "first_output_chunk_ms": 190.0610000000015,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 158.498
+              }
+            },
+            {
+              "elapsed_ms": 185.77240000000165,
+              "first_output_chunk_ms": 183.9881000000023,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 147.836
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 170.5610000000015,
+            "p90_ms": 221.8876999999993,
+            "p95_ms": 221.8876999999993,
+            "standard_deviation_ms": 24.47499078376578,
+            "dispersion_percent": 14.219808599715622
+          },
+          "compile": {
+            "compile_ns": 25900
+          },
+          "engine_samples": [
+            {
+              "elapsed_ns": 123947100,
+              "first_match_ns": 229000,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 126131900,
+              "first_match_ns": 229900,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 126031500,
+              "first_match_ns": 282800,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 141507800,
+              "first_match_ns": 293400,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 150393100,
+              "first_match_ns": 434700,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 142923600,
+              "first_match_ns": 345800,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 153462900,
+              "first_match_ns": 325400,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 148481600,
+              "first_match_ns": 457000,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 147638800,
+              "first_match_ns": 308200,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            }
+          ],
+          "engine_distribution": {
+            "median_ms": 142.9236,
+            "p90_ms": 153.4629,
+            "p95_ms": 153.4629,
+            "standard_deviation_ms": 10.931528538888932,
+            "dispersion_percent": 7.805024080174035
+          },
+          "resources": [
+            {
+              "cpu_ms": 156.25,
+              "memory_sample_interval_ms": 1,
+              "stderr": "matched                 100000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 132.136ms\n",
+              "exit_code": 0,
+              "observed_peak_working_set_bytes": 5672960,
+              "stdout_bytes": 7,
+              "elapsed_ms": 178.8206
+            },
+            {
+              "stderr": "matched                 100000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 167.354ms\n",
+              "cpu_ms": 171.875,
+              "exit_code": 0,
+              "stdout_bytes": 7,
+              "memory_sample_interval_ms": 1,
+              "observed_peak_working_set_bytes": 5652480,
+              "elapsed_ms": 220.8033
+            },
+            {
+              "exit_code": 0,
+              "observed_peak_working_set_bytes": 6000640,
+              "stdout_bytes": 7,
+              "stderr": "matched                 100000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 151.775ms\n",
+              "memory_sample_interval_ms": 1,
+              "cpu_ms": 156.25,
+              "elapsed_ms": 202.8734
+            }
+          ]
+        },
+        "after": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 135.75939999999537,
+              "first_output_chunk_ms": 132.49609999999666,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 100.852
+              }
+            },
+            {
+              "elapsed_ms": 121.58549999999377,
+              "first_output_chunk_ms": 119.536199999995,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 90.175
+              }
+            },
+            {
+              "elapsed_ms": 151.07340000000113,
+              "first_output_chunk_ms": 147.55359999999928,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 115.685
+              }
+            },
+            {
+              "elapsed_ms": 138.19540000000416,
+              "first_output_chunk_ms": 135.28940000000148,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 101.774
+              }
+            },
+            {
+              "elapsed_ms": 125.81580000000395,
+              "first_output_chunk_ms": 124.12650000000576,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 92.123
+              }
+            },
+            {
+              "elapsed_ms": 122.09569999999803,
+              "first_output_chunk_ms": 120.09670000000187,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 95.178
+              }
+            },
+            {
+              "elapsed_ms": 159.02700000000186,
+              "first_output_chunk_ms": 156.98369999999704,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 113.159
+              }
+            },
+            {
+              "elapsed_ms": 169.2175999999963,
+              "first_output_chunk_ms": 167.09640000000218,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 132.982
+              }
+            },
+            {
+              "elapsed_ms": 136.95759999999427,
+              "first_output_chunk_ms": 134.74839999999676,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 106.206
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 136.95759999999427,
+            "p90_ms": 169.2175999999963,
+            "p95_ms": 169.2175999999963,
+            "standard_deviation_ms": 15.739728838653322,
+            "dispersion_percent": 11.24509632384603
+          },
+          "compile": {
+            "compile_ns": 35700
+          },
+          "engine_samples": [
+            {
+              "elapsed_ns": 129277200,
+              "first_match_ns": 395100,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 141406600,
+              "first_match_ns": 326700,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 148985500,
+              "first_match_ns": 241700,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 154298000,
+              "first_match_ns": 653300,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 142883300,
+              "first_match_ns": 494300,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 155605700,
+              "first_match_ns": 444200,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 141218100,
+              "first_match_ns": 622700,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 131956100,
+              "first_match_ns": 253800,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 120742700,
+              "first_match_ns": 265200,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            }
+          ],
+          "engine_distribution": {
+            "median_ms": 141.4066,
+            "p90_ms": 155.6057,
+            "p95_ms": 155.6057,
+            "standard_deviation_ms": 10.987360879058572,
+            "dispersion_percent": 7.808618179185024
+          },
+          "resources": [
+            {
+              "exit_code": 0,
+              "stderr": "matched                 100000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 125.462ms\n",
+              "memory_sample_interval_ms": 1,
+              "observed_peak_working_set_bytes": 5664768,
+              "stdout_bytes": 7,
+              "elapsed_ms": 166.3702,
+              "cpu_ms": 125
+            },
+            {
+              "stdout_bytes": 7,
+              "exit_code": 0,
+              "cpu_ms": 140.625,
+              "stderr": "matched                 100000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 123.310ms\n",
+              "observed_peak_working_set_bytes": 5652480,
+              "elapsed_ms": 174.145,
+              "memory_sample_interval_ms": 1
+            },
+            {
+              "stdout_bytes": 7,
+              "observed_peak_working_set_bytes": 5664768,
+              "exit_code": 0,
+              "memory_sample_interval_ms": 1,
+              "cpu_ms": 140.625,
+              "elapsed_ms": 183.7741,
+              "stderr": "matched                 100000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 137.210ms\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "broad-output",
+      "corpus_files": 100000,
+      "query": [
+        "--glob",
+        "**/*"
+      ],
+      "expected_matches": 100000,
+      "complete_selection_sha256": "766f87cd99266f1c9d5c6e573f9687a9b72c958ed5c1e361f94778307f4557e6",
+      "variants": {
+        "before": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 210.43379999999888,
+              "first_output_chunk_ms": 35.936799999995856,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 175.403
+              }
+            },
+            {
+              "elapsed_ms": 237.41500000000815,
+              "first_output_chunk_ms": 39.83630000000994,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 200.506
+              }
+            },
+            {
+              "elapsed_ms": 183.56999999999243,
+              "first_output_chunk_ms": 34.342399999994086,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 150.449
+              }
+            },
+            {
+              "elapsed_ms": 237.3640999999916,
+              "first_output_chunk_ms": 39.548299999994924,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 197.505
+              }
+            },
+            {
+              "elapsed_ms": 265.9103999999934,
+              "first_output_chunk_ms": 48.783400000000256,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 220.056
+              }
+            },
+            {
+              "elapsed_ms": 230.2841000000044,
+              "first_output_chunk_ms": 42.81030000001192,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 189.965
+              }
+            },
+            {
+              "elapsed_ms": 207.94080000001122,
+              "first_output_chunk_ms": 44.868700000006356,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 165.856
+              }
+            },
+            {
+              "elapsed_ms": 212.80250000000524,
+              "first_output_chunk_ms": 43.61590000000433,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 171.566
+              }
+            },
+            {
+              "elapsed_ms": 208.0671000000002,
+              "first_output_chunk_ms": 37.04409999999916,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 173.102
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 212.80250000000524,
+            "p90_ms": 265.9103999999934,
+            "p95_ms": 265.9103999999934,
+            "standard_deviation_ms": 22.498095295467017,
+            "dispersion_percent": 10.155687463791411
+          },
+          "compile": {
+            "compile_ns": 37400
+          },
+          "engine_samples": [
+            {
+              "elapsed_ns": 119068400,
+              "first_match_ns": 274000,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 118460900,
+              "first_match_ns": 297400,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 110133400,
+              "first_match_ns": 282000,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 119467000,
+              "first_match_ns": 375600,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 134826200,
+              "first_match_ns": 404100,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 131445500,
+              "first_match_ns": 284700,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 140727100,
+              "first_match_ns": 284500,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 131366400,
+              "first_match_ns": 314300,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 136906000,
+              "first_match_ns": 427600,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            }
+          ],
+          "engine_distribution": {
+            "median_ms": 131.3664,
+            "p90_ms": 140.7271,
+            "p95_ms": 140.7271,
+            "standard_deviation_ms": 9.795998887868006,
+            "dispersion_percent": 7.717430018727406
+          }
+        },
+        "after": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 183.9444000000076,
+              "first_output_chunk_ms": 38.07090000000608,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 148.467
+              }
+            },
+            {
+              "elapsed_ms": 217.566599999991,
+              "first_output_chunk_ms": 39.39629999999306,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 179.754
+              }
+            },
+            {
+              "elapsed_ms": 146.7948999999935,
+              "first_output_chunk_ms": 30.02730000000156,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 117.54
+              }
+            },
+            {
+              "elapsed_ms": 186.3023000000103,
+              "first_output_chunk_ms": 35.87300000000687,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 152.166
+              }
+            },
+            {
+              "elapsed_ms": 240.4725000000035,
+              "first_output_chunk_ms": 53.82970000000205,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 188.883
+              }
+            },
+            {
+              "elapsed_ms": 225.96379999999772,
+              "first_output_chunk_ms": 42.757400000002235,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 185.318
+              }
+            },
+            {
+              "elapsed_ms": 206.44129999999132,
+              "first_output_chunk_ms": 48.279899999994086,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 160.825
+              }
+            },
+            {
+              "elapsed_ms": 198.72899999999208,
+              "first_output_chunk_ms": 40.529899999994086,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 160.245
+              }
+            },
+            {
+              "elapsed_ms": 182.8188000000082,
+              "first_output_chunk_ms": 31.95350000000326,
+              "stats": {
+                "matched": 100000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 151.657
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 198.72899999999208,
+            "p90_ms": 240.4725000000035,
+            "p95_ms": 240.4725000000035,
+            "standard_deviation_ms": 26.292915244496566,
+            "dispersion_percent": 13.227042644725607
+          },
+          "compile": {
+            "compile_ns": 30700
+          },
+          "engine_samples": [
+            {
+              "elapsed_ns": 117682000,
+              "first_match_ns": 340700,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 147205100,
+              "first_match_ns": 324400,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 138130800,
+              "first_match_ns": 449600,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 109948400,
+              "first_match_ns": 379200,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 104903500,
+              "first_match_ns": 244200,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 105239200,
+              "first_match_ns": 311500,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 107377900,
+              "first_match_ns": 276300,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 138277300,
+              "first_match_ns": 296500,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            },
+            {
+              "elapsed_ns": 150275600,
+              "first_match_ns": 434500,
+              "matches": 100000,
+              "dirs_opened": 202,
+              "dirs_pruned": 0,
+              "entries_seen": 100203,
+              "metadata_calls": 1
+            }
+          ],
+          "engine_distribution": {
+            "median_ms": 117.682,
+            "p90_ms": 150.2756,
+            "p95_ms": 150.2756,
+            "standard_deviation_ms": 17.83155953739892,
+            "dispersion_percent": 14.341226812182223
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1376 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-11T12:00:56.152Z",
+  "method": "CLI: fresh process, stdout pipe drained and retained, alternating variant order; engine: compiled plan reused in one process, visitor count or buffered parallel collection. Filesystem cache uncontrolled; warmups are not cold-disk control.",
+  "correctness": "Complete CLI path sets checked against deterministic generator manifest before timing; every timed output/count checked. Engine counts checked against the same manifest.",
+  "limitations": [
+    "Engine variants run in separate blocks, reversing order between workloads.",
+    "First output chunk includes buffering and startup; it is not engine time to first match.",
+    "Windows resources are separate untimed samples; peak working set is not allocator usage.",
+    "No external competitor speed claim; generated files are not a public-repository benchmark.",
+    "Batch child-process work is not timed by this suite."
+  ],
+  "system": {
+    "os": "Windows_NT 10.0.26200 x64",
+    "cpu": "Intel(R) Core(TM) 5 210H",
+    "logical_cpus": 12,
+    "ram_bytes": 16788987904,
+    "node": "v25.2.1",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "filesystem_type": 0
+  },
+  "harness_sha256": "b650a7af67f20316df159f9992e8901a11fde92c8ee25683077ee740060e02ef",
+  "resource_probe_sha256": "8c6625e012e87a9b387646ff14f06d03756d055d80b85705a44bebd611d5c6a3",
+  "variants": {
+    "before": {
+      "binary_sha256": "e23f52a6719c20b0bdc2de22a4bd0c2efef5406b8804771f40372924154a4a3f",
+      "engine_sha256": "49dfd339f93e621fd49f13306dbaf16ef5b573968d5f1b883835e11a9c4eed27",
+      "source": {
+        "commit": "596bbfc9bfe358467e6f947470d1376e42880a53",
+        "dirty": true,
+        "source_manifest": [
+          {
+            "path": "Cargo.lock",
+            "sha256": "04a2973eb78f0e347884141f6e1c7bd33a3608fa54a82a8007a3e7923ea183c4"
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "82f30abf904d914e0a864908007001e3d39b849cbd9b73268b327ce2f60edec5"
+          },
+          {
+            "path": "examples/measure_engine.rs",
+            "sha256": "20bb33cfafc1a17cf300b9ebb14140da050a144600bf49045ca0bd8fbd5d324a"
+          },
+          {
+            "path": "src/cli/args.rs",
+            "sha256": "490ecbe1061d327e4ef51482e96a40538b3ceaf873d005c761b6c3abc2c7be33"
+          },
+          {
+            "path": "src/cli/config.rs",
+            "sha256": "e151bfcd082c8f8fca5a93f0f2979477dec298ff2f8b6c4cb5534f7bf87345d1"
+          },
+          {
+            "path": "src/cli/exec.rs",
+            "sha256": "3f8bf2a07959cd10a9063f34b1fe1a7354b360778ac2f132ec5350b6ec18eacb"
+          },
+          {
+            "path": "src/cli/mod.rs",
+            "sha256": "f3eca2a6871a1554d8b7c9fa4234b9d8c68d3957588208011cbd5727c44e2c2a"
+          },
+          {
+            "path": "src/cli/output.rs",
+            "sha256": "8dfd5181c4a9454ba2ff00a8c594a549fd32f548f0da6d13b3105e9b841266a4"
+          },
+          {
+            "path": "src/diagnostic.rs",
+            "sha256": "ff6706bfd6558dcd5912656e9cfe2be4f61ba981877e1bcc03e994f17b0c4104"
+          },
+          {
+            "path": "src/error.rs",
+            "sha256": "fe5d0c402fa50eded3963c78183a31546451ee23b8a2aa0973cd4d642b6897a9"
+          },
+          {
+            "path": "src/filters.rs",
+            "sha256": "30c01cefceac871afa386b2d2ad9774e69a1640f3d5ad8f00cdabd4904ab2f13"
+          },
+          {
+            "path": "src/ignore.rs",
+            "sha256": "5c92838f41e50a73932f74d5a100272a49aed3a1080bb2af2134a38530747627"
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "046daedaa8fcbfec44fe9d78b848c21de2869ea57b28ca4026688d64bbdc3351"
+          },
+          {
+            "path": "src/main.rs",
+            "sha256": "99f4885c633e060eb889ceada55c9f03382b9c11ffac74043d03118f9e0057ec"
+          },
+          {
+            "path": "src/metadata.rs",
+            "sha256": "9824e99633cd3dd1a7ecf834dedde1bf20a089e7908338f2277b30cf8ef03346"
+          },
+          {
+            "path": "src/path.rs",
+            "sha256": "6d3e15318520a80de4cd52d4d74e9e3b2751b82fdd9aeec2b38c1e3e7c6ef045"
+          },
+          {
+            "path": "src/pattern/case_tests.rs",
+            "sha256": "80447bf3b384a2c8434b5520b8bc11afa32789b94beab13dbeb630b3991ddfe0"
+          },
+          {
+            "path": "src/pattern/mod.rs",
+            "sha256": "682b5d2f16c95141a8a6f6383ab96cd6b4193683f7bbb63c1932008b1a137beb"
+          },
+          {
+            "path": "src/pattern/parse.rs",
+            "sha256": "c6ac26455e35e215814ca966e0232dea9da908e93576079f1aa996133d6d627d"
+          },
+          {
+            "path": "src/pattern/program.rs",
+            "sha256": "9c70760f0e22117f54ef7718c618e8fed21973321b79409e80ab29661c7ca6ee"
+          },
+          {
+            "path": "src/query.rs",
+            "sha256": "fcb26bcd8e09aa2d43af68d1fb3be212c0869a0d9adb085b98a2b99b6dd35ac6"
+          },
+          {
+            "path": "src/stats.rs",
+            "sha256": "8333b4c921cd35c70d3df93626d7c3620ff67a72138d96c79c0d8e131f1617e9"
+          },
+          {
+            "path": "src/tests.rs",
+            "sha256": "c5d8e7c8d4bd6013c53fa03e57025c914bc8aac24fe337bf468b565385b5c863"
+          },
+          {
+            "path": "src/walk/mod.rs",
+            "sha256": "ade628fe37ef5596dea4cbdcd0b099eec3b4d514258a24a9957b5ad88e06d438"
+          },
+          {
+            "path": "src/walk/parallel.rs",
+            "sha256": "3d372eb97b334964a41f1d1b76de486b5ad145c9f2e6401116730d4cf6b80ac3"
+          },
+          {
+            "path": "src/walk/sequential.rs",
+            "sha256": "18b7894deb31d3425564c59e16a5f4df41f1bb13b8e569af3761f22fa94d0583"
+          }
+        ],
+        "source_sha256": "9355152930df5a3a76ad0874afb6bb035b7d08392be43787d4f2603dab1ca127"
+      }
+    },
+    "after": {
+      "binary_sha256": "e23f52a6719c20b0bdc2de22a4bd0c2efef5406b8804771f40372924154a4a3f",
+      "engine_sha256": "49dfd339f93e621fd49f13306dbaf16ef5b573968d5f1b883835e11a9c4eed27",
+      "source": {
+        "commit": "596bbfc9bfe358467e6f947470d1376e42880a53",
+        "dirty": true,
+        "source_manifest": [
+          {
+            "path": "Cargo.lock",
+            "sha256": "04a2973eb78f0e347884141f6e1c7bd33a3608fa54a82a8007a3e7923ea183c4"
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "82f30abf904d914e0a864908007001e3d39b849cbd9b73268b327ce2f60edec5"
+          },
+          {
+            "path": "examples/measure_engine.rs",
+            "sha256": "20bb33cfafc1a17cf300b9ebb14140da050a144600bf49045ca0bd8fbd5d324a"
+          },
+          {
+            "path": "src/cli/args.rs",
+            "sha256": "490ecbe1061d327e4ef51482e96a40538b3ceaf873d005c761b6c3abc2c7be33"
+          },
+          {
+            "path": "src/cli/config.rs",
+            "sha256": "e151bfcd082c8f8fca5a93f0f2979477dec298ff2f8b6c4cb5534f7bf87345d1"
+          },
+          {
+            "path": "src/cli/exec.rs",
+            "sha256": "3f8bf2a07959cd10a9063f34b1fe1a7354b360778ac2f132ec5350b6ec18eacb"
+          },
+          {
+            "path": "src/cli/mod.rs",
+            "sha256": "f3eca2a6871a1554d8b7c9fa4234b9d8c68d3957588208011cbd5727c44e2c2a"
+          },
+          {
+            "path": "src/cli/output.rs",
+            "sha256": "8dfd5181c4a9454ba2ff00a8c594a549fd32f548f0da6d13b3105e9b841266a4"
+          },
+          {
+            "path": "src/diagnostic.rs",
+            "sha256": "ff6706bfd6558dcd5912656e9cfe2be4f61ba981877e1bcc03e994f17b0c4104"
+          },
+          {
+            "path": "src/error.rs",
+            "sha256": "fe5d0c402fa50eded3963c78183a31546451ee23b8a2aa0973cd4d642b6897a9"
+          },
+          {
+            "path": "src/filters.rs",
+            "sha256": "30c01cefceac871afa386b2d2ad9774e69a1640f3d5ad8f00cdabd4904ab2f13"
+          },
+          {
+            "path": "src/ignore.rs",
+            "sha256": "5c92838f41e50a73932f74d5a100272a49aed3a1080bb2af2134a38530747627"
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "046daedaa8fcbfec44fe9d78b848c21de2869ea57b28ca4026688d64bbdc3351"
+          },
+          {
+            "path": "src/main.rs",
+            "sha256": "99f4885c633e060eb889ceada55c9f03382b9c11ffac74043d03118f9e0057ec"
+          },
+          {
+            "path": "src/metadata.rs",
+            "sha256": "9824e99633cd3dd1a7ecf834dedde1bf20a089e7908338f2277b30cf8ef03346"
+          },
+          {
+            "path": "src/path.rs",
+            "sha256": "6d3e15318520a80de4cd52d4d74e9e3b2751b82fdd9aeec2b38c1e3e7c6ef045"
+          },
+          {
+            "path": "src/pattern/case_tests.rs",
+            "sha256": "80447bf3b384a2c8434b5520b8bc11afa32789b94beab13dbeb630b3991ddfe0"
+          },
+          {
+            "path": "src/pattern/mod.rs",
+            "sha256": "682b5d2f16c95141a8a6f6383ab96cd6b4193683f7bbb63c1932008b1a137beb"
+          },
+          {
+            "path": "src/pattern/parse.rs",
+            "sha256": "c6ac26455e35e215814ca966e0232dea9da908e93576079f1aa996133d6d627d"
+          },
+          {
+            "path": "src/pattern/program.rs",
+            "sha256": "9c70760f0e22117f54ef7718c618e8fed21973321b79409e80ab29661c7ca6ee"
+          },
+          {
+            "path": "src/query.rs",
+            "sha256": "fcb26bcd8e09aa2d43af68d1fb3be212c0869a0d9adb085b98a2b99b6dd35ac6"
+          },
+          {
+            "path": "src/stats.rs",
+            "sha256": "8333b4c921cd35c70d3df93626d7c3620ff67a72138d96c79c0d8e131f1617e9"
+          },
+          {
+            "path": "src/tests.rs",
+            "sha256": "c5d8e7c8d4bd6013c53fa03e57025c914bc8aac24fe337bf468b565385b5c863"
+          },
+          {
+            "path": "src/walk/mod.rs",
+            "sha256": "ade628fe37ef5596dea4cbdcd0b099eec3b4d514258a24a9957b5ad88e06d438"
+          },
+          {
+            "path": "src/walk/parallel.rs",
+            "sha256": "3d372eb97b334964a41f1d1b76de486b5ad145c9f2e6401116730d4cf6b80ac3"
+          },
+          {
+            "path": "src/walk/sequential.rs",
+            "sha256": "18b7894deb31d3425564c59e16a5f4df41f1bb13b8e569af3761f22fa94d0583"
+          }
+        ],
+        "source_sha256": "9355152930df5a3a76ad0874afb6bb035b7d08392be43787d4f2603dab1ca127"
+      }
+    }
+  },
+  "iterations": 5,
+  "warmups": 1,
+  "workloads": [
+    {
+      "name": "sorted-10",
+      "corpus_files": 10000,
+      "query": [
+        "--glob",
+        "**/*",
+        "--sort",
+        "--limit",
+        "10"
+      ],
+      "expected_matches": 10,
+      "complete_selection_sha256": "0e0a8909c27564b526608eacbda30751e9453cbdb4bdbd310c507dd5087f8f94",
+      "variants": {
+        "before": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 76.92889999999989,
+              "first_output_chunk_ms": 74.23119999999972,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 41.637
+              }
+            },
+            {
+              "elapsed_ms": 80.38360000000011,
+              "first_output_chunk_ms": 77.84259999999995,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 44.653
+              }
+            },
+            {
+              "elapsed_ms": 80.0609000000004,
+              "first_output_chunk_ms": 77.73660000000018,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 44.985
+              }
+            },
+            {
+              "elapsed_ms": 77.6850999999997,
+              "first_output_chunk_ms": 74.72310000000016,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 43.801
+              }
+            },
+            {
+              "elapsed_ms": 79.77930000000015,
+              "first_output_chunk_ms": 77.42399999999998,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 44.616
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 79.77930000000015,
+            "p90_ms": 80.38360000000011,
+            "p95_ms": 80.38360000000011,
+            "standard_deviation_ms": 1.3899871734661944,
+            "dispersion_percent": 1.7602002309127869
+          },
+          "resources": [
+            {
+              "peak_working_set_bytes": null,
+              "exit_code": 0,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 42.340ms\n",
+              "elapsed_ms": 86.4827,
+              "cpu_ms": 46.875,
+              "stdout_bytes": 280
+            },
+            {
+              "peak_working_set_bytes": null,
+              "stdout_bytes": 280,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 41.524ms\n",
+              "cpu_ms": 46.875,
+              "exit_code": 0,
+              "elapsed_ms": 83.4365
+            },
+            {
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 42.499ms\n",
+              "peak_working_set_bytes": null,
+              "cpu_ms": 62.5,
+              "elapsed_ms": 86.1169,
+              "exit_code": 0,
+              "stdout_bytes": 280
+            }
+          ]
+        },
+        "after": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 80.5925000000002,
+              "first_output_chunk_ms": 77.85140000000001,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 42.861
+              }
+            },
+            {
+              "elapsed_ms": 82.27060000000029,
+              "first_output_chunk_ms": 78.83590000000004,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 45.539
+              }
+            },
+            {
+              "elapsed_ms": 77.59429999999975,
+              "first_output_chunk_ms": 75.08150000000023,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 40.554
+              }
+            },
+            {
+              "elapsed_ms": 80.96070000000054,
+              "first_output_chunk_ms": 78.36790000000019,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 41.392
+              }
+            },
+            {
+              "elapsed_ms": 75.28920000000016,
+              "first_output_chunk_ms": 73.03159999999934,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 40.595
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 80.5925000000002,
+            "p90_ms": 82.27060000000029,
+            "p95_ms": 82.27060000000029,
+            "standard_deviation_ms": 2.5393022495167243,
+            "dispersion_percent": 3.200473308049434
+          },
+          "resources": [
+            {
+              "exit_code": 0,
+              "peak_working_set_bytes": null,
+              "cpu_ms": 46.875,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 44.443ms\n",
+              "elapsed_ms": 89.2588,
+              "stdout_bytes": 280
+            },
+            {
+              "peak_working_set_bytes": null,
+              "stdout_bytes": 280,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 42.884ms\n",
+              "exit_code": 0,
+              "cpu_ms": 46.875,
+              "elapsed_ms": 89.9846
+            },
+            {
+              "exit_code": 0,
+              "stdout_bytes": 280,
+              "elapsed_ms": 90.9773,
+              "peak_working_set_bytes": null,
+              "cpu_ms": 46.875,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 43.321ms\n"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "sorted-half",
+      "corpus_files": 10000,
+      "query": [
+        "--glob",
+        "**/*",
+        "--sort",
+        "--limit",
+        "5000"
+      ],
+      "expected_matches": 5000,
+      "complete_selection_sha256": "0e0a8909c27564b526608eacbda30751e9453cbdb4bdbd310c507dd5087f8f94",
+      "variants": {
+        "before": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 77.45179999999891,
+              "first_output_chunk_ms": 74.69959999999992,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 44.97
+              }
+            },
+            {
+              "elapsed_ms": 73.28369999999995,
+              "first_output_chunk_ms": 70.46290000000045,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 40.036
+              }
+            },
+            {
+              "elapsed_ms": 73.25279999999839,
+              "first_output_chunk_ms": 70.14049999999952,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 44.299
+              }
+            },
+            {
+              "elapsed_ms": 66.12830000000031,
+              "first_output_chunk_ms": 63.818999999999505,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 34.649
+              }
+            },
+            {
+              "elapsed_ms": 75.32539999999972,
+              "first_output_chunk_ms": 72.87910000000011,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 36.184
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 73.28369999999995,
+            "p90_ms": 77.45179999999891,
+            "p95_ms": 77.45179999999891,
+            "standard_deviation_ms": 3.8092411322987783,
+            "dispersion_percent": 5.211827228806222
+          },
+          "resources": [
+            {
+              "stderr": "matched                 5000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 35.062ms\n",
+              "elapsed_ms": 79.7717,
+              "stdout_bytes": 162430,
+              "peak_working_set_bytes": null,
+              "exit_code": 0,
+              "cpu_ms": 46.875
+            },
+            {
+              "elapsed_ms": 87.3015,
+              "stderr": "matched                 5000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 40.782ms\n",
+              "cpu_ms": 46.875,
+              "stdout_bytes": 162430,
+              "exit_code": 0,
+              "peak_working_set_bytes": null
+            },
+            {
+              "elapsed_ms": 87.8567,
+              "cpu_ms": 62.5,
+              "stderr": "matched                 5000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 42.594ms\n",
+              "stdout_bytes": 162430,
+              "exit_code": 0,
+              "peak_working_set_bytes": null
+            }
+          ]
+        },
+        "after": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 87.20410000000084,
+              "first_output_chunk_ms": 83.34189999999944,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 51.799
+              }
+            },
+            {
+              "elapsed_ms": 80.28060000000005,
+              "first_output_chunk_ms": 77.04989999999998,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 43.318
+              }
+            },
+            {
+              "elapsed_ms": 72.9369999999999,
+              "first_output_chunk_ms": 70.11490000000049,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 34.666
+              }
+            },
+            {
+              "elapsed_ms": 68.51250000000073,
+              "first_output_chunk_ms": 65.79230000000098,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 38.112
+              }
+            },
+            {
+              "elapsed_ms": 71.53440000000046,
+              "first_output_chunk_ms": 68.65560000000005,
+              "stats": {
+                "matched": 5000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 10203,
+                "candidate_files": 10000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 41.379
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 72.9369999999999,
+            "p90_ms": 87.20410000000084,
+            "p95_ms": 87.20410000000084,
+            "standard_deviation_ms": 6.770490153423228,
+            "dispersion_percent": 8.897567569864101
+          },
+          "resources": [
+            {
+              "exit_code": 0,
+              "elapsed_ms": 89.1604,
+              "stdout_bytes": 162430,
+              "cpu_ms": 46.875,
+              "stderr": "matched                 5000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 46.011ms\n",
+              "peak_working_set_bytes": null
+            },
+            {
+              "peak_working_set_bytes": null,
+              "stdout_bytes": 162430,
+              "elapsed_ms": 86.8888,
+              "cpu_ms": 78.125,
+              "exit_code": 0,
+              "stderr": "matched                 5000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 41.649ms\n"
+            },
+            {
+              "stderr": "matched                 5000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       10203\ncandidate files         10000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 44.693ms\n",
+              "elapsed_ms": 86.5078,
+              "stdout_bytes": 162430,
+              "peak_working_set_bytes": null,
+              "exit_code": 0,
+              "cpu_ms": 62.5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "sorted-10",
+      "corpus_files": 100000,
+      "query": [
+        "--glob",
+        "**/*",
+        "--sort",
+        "--limit",
+        "10"
+      ],
+      "expected_matches": 10,
+      "complete_selection_sha256": "766f87cd99266f1c9d5c6e573f9687a9b72c958ed5c1e361f94778307f4557e6",
+      "variants": {
+        "before": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 307.9879000000001,
+              "first_output_chunk_ms": 305.0279999999984,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 272.895
+              }
+            },
+            {
+              "elapsed_ms": 292.4660999999978,
+              "first_output_chunk_ms": 289.1238000000012,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 255.059
+              }
+            },
+            {
+              "elapsed_ms": 290.33610000000044,
+              "first_output_chunk_ms": 287.5544000000009,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 252.836
+              }
+            },
+            {
+              "elapsed_ms": 325.1995999999999,
+              "first_output_chunk_ms": 322.2589000000007,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 288.28
+              }
+            },
+            {
+              "elapsed_ms": 353.41369999999733,
+              "first_output_chunk_ms": 351.10339999999997,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 315.519
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 307.9879000000001,
+            "p90_ms": 353.41369999999733,
+            "p95_ms": 353.41369999999733,
+            "standard_deviation_ms": 23.403563661835175,
+            "dispersion_percent": 7.456197578594273
+          },
+          "resources": [
+            {
+              "exit_code": 0,
+              "elapsed_ms": 360.9364,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 315.399ms\n",
+              "peak_working_set_bytes": null,
+              "stdout_bytes": 280,
+              "cpu_ms": 312.5
+            },
+            {
+              "cpu_ms": 296.875,
+              "stdout_bytes": 280,
+              "exit_code": 0,
+              "elapsed_ms": 325.667,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 275.799ms\n",
+              "peak_working_set_bytes": null
+            },
+            {
+              "elapsed_ms": 331.4118,
+              "exit_code": 0,
+              "cpu_ms": 296.875,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 283.697ms\n",
+              "peak_working_set_bytes": null,
+              "stdout_bytes": 280
+            }
+          ]
+        },
+        "after": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 321.14890000000014,
+              "first_output_chunk_ms": 318.32770000000164,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 283.637
+              }
+            },
+            {
+              "elapsed_ms": 309.28689999999915,
+              "first_output_chunk_ms": 306.59730000000127,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 270.287
+              }
+            },
+            {
+              "elapsed_ms": 320.9377000000022,
+              "first_output_chunk_ms": 317.6953999999969,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 282.543
+              }
+            },
+            {
+              "elapsed_ms": 304.55159999999887,
+              "first_output_chunk_ms": 301.8778999999995,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 271.193
+              }
+            },
+            {
+              "elapsed_ms": 329.8202999999994,
+              "first_output_chunk_ms": 326.9035999999978,
+              "stats": {
+                "matched": 10,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 291.249
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 320.9377000000022,
+            "p90_ms": 329.8202999999994,
+            "p95_ms": 329.8202999999994,
+            "standard_deviation_ms": 9.071079258038095,
+            "dispersion_percent": 2.860194094852205
+          },
+          "resources": [
+            {
+              "elapsed_ms": 327.8132,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 279.365ms\n",
+              "peak_working_set_bytes": null,
+              "cpu_ms": 296.875,
+              "exit_code": 0,
+              "stdout_bytes": 280
+            },
+            {
+              "peak_working_set_bytes": null,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 283.656ms\n",
+              "stdout_bytes": 280,
+              "cpu_ms": 281.25,
+              "elapsed_ms": 337.5989,
+              "exit_code": 0
+            },
+            {
+              "peak_working_set_bytes": null,
+              "stderr": "matched                 10\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 231.605ms\n",
+              "exit_code": 0,
+              "cpu_ms": 234.375,
+              "elapsed_ms": 276.647,
+              "stdout_bytes": 280
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "sorted-half",
+      "corpus_files": 100000,
+      "query": [
+        "--glob",
+        "**/*",
+        "--sort",
+        "--limit",
+        "50000"
+      ],
+      "expected_matches": 50000,
+      "complete_selection_sha256": "766f87cd99266f1c9d5c6e573f9687a9b72c958ed5c1e361f94778307f4557e6",
+      "variants": {
+        "before": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 287.802300000003,
+              "first_output_chunk_ms": 278.4892000000036,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 254.885
+              }
+            },
+            {
+              "elapsed_ms": 300.0535999999993,
+              "first_output_chunk_ms": 289.3744000000006,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 267.285
+              }
+            },
+            {
+              "elapsed_ms": 338.29999999999563,
+              "first_output_chunk_ms": 327.1483999999982,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 302.386
+              }
+            },
+            {
+              "elapsed_ms": 307.11179999999877,
+              "first_output_chunk_ms": 298.35349999999744,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 271.015
+              }
+            },
+            {
+              "elapsed_ms": 319.5421999999962,
+              "first_output_chunk_ms": 308.77150000000256,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 281.77
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 307.11179999999877,
+            "p90_ms": 338.29999999999563,
+            "p95_ms": 338.29999999999563,
+            "standard_deviation_ms": 17.264848280408238,
+            "dispersion_percent": 5.559227913348671
+          },
+          "resources": [
+            {
+              "elapsed_ms": 373.5876,
+              "cpu_ms": 281.25,
+              "stdout_bytes": 1625000,
+              "exit_code": 0,
+              "stderr": "matched                 50000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 315.325ms\n",
+              "peak_working_set_bytes": null
+            },
+            {
+              "cpu_ms": 265.625,
+              "stdout_bytes": 1625000,
+              "elapsed_ms": 306.7321,
+              "stderr": "matched                 50000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 263.006ms\n",
+              "exit_code": 0,
+              "peak_working_set_bytes": null
+            },
+            {
+              "exit_code": 0,
+              "stderr": "matched                 50000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 302.617ms\n",
+              "stdout_bytes": 1625000,
+              "cpu_ms": 296.875,
+              "elapsed_ms": 352.0586,
+              "peak_working_set_bytes": null
+            }
+          ]
+        },
+        "after": {
+          "cli_samples": [
+            {
+              "elapsed_ms": 300.0864999999976,
+              "first_output_chunk_ms": 289.5404999999955,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 264.633
+              }
+            },
+            {
+              "elapsed_ms": 277.90200000000186,
+              "first_output_chunk_ms": 268.7133000000031,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 241.092
+              }
+            },
+            {
+              "elapsed_ms": 326.54759999999806,
+              "first_output_chunk_ms": 313.074099999998,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 290.461
+              }
+            },
+            {
+              "elapsed_ms": 275.67109999999957,
+              "first_output_chunk_ms": 262.9828000000052,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 242.775
+              }
+            },
+            {
+              "elapsed_ms": 330.8439999999973,
+              "first_output_chunk_ms": 315.34969999999885,
+              "stats": {
+                "matched": 50000,
+                "directories_considered": 202,
+                "directories_opened": 202,
+                "directories_pruned": 0,
+                "positive": 0,
+                "excluded": 0,
+                "ignored": 0,
+                "depth": 0,
+                "entries_inspected": 100203,
+                "candidate_files": 100000,
+                "metadata_calls": 1,
+                "filesystem_errors": 0,
+                "elapsed": 294.554
+              }
+            }
+          ],
+          "cli_distribution": {
+            "median_ms": 300.0864999999976,
+            "p90_ms": 330.8439999999973,
+            "p95_ms": 330.8439999999973,
+            "standard_deviation_ms": 23.289165115700023,
+            "dispersion_percent": 7.706279282826456
+          },
+          "resources": [
+            {
+              "stderr": "matched                 50000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 314.201ms\n",
+              "stdout_bytes": 1625000,
+              "elapsed_ms": 369.3333,
+              "peak_working_set_bytes": null,
+              "cpu_ms": 281.25,
+              "exit_code": 0
+            },
+            {
+              "elapsed_ms": 340.6508,
+              "stdout_bytes": 1625000,
+              "peak_working_set_bytes": null,
+              "exit_code": 0,
+              "stderr": "matched                 50000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 292.234ms\n",
+              "cpu_ms": 296.875
+            },
+            {
+              "peak_working_set_bytes": null,
+              "stderr": "matched                 50000\ndirectories considered  202\ndirectories opened      202\ndirectories pruned      0\n  positive              0\n  excluded              0\n  ignored               0\n  depth                 0\nentries inspected       100203\ncandidate files         100000\nmetadata calls          1\nfilesystem errors       0\nelapsed                 257.615ms\n",
+              "exit_code": 0,
+              "stdout_bytes": 1625000,
+              "cpu_ms": 218.75,
+              "elapsed_ms": 293.6413
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

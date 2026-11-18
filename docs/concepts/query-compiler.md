@@ -56,4 +56,4 @@ The compiler classifies each pattern:
 
 ## Plan invariants
 
-The compiled plan owns immutable positives, exclusions, programs, root selection, filters, ignore policy, and termination settings. Traversal consumes that plan; it does not reparse query strings in the hot path.
+The compiled plan owns immutable positives, exclusions, programs, root selection, case and search-target modes, depth bounds, filters, ignore policy, and the query's cancellation token. CLI limits, sorting, and output modes remain adapter policies. Relative time durations remain durations until execution so a reused plan gets a fresh clock boundary each run. Traversal consumes the compiled plan; it does not reparse query strings in the hot path.
