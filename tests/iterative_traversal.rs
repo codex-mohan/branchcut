@@ -65,12 +65,22 @@ fn sequential_frames_preserve_depth_filters_and_metadata_avoidance() {
 
 #[test]
 fn streams_matches_through_a_deep_tree_without_recursive_calls() {
-    // 600 one-character components stay below common path length limits,
-    // while exercising a traversal depth well beyond the old 64-level test.
+    // Keep the fixture within the host path limit, including its temporary
+    // prefix. macOS limits full paths to 1024 bytes; reserve room for leaves
+    // and the /private alias. Other supported hosts can exercise 600 levels.
     let fixture = Fixture::new();
+    let levels = if cfg!(target_os = "macos") {
+        600.min(1000usize.saturating_sub(fixture.0.as_os_str().len() + 32) / 2)
+    } else {
+        600
+    };
+    assert!(
+        levels > 64,
+        "fixture root leaves too little room for a deep tree"
+    );
     let mut absolute = fixture.0.clone();
     let mut relative = PathBuf::new();
-    for depth in 0..600 {
+    for depth in 0..levels {
         absolute.push("d");
         relative.push("d");
         fs::create_dir(&absolute).expect("create deep directory");
@@ -84,8 +94,8 @@ fn streams_matches_through_a_deep_tree_without_recursive_calls() {
     let query = Query {
         cwd: fixture.0.clone(),
         patterns: vec!["**/leaf.rs".into()],
-        min_depth: 601,
-        max_depth: Some(601),
+        min_depth: levels + 1,
+        max_depth: Some(levels + 1),
         ..Query::default()
     }
     .compile()
@@ -100,8 +110,8 @@ fn streams_matches_through_a_deep_tree_without_recursive_calls() {
 
     assert_eq!(matches, [relative]);
     assert_eq!(report.completion, Completion::Complete);
-    assert_eq!(report.stats.dirs_opened, 601);
-    assert_eq!(report.stats.entries_seen, 1_201);
+    assert_eq!(report.stats.dirs_opened, (levels + 1) as u64);
+    assert_eq!(report.stats.entries_seen, (2 * levels + 1) as u64);
     // Only root/ancestor validation uses metadata for this name-only query.
     assert_eq!(report.stats.metadata_calls, 1);
 }
