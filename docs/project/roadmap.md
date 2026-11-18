@@ -19,7 +19,7 @@ Branchcut preserves the tagged competition submission while developing a maintai
 | Rust integrations | Implemented | Standalone path matcher, multi-root search, metadata-record visitors, and cooperative cancellation |
 | Parallel traversal | Implemented | Bounded workers, streaming coordinator, sequential compatibility fallback |
 | Performance work | Measured on Windows | Raw results and losses retained; broader platforms remain separate evidence |
-| Cross-platform confidence | CI required | Local Windows passes do not replace Linux and macOS execution |
+| Cross-platform confidence | Native CI passes | [Windows, Linux and Intel macOS](https://github.com/codex-mohan/branchcut/actions/runs/44349839187); release artifact builds remain separate gates |
 | Release artifacts and packaging | Planned | One-command source install exists; prebuilt distribution is not claimed |
 
 ## Completed foundations

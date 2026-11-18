@@ -4,6 +4,8 @@ Branchcut is evolving from a one-file hackathon submission into a maintainable f
 
 This roadmap is a plan, not a statement that listed features are implemented. The preserved competition submission is tagged `submission-v1`; current development must not rewrite that history. See the [baseline record](docs/evidence/post-competition-baseline.md) for the verified starting point and limitations.
 
+The [18 November native validation matrix](https://github.com/codex-mohan/branchcut/actions/runs/44349839187) passes formatting, tests, lint, supported-semantics differential checks and install/query/uninstall on Windows, Linux and Intel macOS. Tagged release builds still validate the separate artifact targets, including macOS ARM.
+
 ## Phase 1 — Establish and verify the baseline
 
 **Status: implemented and locally verified.** The starting revision and original submission tag are recorded. Deterministic oracle and benchmark runners and raw before/after records are checked in.
@@ -17,7 +19,7 @@ This roadmap is a plan, not a statement that listed features are implemented. Th
 
 ## Phase 2 — Make queries and paths trustworthy
 
-**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** Matching, sorted limits, ancestor ignores, native paths, command roots, and parallel best-effort/strict error handling have regression coverage. Sequential traversal now uses directory frames, tested at 600 levels; parallel queue-overflow recursion remains documented.
+**Status: implemented; Windows, Linux and Intel macOS CI passes.** Matching, sorted limits, ancestor ignores, native paths, command roots, and parallel best-effort/strict error handling have regression coverage. Sequential traversal and parallel overflow use iterative frames; deep-tree fixtures exercise 600 levels on Windows/Linux and fit the macOS path budget.
 
 - Add regressions and fix shared-pattern globstar state leakage.
 - Make `--sort --limit` implement global sorted selection as documented.
@@ -31,7 +33,7 @@ This roadmap is a plan, not a statement that listed features are implemented. Th
 
 ## Phase 3 — Extract a maintainable library
 
-**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** `src/main.rs` is a three-line entry point. The public library, focused core modules, CLI adapter, and external-consumer tests are in place. See [library and modules](docs/concepts/library-and-modules.md).
+**Status: implemented; Windows, Linux and Intel macOS CI passes.** `src/main.rs` is a three-line entry point. The public library, focused core modules, CLI adapter, and external-consumer tests are in place. See [library and modules](docs/concepts/library-and-modules.md).
 
 - Create `src/lib.rs` and keep `src/main.rs` as a thin executable entry point.
 - Separate the typed query and compiled plan, pattern parser/program, sequential and parallel traversal, ignore rules, filters, native path handling, statistics, errors, and CLI.
@@ -45,7 +47,7 @@ Start inside one Cargo package. Keep core and CLI dependencies empty. Add worksp
 
 ## Phase 4 — Complete everyday search
 
-**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** Size, modification-time, case, path-search, and depth filters are exposed through both the CLI and library. Candidate-first metadata evaluation and the existing no-metadata fast path have focused regression coverage.
+**Status: implemented; Windows, Linux and Intel macOS CI passes.** Size, modification-time, case, path-search, and depth filters are exposed through both the CLI and library. Candidate-first metadata evaluation and the existing no-metadata fast path have focused regression coverage.
 
 Add high-value, composable file-size and modification-time predicates, explicit case behavior and smart case for simple search, depth limits, and clear filename versus full-path matching. Decide units, comparison boundaries, time interpretation, and cross-platform case behavior before implementation. Query planning must fetch metadata only when a predicate needs it.
 
@@ -53,7 +55,7 @@ Add high-value, composable file-size and modification-time predicates, explicit 
 
 ## Phase 5 — Explain and reuse selections
 
-**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** `--why PATH` explains the ordered candidate checks and identifies the decisive `.gitignore` rule and source line. Named profiles in explicit config files load before command-line options, and `--explain` prints the fully resolved query.
+**Status: implemented; Windows, Linux and Intel macOS CI passes.** `--why PATH` explains the ordered candidate checks and identifies the decisive `.gitignore` rule and source line. Named profiles in explicit config files load before command-line options, and `--explain` prints the fully resolved query.
 
 Extend the existing plan explanation with `--why PATH` and ignore-rule provenance. Then consider small saved project queries with explicit precedence and a command that prints the fully resolved query. Keep configuration behavior visible and stable.
 
@@ -61,9 +63,9 @@ Extend the existing plan explanation with `--why PATH` and ignore-rule provenanc
 
 ## Phase 6 — Improve selected-file workflows
 
-**Status: implemented; Windows validation passes. Linux/macOS confirmation remains a CI gate.** Native NUL output, resolved absolute paths, and bounded shell-free batch execution now cover pipeline and external-tool handoff workflows. Batch composition respects both a path-count limit and a conservative command-size budget.
+**Status: implemented; Windows, Linux and Intel macOS CI passes.** Native NUL output, resolved absolute paths, and bounded shell-free batch execution now cover pipeline and external-tool handoff workflows. Batch composition respects both a path-count limit and a conservative command-size budget.
 
-Add NUL-delimited output and explicit path forms for dependable pipelines. Improve command invocation with native argument handling, well-defined working-directory semantics, safe batching, and clear failure reporting. Treat command preview as a possible follow-up if users need it.
+Add NUL-delimited output and explicit path forms for dependable pipelines. Improve command invocation with native argument handling, well-defined working-directory semantics, safe batching, and clear failure reporting. Command preview now shows planned native arguments without launching the child.
 
 **Exit gate:** integration recipes handle whitespace and unusual paths correctly, and report command or traversal failures without ambiguity.
 

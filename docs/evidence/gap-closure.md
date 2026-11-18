@@ -12,7 +12,7 @@ This record describes the development tree reviewed on 18 November 2026. It does
 |---|---|---|
 | 1. Ignores | Nested and above-cwd inheritance; repository/global excludes; linked worktrees; supported conditional includes; `.ignore`; explicit override files; BOM/escaping/classes; native Unix pattern bytes; provenance | Git-oracle tests on Windows and Linux; full Git configuration parity is not claimed |
 | 2. Matching | Composed/nested component-local negated extglobs; POSIX ASCII classes; opt-in backslash quoting; Unicode scalar literals, wildcards and classes; matching-pattern IDs | Regression and supported-semantics differential tests; no normalization, grapheme matching, or multi-character folding |
-| 3. Traversal | Followed symlinks with ancestor-cycle checks; multi-root unions; Unix filesystem boundary; handle budgets; post-order; iterative overflow; exact parallel limits; cooperative cancellation | Windows and Linux tests; macOS native CI remains required |
+| 3. Traversal | Followed symlinks with ancestor-cycle checks; multi-root unions; Unix filesystem boundary; handle budgets; post-order; iterative overflow; exact parallel limits; cooperative cancellation | Native Windows, Linux and Intel macOS CI; separate release artifact builds remain required |
 | 4. Filters | Entry-type unions; empty/executable selection; Unix numeric ownership/group and special types; required terms; exact fractional sizes; offset/fractional timestamps | Candidate-first metadata checks and public-API integration regressions |
 | 5. Workflows | Metadata JSON; formatting/component placeholders; quiet exit status; bounded child concurrency; lossless command preview; terminal decorations isolated from machine output | CLI integration tests, failure propagation and native-name regressions |
 | 6. Rust APIs | PathMatcher, MatchOptions, escape_path_pattern; MultiRootQuery; EntryRecord visitors; CancellationToken | External-consumer tests; metadata-rich visits explicitly request metadata |
@@ -23,7 +23,7 @@ This record describes the development tree reviewed on 18 November 2026. It does
 
 Required checks are `cargo fmt -- --check`, `cargo test --locked`, `cargo clippy --locked --all-targets -- -D warnings`, and `cargo tree -e normal`. The core dependency table remains empty.
 
-Windows tests run natively. Linux tests run in Fedora under WSL with an independent Linux Rust toolchain and a Linux target directory. This exercises Unix symlinks, file types, permissions, raw filenames and Git behavior, but is not a native macOS run or a Linux performance claim.
+Local Windows tests run natively. Local Linux tests run in Fedora under WSL with an independent Linux Rust toolchain and a Linux target directory. The subsequent [native validation matrix](https://github.com/codex-mohan/branchcut/actions/runs/44349839187) passed on hosted Windows, Ubuntu and Intel macOS at source `34e9e8e`. Each job passed formatting, tests, Clippy, pinned-oracle differential checks and install/query/uninstall. This verifies those workflows; it is not a Linux/macOS performance claim.
 
 The first hosted matrix exposed fixture assumptions: Git resolves Windows short-name aliases before testing conditional includes, and the macOS fixture filesystem rejects invalid UTF-8 names with EILSEQ. Conditional-include fixtures now use a canonical Git directory. Native-byte filesystem assertions run where such names can be created; the helper permits only that specific macOS creation failure, and all other creation failures remain test errors. Pure matcher byte-path tests still run independently of filesystem filename restrictions. These corrections do not change production behavior or the measured binary.
 
@@ -41,12 +41,14 @@ The expanded runner checks 28 result-equivalent cases in sequential and parallel
 - Windows plain/NUL text cannot preserve every unpaired surrogate; native APIs, command arguments and JSON companion fields provide lossless alternatives.
 - Filename regexes, captures, custom filesystem adapters, foreign-language bindings, and POSIX/glibc ABI compatibility are not implemented. These are not implied by glob support or CLI timing results.
 - Content search, indexing, watchers, GUI/TUI and service protocols remain separate product work. The ripgrep benchmark measures `rg --files`, not content search.
-- macOS execution, a tagged prebuilt release and package-manager publication remain release gates. A local passing build does not establish those outcomes.
+- A tagged prebuilt release and package-manager publication remain release gates. The regular native macOS gate uses Intel runners following an ARM hosted-runner capacity failure; release automation retains separate Intel and ARM targets. ARM release builds have not been published.
 
 ## Benchmark scope
 
 The original [direct CLI comparison](cli-comparison.md) remains a historical Windows/NTFS snapshot. Missing cells mean the runner did not measure an equivalent invocation, not necessarily that the tool lacks the feature. A filesystem listing benchmark is not a full replacement assessment.
 
-The final [current CLI comparison](current-cli-comparison.md) uses committed runtime source `8035ad6`, ten workloads and all six CLI/API targets. It reports default and tuned configurations separately and adds same-query observed working-set samples. The preflight is retained separately. Local validation passed 209 Windows tests and 226 Linux tests, including doctests, with Clippy on both toolchains. Both Apple targets passed all-target cross-checks; native macOS CI remains pending.
+The final [current CLI comparison](current-cli-comparison.md) uses committed runtime source `8035ad6`, ten workloads and all six CLI/API targets. It reports default and tuned configurations separately and adds same-query observed working-set samples. The preflight is retained separately. Local validation passed 209 Windows tests and 226 Linux tests, including doctests, with Clippy on both toolchains. Both Apple targets passed all-target cross-checks; the linked native Intel macOS matrix subsequently passed as well.
 
 Final review added regressions for config-relative override files, cached target metadata error handling/counting, and a Linux `--max-open 1` search under a four-descriptor process limit.
+
+The hosted runs also corrected command-cwd assertions to compare resolved directory identity (`/var` and `/private/var` can name the same directory), and constrained deep-tree fixtures to the macOS full-path budget. These were test-only corrections. Historical failing runs are retained in Actions; the successful matrix is linked above.
