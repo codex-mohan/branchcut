@@ -97,7 +97,8 @@ fn child_exec_capture_helper() {
         .position(|arg| arg == "--skip")
         .expect("Branchcut passes the selected path after --skip");
     let selected_path = args.get(skip_index + 1).expect("selected path argument");
-    let cwd = std::env::current_dir().expect("read child working directory");
+    let cwd = fs::canonicalize(std::env::current_dir().expect("read child working directory"))
+        .expect("resolve child working directory");
     let mut capture = fs::OpenOptions::new()
         .create(true)
         .append(true)
@@ -376,7 +377,9 @@ fn exec_passes_spaced_paths_as_one_argument_and_uses_query_root() {
         records.lines().collect::<Vec<_>>(),
         [format!(
             "{:?}\t{:?}",
-            fixture.0.as_os_str(),
+            fs::canonicalize(&fixture.0)
+                .expect("resolve fixture working directory")
+                .as_os_str(),
             selected_path.as_os_str()
         )]
     );
