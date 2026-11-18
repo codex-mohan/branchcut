@@ -12,7 +12,7 @@ Branchcut installs as one user-level command. Cargo is needed to compile or inst
 |---|---|---|---|
 | Windows 10/11 | PowerShell | `branchcut.exe` | `windows-latest` |
 | Linux | POSIX `sh` | `branchcut` | `ubuntu-latest` |
-| macOS | POSIX `sh` | `branchcut` | `macos-latest` |
+| macOS | POSIX `sh` | `branchcut` | `macos-15-intel` |
 
 The repository's [install matrix](https://github.com/codex-mohan/branchcut/actions/workflows/install-matrix.yml) is configured to exercise the same lifecycle on all three systems:
 

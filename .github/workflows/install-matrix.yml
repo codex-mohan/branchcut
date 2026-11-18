@@ -31,7 +31,9 @@ jobs:
         os:
           - windows-latest
           - ubuntu-latest
-          - macos-latest
+          # Keep the regular gate available during ARM hosted-runner shortages.
+          # Tagged releases separately validate both macOS architectures.
+          - macos-15-intel
     runs-on: ${{ matrix.os }}
 
     steps:
