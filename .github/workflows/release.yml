@@ -60,8 +60,9 @@ jobs:
             runner: macos-15-intel
             extension: tar.gz
           - target: aarch64-apple-darwin
-            runner: macos-15
+            runner: macos-15-intel
             extension: tar.gz
+            cross: true
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -69,6 +70,7 @@ jobs:
       TARGET: ${{ matrix.target }}
       VERSION: ${{ needs.validate-tag.outputs.version }}
       ARCHIVE_EXTENSION: ${{ matrix.extension }}
+      CROSS_COMPILE: ${{ matrix.cross || false }}
     steps:
       - name: Check out tagged source
         uses: actions/checkout@v4
@@ -77,13 +79,23 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+          components: clippy, rustfmt
 
-      - name: Verify native runner matches release target
+      - name: Verify release toolchain
         shell: pwsh
         run: |
           $hostLine = (rustc -vV | Select-String '^host: ').ToString()
           $hostTarget = [regex]::Match($hostLine, '^host: (.+)$').Groups[1].Value
-          if ($hostTarget -cne $env:TARGET) {
+          if ($env:CROSS_COMPILE -eq 'true') {
+            if ($hostTarget -cne 'x86_64-apple-darwin' -or $env:TARGET -cne 'aarch64-apple-darwin') {
+              throw "Unsupported cross-compilation pair: $hostTarget to $env:TARGET."
+            }
+            $sdk = (& xcrun --sdk macosx --show-sdk-path | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $sdk)) {
+              throw 'The Apple macOS SDK is required for Apple Silicon builds.'
+            }
+            "SDKROOT=$sdk" >> $env:GITHUB_ENV
+          } elseif ($hostTarget -cne $env:TARGET) {
             throw "Runner Rust host $hostTarget does not match requested target $env:TARGET."
           }
           rustc --version
@@ -98,7 +110,11 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --locked --all-targets -- -D warnings
 
-      - name: Build native release binary
+      - name: Check cross-target source and tests
+        if: matrix.cross
+        run: cargo clippy --locked --all-targets --target ${{ matrix.target }} -- -D warnings
+
+      - name: Build release binary
         run: cargo build --release --locked --target ${{ matrix.target }}
 
       - name: Verify binary and prepare archive
@@ -110,22 +126,34 @@ jobs:
           if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
             throw "Release binary was not created: $binary"
           }
-          $versionOutput = (& $binary --version | Out-String).Trim()
-          if ($LASTEXITCODE -ne 0 -or $versionOutput -cne "branchcut $env:VERSION") {
-            throw "Unexpected binary version output: $versionOutput"
+          if ($env:CROSS_COMPILE -eq 'true') {
+            & lipo -verify_arch arm64 $binary
+            if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon binary architecture verification failed.' }
+            & codesign --force --sign - $binary
+            if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon ad-hoc signing failed.' }
+            & codesign --verify --strict $binary
+            if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon signature verification failed.' }
+            & file $binary
+          } else {
+            $versionOutput = (& $binary --version | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0 -or $versionOutput -cne "branchcut $env:VERSION") {
+              throw "Unexpected binary version output: $versionOutput"
+            }
           }
 
           $dist = Join-Path $env:RUNNER_TEMP 'branchcut-release'
           New-Item -ItemType Directory -Path $dist -Force | Out-Null
           Copy-Item -LiteralPath $binary -Destination (Join-Path $dist $binaryName)
           Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'LICENSE') -Destination $dist
-          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'README.md') -Destination $dist
+          Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'README*.md') -File |
+            Copy-Item -Destination $dist
           $archiveName = "branchcut-v$env:VERSION-$env:TARGET.$env:ARCHIVE_EXTENSION"
           $archivePath = Join-Path $env:RUNNER_TEMP $archiveName
           if ($env:ARCHIVE_EXTENSION -eq 'zip') {
             Compress-Archive -Path (Join-Path $dist '*') -DestinationPath $archivePath -CompressionLevel Optimal
           } else {
-            tar -czf $archivePath -C $dist branchcut LICENSE README.md
+            $packageFiles = @(Get-ChildItem -LiteralPath $dist -File | Sort-Object Name | ForEach-Object Name)
+            & tar -czf $archivePath -C $dist @packageFiles
             if ($LASTEXITCODE -ne 0) { throw 'Could not create the release tarball.' }
           }
           "archive=$archivePath" >> $env:GITHUB_OUTPUT
@@ -147,6 +175,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Check out release notes
+        uses: actions/checkout@v4
+
       - name: Download all platform archives
         uses: actions/download-artifact@v4
         with:
@@ -171,7 +202,7 @@ jobs:
             [Text.UTF8Encoding]::new($false)
           )
 
-      - name: Publish assets and generated release notes
+      - name: Publish assets and release notes
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -181,8 +212,8 @@ jobs:
           $arguments = @(
             'release', 'create', $env:GITHUB_REF_NAME,
             '--verify-tag',
-            '--title', $env:GITHUB_REF_NAME,
-            '--generate-notes'
+            '--title', "Branchcut $env:GITHUB_REF_NAME",
+            '--notes-file', 'RELEASE_NOTES.md'
           ) + $assets
           & gh @arguments
           if ($LASTEXITCODE -ne 0) { throw 'GitHub release creation failed.' }

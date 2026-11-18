@@ -1,6 +1,6 @@
 ---
 title: CLI reference
-description: Complete command-line reference for Branchcut 0.1.0.
+description: Complete command-line reference for Branchcut 0.2.0.
 icon: SquareTerminal
 ---
 

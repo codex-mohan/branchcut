@@ -26,6 +26,10 @@ install into an isolated user root
 
 The CI checkout itself uses Git and the hosted Rust toolchain; it does not add any Branchcut runtime dependency.
 
+## Prebuilt binaries
+
+Open [GitHub Releases](https://github.com/codex-mohan/branchcut/releases/latest), download the Windows x64, Linux x64, macOS Intel or Apple Silicon archive, verify its checksum against `SHA256SUMS`, and extract it. Place the executable in a directory on your `PATH`. Rust and Cargo are not needed for a prebuilt binary. See [archive verification](../contributing/releases.md#verify-and-install-an-archive) for platform-specific commands.
+
 ## Choose an installation method
 
 | Method | Best for | Requires a checkout? | Upgrade method |
@@ -217,7 +221,7 @@ PowerShell example:
 branchcut --cwd C:\path\to\project --glob "**/*.rs" --first
 ```
 
-The version command should print `branchcut 0.1.0`. The final command should print at most one matching Rust path and exit successfully.
+The version command should print `branchcut 0.2.0`. The final command should print at most one matching Rust path and exit successfully.
 
 ## Upgrade
 
