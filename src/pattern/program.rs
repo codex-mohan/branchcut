@@ -1,5 +1,6 @@
 use super::{Pattern, Segment};
 use std::ffi::OsStr;
+use std::path::{Component, Path};
 #[derive(Clone, Debug)]
 pub(crate) struct ProgramNode {
     pub(crate) edges: Vec<(Segment, usize)>,
@@ -22,6 +23,12 @@ impl ProgramNode {
 #[derive(Clone, Debug)]
 pub(crate) struct PatternProgram {
     pub(crate) nodes: Vec<ProgramNode>,
+}
+
+#[derive(Default)]
+pub(crate) struct PathMatchScratch {
+    states: Vec<usize>,
+    next: Vec<usize>,
 }
 
 impl PatternProgram {
@@ -52,38 +59,133 @@ impl PatternProgram {
     }
 
     pub(crate) fn initial_states(&self) -> Vec<usize> {
-        let mut states = vec![0];
-        self.add_epsilon_closure(&mut states);
+        let mut states = Vec::new();
+        self.initial_states_into(&mut states);
         states
     }
 
+    fn initial_states_into(&self, states: &mut Vec<usize>) {
+        states.clear();
+        if self.nodes.len() == 1
+            && !self.nodes[0].terminal
+            && self.nodes[0].edges.is_empty()
+            && !self.nodes[0].globstar
+        {
+            return;
+        }
+        states.push(0);
+        self.add_epsilon_closure(states);
+    }
+
+    #[cfg(test)]
     pub(crate) fn advance(&self, states: &[usize], component: &OsStr) -> Vec<usize> {
+        self.advance_with_case(states, component, false)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn advance_with_case(
+        &self,
+        states: &[usize],
+        component: &OsStr,
+        insensitive: bool,
+    ) -> Vec<usize> {
+        self.advance_with_mode(states, component, insensitive, false)
+    }
+
+    pub(crate) fn advance_with_mode(
+        &self,
+        states: &[usize],
+        component: &OsStr,
+        insensitive: bool,
+        unicode: bool,
+    ) -> Vec<usize> {
         let mut next = Vec::with_capacity(states.len());
+        self.advance_into_with_mode(states, component, insensitive, unicode, &mut next);
+        next
+    }
+
+    /// Reuse entry-local storage without modifying the parent's active states.
+    #[cfg(test)]
+    pub(crate) fn advance_into_with_case(
+        &self,
+        states: &[usize],
+        component: &OsStr,
+        insensitive: bool,
+        next: &mut Vec<usize>,
+    ) {
+        self.advance_into_with_mode(states, component, insensitive, false, next)
+    }
+
+    pub(crate) fn advance_into_with_mode(
+        &self,
+        states: &[usize],
+        component: &OsStr,
+        insensitive: bool,
+        unicode: bool,
+        next: &mut Vec<usize>,
+    ) {
+        next.clear();
         for &node in states {
             if self.nodes[node].globstar {
-                push_unique(&mut next, node);
+                push_unique(next, node);
             }
             for (segment, child) in &self.nodes[node].edges {
                 match segment {
-                    Segment::GlobStar => push_unique(&mut next, *child),
-                    Segment::Match(matcher) if matcher.matches(component) => {
-                        push_unique(&mut next, *child);
+                    Segment::GlobStar => push_unique(next, *child),
+                    Segment::Match(matcher)
+                        if matcher.matches_with_mode(component, insensitive, unicode) =>
+                    {
+                        push_unique(next, *child);
                     }
                     Segment::Match(_) => {}
                 }
             }
         }
-        self.add_epsilon_closure(&mut next);
-        next
+        self.add_epsilon_closure(next);
     }
 
-    pub(crate) fn matches_path(&self, components: &[&OsStr]) -> bool {
-        let states = components
-            .iter()
-            .fold(self.initial_states(), |states, component| {
-                self.advance(&states, component)
-            });
-        self.states_match(&states)
+    pub(crate) fn matches_path_with_scratch(
+        &self,
+        path: &Path,
+        scratch: &mut PathMatchScratch,
+    ) -> bool {
+        self.matches_path_with_case_and_scratch(path, false, scratch)
+    }
+
+    pub(crate) fn matches_path_with_case_and_scratch(
+        &self,
+        path: &Path,
+        insensitive: bool,
+        scratch: &mut PathMatchScratch,
+    ) -> bool {
+        self.matches_path_with_mode_and_scratch(path, insensitive, false, scratch)
+    }
+
+    pub(crate) fn matches_path_with_mode_and_scratch(
+        &self,
+        path: &Path,
+        insensitive: bool,
+        unicode: bool,
+        scratch: &mut PathMatchScratch,
+    ) -> bool {
+        self.initial_states_into(&mut scratch.states);
+        if scratch.states.is_empty() {
+            return false;
+        }
+        for component in path.components().filter_map(|component| match component {
+            Component::Normal(component) => Some(component),
+            _ => None,
+        }) {
+            self.advance_into_with_mode(
+                &scratch.states,
+                component,
+                insensitive,
+                unicode,
+                &mut scratch.next,
+            );
+            std::mem::swap(&mut scratch.states, &mut scratch.next);
+        }
+        self.states_match(&scratch.states)
     }
 
     pub(crate) fn states_match(&self, states: &[usize]) -> bool {
@@ -117,5 +219,58 @@ impl PatternProgram {
 pub(crate) fn push_unique(states: &mut Vec<usize>, node: usize) {
     if !states.contains(&node) {
         states.push(node);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reused_entry_storage_clears_siblings_without_changing_parent_states() {
+        let positives = ["src/**/keep.rs", "src/root.rs"]
+            .map(|source| Pattern::compile(source.to_owned()).unwrap());
+        let program = PatternProgram::compile(&positives);
+        let parent = program.advance(&program.initial_states(), OsStr::new("src"));
+        let original_parent = parent.clone();
+        let mut scratch = vec![usize::MAX];
+        for (name, selected) in [
+            ("keep.rs", true),
+            ("missing.rs", false),
+            ("root.rs", true),
+            ("KEEP.RS", false),
+            ("another.rs", false),
+        ] {
+            program.advance_into_with_case(&parent, OsStr::new(name), false, &mut scratch);
+            assert_eq!(program.states_match(&scratch), selected, "{name}");
+            assert_eq!(parent, original_parent);
+        }
+        program.advance_into_with_case(&parent, OsStr::new("KEEP.RS"), true, &mut scratch);
+        assert!(program.states_match(&scratch));
+        let empty = PatternProgram::compile(&[]);
+        empty.advance_into_with_case(&[], OsStr::new("keep.rs"), false, &mut scratch);
+        assert!(scratch.is_empty());
+    }
+
+    #[test]
+    fn reusable_path_scratch_does_not_leak_between_candidates() {
+        let patterns = ["**/keep.rs", "**/nested/*.toml"]
+            .map(|source| Pattern::compile(source.to_owned()).unwrap());
+        let program = PatternProgram::compile(&patterns);
+        let mut scratch = PathMatchScratch::default();
+        for (path, expected) in [
+            (Path::new("one/keep.rs"), true),
+            (Path::new("one/drop.rs"), false),
+            (Path::new("nested/Cargo.toml"), true),
+            (Path::new("nested/deep/keep.rs"), true),
+            (Path::new("nested/deep/drop.rs"), false),
+        ] {
+            assert_eq!(
+                program.matches_path_with_scratch(path, &mut scratch),
+                expected,
+                "{}",
+                path.display()
+            );
+        }
     }
 }

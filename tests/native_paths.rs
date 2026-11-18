@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-#[cfg(windows)]
 use std::ffi::OsString;
 
 static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
@@ -69,6 +68,78 @@ fn plain_output_preserves_non_utf8_filename_bytes() {
 
 #[cfg(unix)]
 #[test]
+fn directory_only_ignore_leaves_a_same_named_symlink_eligible() {
+    use std::os::unix::fs::symlink;
+    let fixture = Fixture::new();
+    fixture.write("actual/file.rs");
+    fs::write(fixture.0.join(".gitignore"), b"target/\n").unwrap();
+    symlink("actual", fixture.0.join("target")).unwrap();
+    for args in [
+        vec!["--gitignore", "--type", "symlink"],
+        vec!["--gitignore", "--type", "symlink", "--threads", "2"],
+        vec!["--gitignore", "--type", "symlink", "--glob", "target"],
+    ] {
+        let output = fixture.run(&args);
+        assert_success(&output);
+        assert_eq!(output.stdout, b"target\n");
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn print0_output_preserves_non_utf8_filename_bytes() {
+    use std::os::unix::ffi::OsStringExt;
+
+    let fixture = Fixture::new();
+    let name = OsString::from_vec(b"bad-\xff.rs".to_vec());
+    fixture.write(&name);
+
+    let output = fixture.run(&["--glob", "**/*.rs", "--sort", "--print0"]);
+
+    assert_success(&output);
+    assert_eq!(output.stdout, b"bad-\xff.rs\0");
+}
+
+#[test]
+fn sorted_limit_uses_native_path_order_for_unusual_names() {
+    use std::ffi::OsString;
+    let fixture = Fixture::new();
+    let mut names: Vec<OsString> = ["z.rs", "a file.rs", "é.rs", "folder/b.rs"]
+        .into_iter()
+        .map(OsString::from)
+        .collect();
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStringExt;
+        names.push(OsString::from_vec(b"bad-\xff.rs".to_vec()));
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStringExt;
+        names.push(OsString::from_wide(&[
+            0xd800,
+            b'.' as u16,
+            b'r' as u16,
+            b's' as u16,
+        ]));
+    }
+    for name in &names {
+        fixture.write(name);
+    }
+    let full = fixture.run(&["--glob", "**/*.rs", "--sort", "--json"]);
+    let limited = fixture.run(&["--glob", "**/*.rs", "--sort", "--limit", "3", "--json"]);
+    assert_success(&full);
+    assert_success(&limited);
+    let full = std::str::from_utf8(&full.stdout).unwrap();
+    let limited = std::str::from_utf8(&limited.stdout).unwrap();
+    assert_eq!(
+        limited.lines().collect::<Vec<_>>(),
+        full.lines().take(3).collect::<Vec<_>>()
+    );
+}
+
+#[cfg(unix)]
+#[test]
 fn json_output_includes_reversible_bytes_for_non_utf8_filename() {
     use std::os::unix::ffi::OsStringExt;
 
@@ -81,7 +152,10 @@ fn json_output_includes_reversible_bytes_for_non_utf8_filename() {
     assert_success(&output);
     let json = std::str::from_utf8(&output.stdout).expect("JSON output is UTF-8");
     assert!(json.contains("\u{fffd}"), "{json}");
-    assert!(json.contains("\"path_bytes\":\"626164ff2e7273\""), "{json}");
+    assert!(
+        json.contains("\"path_bytes\":\"6261642dff2e7273\""),
+        "{json}"
+    );
 }
 
 #[cfg(unix)]

@@ -1,4 +1,4 @@
-use branchcut::{Completion, EntryType, Query, Visitor};
+use branchcut::{CheckOutcome, Completion, EntryType, Query, Visitor};
 use std::fs;
 use std::io;
 use std::ops::ControlFlow;
@@ -74,6 +74,27 @@ fn one_compiled_query_observes_filesystem_changes_between_runs() {
             PathBuf::from("src/second.rs")
         ]
     );
+}
+
+#[test]
+fn compiled_query_explains_a_candidate_without_traversing() {
+    let fixture = Fixture::new();
+    fixture.write("src/first.rs");
+    fixture.write("src/first.txt");
+    let compiled = fixture.query(&["src/**/*.rs"]).compile().unwrap();
+
+    let matching = compiled.explain_path("src/first.rs").unwrap();
+    assert!(matching.selected);
+    assert_eq!(matching.path, PathBuf::from("src/first.rs"));
+    assert!(matching.checks.iter().any(|check| {
+        check.label == "positive patterns" && check.outcome == CheckOutcome::Passed
+    }));
+
+    let nonmatching = compiled.explain_path("src/first.txt").unwrap();
+    assert!(!nonmatching.selected);
+    assert!(nonmatching.checks.iter().any(|check| {
+        check.label == "positive patterns" && check.outcome == CheckOutcome::Failed
+    }));
 }
 
 #[test]

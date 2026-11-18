@@ -53,6 +53,12 @@ async function makeFixture() {
     'alpha/lib.rs',
     'alpha/src/lib.rs',
     'alpha/src/main.rs',
+    'alpha/src/range-01.rs',
+    'alpha/src/range-03.rs',
+    'alpha/src/range-05.rs',
+    'alpha/src/range-a.toml',
+    'alpha/src/range-b.toml',
+    'alpha/src/range-c.toml',
     'alpha/src/unit.test.rs',
     'alpha/src/nested/mod.rs',
     'alpha/src/nested/view.ts',
@@ -67,6 +73,12 @@ async function makeFixture() {
     'beta/src/nested/mod.rs',
     'beta/docs/readme.md',
     'empty/placeholder.txt',
+    'ext/foo.rs',
+    'ext/bar.rs',
+    'ext/a.rs',
+    'ext/aa.rs',
+    'ext/aaa.rs',
+    'ext/b.rs',
   ];
   for (const file of files) {
     const destination = path.join(root, file);
@@ -120,8 +132,30 @@ async function main() {
     { name: 'question wildcard', patterns: ['alpha/src/ma?n.rs'] },
     { name: 'character class', patterns: ['alpha/src/[mn]ain.rs'] },
     { name: 'negated character class', patterns: ['alpha/src/[!x]ain.rs'] },
+    { name: 'POSIX digit class', patterns: ['alpha/src/range-[[:digit:]][[:digit:]].rs'] },
+    { name: 'POSIX alpha class', patterns: ['alpha/src/range-[[:alpha:]].toml'] },
+    { name: 'POSIX mixed class', patterns: ['alpha/src/range-[a[:digit:]][[:digit:]].rs'] },
+    { name: 'POSIX negated class', patterns: ['alpha/src/range-[![:digit:]].toml'] },
     { name: 'zero or many globstar components', patterns: ['**/main.rs'] },
     { name: 'flat braces', patterns: ['**/*.{rs,toml}'] },
+    { name: 'nested braces', patterns: ['alpha/{src/{main,lib},lib}.rs'] },
+    { name: 'stepped padded numeric range', patterns: ['alpha/src/range-{01..05..2}.rs'] },
+    { name: 'alphabetic range', patterns: ['alpha/src/range-{a..c}.toml'] },
+    { name: 'exact extglob alternative', patterns: ['ext/@(foo|bar).rs'] },
+    { name: 'optional extglob', patterns: ['ext/?(foo).rs'] },
+    { name: 'one-or-more extglob', patterns: ['ext/+(a).rs'] },
+    { name: 'zero-or-more extglob', patterns: ['ext/*(a).rs'] },
+    { name: 'whole-component negated extglob', patterns: ['ext/!(foo.rs|bar.rs)'] },
+    { name: 'suffix after negated extglob', patterns: ['ext/!(foo).rs'] },
+    { name: 'nested negated extglob', patterns: ['ext/@(!(foo)|bar).rs'] },
+    {
+      name: 'prefix before negated extglob', patterns: ['ext/a!(a).rs'],
+      knownDifference: {
+        branchcut: ['ext/a.rs', 'ext/aaa.rs'],
+        fastGlob: ['ext/a.rs'],
+        reason: 'Bash span-complement semantics differ from micromatch prefix negation',
+      },
+    },
     { name: 'multiple positive patterns', patterns: ['alpha/**/*.rs', 'beta/**/*.ts'] },
     { name: 'overlapping positive patterns deduplicate', patterns: ['**/*.rs', 'alpha/lib.rs'] },
     {
@@ -149,7 +183,11 @@ async function main() {
         suppressErrors: false,
       };
       if (testCase.excludes?.length) oracleOptions.ignore = testCase.excludes;
-      const expected = normalize(await fastGlob(testCase.patterns, oracleOptions));
+      const oracleExpected = normalize(await fastGlob(testCase.patterns, oracleOptions));
+      if (testCase.knownDifference) {
+        equalResults(`${testCase.name} (recorded fast-glob behavior)`, normalize(testCase.knownDifference.fastGlob), oracleExpected);
+      }
+      const expected = testCase.knownDifference ? normalize(testCase.knownDifference.branchcut) : oracleExpected;
       const baseArgs = ['--cwd', fixture.root];
       for (const pattern of testCase.patterns) baseArgs.push('--glob', pattern);
       for (const pattern of testCase.excludes ?? []) baseArgs.push('--exclude', pattern);
@@ -171,9 +209,11 @@ async function main() {
         assertNoDuplicates(`${testCase.name} (parallel)`, parallelPaths);
         equalResults(`${testCase.name} (parallel)`, expected, parallelPaths);
       }
-      process.stdout.write(`PASS ${testCase.name} (${expected.length} matches)\n`);
+      process.stdout.write(testCase.knownDifference
+        ? `KNOWN DIALECT DIFFERENCE ${testCase.name}: ${testCase.knownDifference.reason}; Branchcut=${JSON.stringify(expected)} fast-glob=${JSON.stringify(oracleExpected)}\n`
+        : `PASS ${testCase.name} (${expected.length} matches)\n`);
     }
-    process.stdout.write(`\n${cases.length} cases passed; fixture files: ${fixture.fileCount}\n`);
+    process.stdout.write(`\n${cases.filter((test) => !test.knownDifference).length} equivalent cases passed in sequential and parallel modes; ${cases.filter((test) => test.knownDifference).length} explicit dialect differences checked; fixture files: ${fixture.fileCount}\n`);
   } finally {
     const resolved = path.resolve(fixture.root);
     if (!resolved.startsWith(path.resolve(os.tmpdir()) + path.sep)) {

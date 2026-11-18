@@ -129,13 +129,16 @@ fn globstar_matches_zero_or_many_components() {
 }
 
 #[test]
-fn brace_expansion_is_flat_and_deterministic() {
+fn brace_expansion_supports_nested_groups_deterministically() {
     assert_eq!(
         expand_braces("**/*.{rs,toml}").unwrap(),
         ["**/*.rs", "**/*.toml"]
     );
     assert!(expand_braces("*.{rs}").is_err());
-    assert!(expand_braces("*.{rs,{ts,tsx}}").is_err());
+    assert_eq!(
+        expand_braces("*.{rs,{ts,tsx}}").unwrap(),
+        ["*.rs", "*.ts", "*.tsx"]
+    );
 }
 
 #[test]

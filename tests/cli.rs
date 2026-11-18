@@ -115,6 +115,34 @@ fn child_exec_failure_helper() {
 }
 
 #[test]
+fn child_exec_batch_capture_helper() {
+    if std::env::var_os(EXEC_HELPER_ENV).is_none() {
+        return;
+    }
+    let capture = std::env::var_os(EXEC_CAPTURE_ENV).expect("capture path is configured");
+    let args: Vec<_> = std::env::args_os().collect();
+    let skip_index = args
+        .iter()
+        .position(|arg| arg == "--skip")
+        .expect("Branchcut passes the selected paths after --skip");
+    let selected_paths = &args[skip_index + 1..];
+    let cwd = std::env::current_dir().expect("read child working directory");
+    let mut capture = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(capture)
+        .expect("open capture log");
+    writeln!(
+        capture,
+        "{:?}\tcount={}\t{:?}",
+        cwd.as_os_str(),
+        selected_paths.len(),
+        selected_paths
+    )
+    .expect("write captured batch arguments");
+}
+
+#[test]
 fn globstar_does_not_leak_into_sibling_patterns() {
     let fixture = Fixture::new();
     fixture.write("docs/cli.md", b"");
@@ -290,21 +318,20 @@ fn literal_directory_matches_in_sequential_and_parallel_modes() {
 }
 
 #[test]
-fn strict_mode_fails_on_invalid_ignore_rules() {
+fn strict_mode_fails_on_unreadable_ignore_files() {
     let fixture = Fixture::new();
-    fixture.write(".gitignore", b"[unterminated\n");
+    fs::create_dir(fixture.0.join(".gitignore")).unwrap();
     fixture.write("src/lib.rs", b"");
 
     let output = fixture.run(&["--glob", "**/*.rs", "--gitignore", "--strict"]);
 
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("query incomplete"), "{stderr}");
-    assert!(stderr.contains("filesystem error"), "{stderr}");
+    assert!(stderr.contains(".gitignore"), "{stderr}");
 }
 
 #[test]
-fn parallel_option_conflicts_are_reported_for_missing_roots() {
+fn parallel_limits_handle_missing_roots_without_an_option_conflict() {
     let fixture = Fixture::new();
     let missing_root = fixture.0.join("does not exist");
     let output = Command::new(env!("CARGO_BIN_EXE_branchcut"))
@@ -314,9 +341,12 @@ fn parallel_option_conflicts_are_reported_for_missing_roots() {
         .output()
         .expect("run branchcut CLI with a missing root");
 
-    assert_eq!(output.status.code(), Some(2));
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("--threads cannot be combined"), "{stderr}");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(output.stdout.is_empty());
 }
 
 #[test]
@@ -396,6 +426,104 @@ fn sorted_limited_exec_runs_only_the_selected_sorted_matches() {
 }
 
 #[test]
+fn print0_and_absolute_output_preserve_selected_path_workflows() {
+    let fixture = Fixture::new();
+    fixture.write("a file.txt", b"");
+    fixture.write("second.txt", b"");
+
+    let nul = fixture.run(&["--glob", "*.txt", "--sort", "--print0"]);
+    assert!(nul.status.success());
+    let fields = nul
+        .stdout
+        .split(|byte| *byte == 0)
+        .filter(|field| !field.is_empty())
+        .map(|field| std::str::from_utf8(field).expect("fixture paths are UTF-8"))
+        .collect::<Vec<_>>();
+    assert_eq!(fields, ["a file.txt", "second.txt"]);
+
+    let absolute = fixture.run(&["--glob", "*.txt", "--sort", "--absolute"]);
+    assert!(absolute.status.success());
+    let lines = stdout_lines(&absolute);
+    assert_eq!(lines.len(), 2);
+    assert!(Path::new(lines[0]).is_absolute(), "{}", lines[0]);
+    assert!(Path::new(lines[1]).is_absolute(), "{}", lines[1]);
+    assert!(Path::new(lines[0]).ends_with("a file.txt"));
+    assert!(Path::new(lines[1]).ends_with("second.txt"));
+}
+
+#[test]
+fn exec_batch_uses_sorted_bounded_batches() {
+    let fixture = Fixture::new();
+    for name in ["src/c.rs", "src/a.rs", "src/b.rs"] {
+        fixture.write(name, b"");
+    }
+    let capture = fixture.0.join("captured batches.txt");
+    let command = exec_helper_command("child_exec_batch_capture_helper");
+
+    let output = fixture.run_with_env(
+        &[
+            "--glob",
+            "**/*.rs",
+            "--sort",
+            "--exec-batch",
+            &command,
+            "--batch-size",
+            "2",
+        ],
+        EXEC_CAPTURE_ENV,
+        &capture,
+    );
+    assert!(
+        output.status.success(),
+        "stdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let records = fs::read_to_string(&capture).expect("read captured batch arguments");
+    let records = records.lines().collect::<Vec<_>>();
+    assert_eq!(records.len(), 2, "{records:?}");
+    assert!(records[0].contains("count=2"), "{}", records[0]);
+    assert!(records[1].contains("count=1"), "{}", records[1]);
+    assert!(records[0].contains("a.rs"), "{}", records[0]);
+    assert!(records[0].contains("b.rs"), "{}", records[0]);
+    assert!(records[1].contains("c.rs"), "{}", records[1]);
+}
+
+#[test]
+fn invalid_output_and_batch_combinations_are_rejected() {
+    let fixture = Fixture::new();
+    fixture.write("selected.rs", b"");
+
+    for args in [
+        vec!["--glob", "*.rs", "--json", "--print0"],
+        vec!["--glob", "*.rs", "--count", "--print0"],
+        vec!["--glob", "*.rs", "--batch-size", "2"],
+        vec![
+            "--glob",
+            "*.rs",
+            "--exec-batch",
+            "helper",
+            "--exec",
+            "helper {}",
+        ],
+        vec![
+            "--glob",
+            "*.rs",
+            "--exec-batch",
+            "helper without-placeholder",
+        ],
+        vec!["--glob", "*.rs", "--exec-batch", "{}"],
+    ] {
+        let output = fixture.run(&args);
+        assert!(
+            !output.status.success(),
+            "invalid option combination unexpectedly succeeded: {args:?}"
+        );
+    }
+}
+
+#[test]
 fn unsuccessful_exec_commands_fail_the_query() {
     let fixture = Fixture::new();
     fixture.write("selected.rs", b"");
@@ -414,4 +542,40 @@ fn unsuccessful_exec_commands_fail_the_query() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
+}
+
+#[test]
+fn count_mode_still_executes_requested_commands_and_reports_batch_failure() {
+    let fixture = Fixture::new();
+    fixture.write("a.rs", b"");
+    fixture.write("b.rs", b"");
+    let capture = fixture.0.join("count-exec.txt");
+    let command = exec_helper_command("child_exec_capture_helper");
+    let result = fixture.run_with_env(
+        &["--glob", "*.rs", "--count", "--exec", &command],
+        EXEC_CAPTURE_ENV,
+        &capture,
+    );
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    assert_eq!(fs::read_to_string(capture).unwrap().lines().count(), 2);
+    assert!(
+        String::from_utf8_lossy(&result.stdout)
+            .trim_end()
+            .ends_with('2')
+    );
+
+    let command = exec_helper_command("child_exec_failure_helper");
+    let result = Command::new(env!("CARGO_BIN_EXE_branchcut"))
+        .arg("--cwd")
+        .arg(&fixture.0)
+        .args(["--glob", "*.rs", "--count", "--exec-batch", &command])
+        .env(EXEC_FAILURE_ENV, "1")
+        .output()
+        .unwrap();
+    assert_eq!(result.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&result.stderr).contains("query failed"));
 }
