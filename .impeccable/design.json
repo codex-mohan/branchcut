@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-12T21:45:00+05:30",
+  "title": "Design System: Branchcut",
+  "extensions": {
+    "colorMeta": {
+      "night-canvas": {
+        "role": "neutral",
+        "displayName": "Night Canvas",
+        "canonical": "#080b09",
+        "tonalRamp": ["#050706", "#0a0d0b", "#121713", "#1b231e", "#28332c", "#3c4c43", "#65776c", "#a9b6ae"]
+      },
+      "signal-mint": {
+        "role": "primary",
+        "displayName": "Signal Mint",
+        "canonical": "#57ef97",
+        "tonalRamp": ["#052d1a", "#075331", "#087a48", "#0ba760", "#0fd77b", "#57ef97", "#9cffc2", "#d4ffe6"]
+      },
+      "lime-verdict": {
+        "role": "primary",
+        "displayName": "Lime Verdict",
+        "canonical": "#c9ff55",
+        "tonalRamp": ["#263700", "#435e00", "#648800", "#88b600", "#a9df18", "#c9ff55", "#e2ff9d", "#f4ffd9"]
+      },
+      "trace-cyan": {
+        "role": "secondary",
+        "displayName": "Trace Cyan",
+        "canonical": "#61d9ff",
+        "tonalRamp": ["#032b36", "#064b5c", "#08738a", "#098eaa", "#12a8c9", "#61d9ff", "#a7edff", "#dff9ff"]
+      },
+      "prune-amber": {
+        "role": "tertiary",
+        "displayName": "Prune Amber",
+        "canonical": "#ffb32d",
+        "tonalRamp": ["#3d2200", "#693d00", "#965b00", "#c47a00", "#e79700", "#ffb32d", "#ffd27e", "#fff0cb"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Diagnostic Display",
+        "purpose": "Large product promise in the first viewport."
+      },
+      "body": {
+        "displayName": "Operational Body",
+        "purpose": "Explanations, supporting copy, and navigation."
+      },
+      "label": {
+        "displayName": "Machine Label",
+        "purpose": "Paths, commands, versions, units, and benchmark metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "instrument",
+        "value": "0 30px 80px -44px rgb(0 0 0 / 0.94)",
+        "purpose": "Placed tool surfaces that sit above the diagnostic desk."
+      }
+    ],
+    "motion": [
+      {
+        "name": "scan",
+        "value": "4.7s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The planner's single authored traversal cue."
+      },
+      {
+        "name": "bar",
+        "value": "420ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Benchmark bar changes when a workload is selected."
+      }
+    ],
+    "breakpoints": [
+      { "name": "hero-stack", "value": "1120px" },
+      { "name": "mobile", "value": "760px" },
+      { "name": "compact", "value": "480px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Square high-signal action for installation and primary navigation.",
+      "html": "<button class=\"ds-btn-primary\">Install Branchcut <span>→</span></button>",
+      "css": ".ds-btn-primary { display:inline-flex; min-height:48px; align-items:center; justify-content:center; gap:10px; border:1px solid transparent; border-radius:0; padding:12px 16px; color:#04130c; background:#57ef97; font:700 14px/1.4 Archivo,sans-serif; transition:background-color 150ms ease-out; } .ds-btn-primary:hover { background:#9cffc2; } .ds-btn-primary:focus-visible { outline:2px solid #57ef97; outline-offset:3px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Square outlined action for documentation and alternate paths.",
+      "html": "<button class=\"ds-btn-secondary\">Read the quick start</button>",
+      "css": ".ds-btn-secondary { min-height:48px; border:1px solid #668575; border-radius:0; padding:12px 16px; color:#f7fff9; background:transparent; font:700 14px/1.4 Archivo,sans-serif; transition:border-color 150ms ease-out, background-color 150ms ease-out; } .ds-btn-secondary:hover { border-color:#57ef97; background:#101512; } .ds-btn-secondary:focus-visible { outline:2px solid #57ef97; outline-offset:3px; }"
+    },
+    {
+      "name": "Query Tabs",
+      "kind": "chip",
+      "refersTo": "button-secondary",
+      "description": "Square controls that switch between operational query presets.",
+      "html": "<div class=\"ds-tabs\"><button class=\"active\">Fixed prefix</button><button>Prune generated</button><button>Stop early</button></div>",
+      "css": ".ds-tabs { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid #2c3a32; border-radius:0; background:#030605; } .ds-tabs button { min-height:46px; border:0; border-right:1px solid #2c3a32; border-radius:0; color:#98aca2; background:transparent; font:650 11px/1.4 Archivo,sans-serif; } .ds-tabs button:last-child { border-right:0; } .ds-tabs button:hover { color:#f2faf6; background:#0b120e; } .ds-tabs button.active { color:#9cffc2; background:#0d2318; box-shadow:inset 0 -2px #9cffc2; } .ds-tabs button:focus-visible { outline:2px solid #57ef97; outline-offset:-2px; }"
+    },
+    {
+      "name": "Terminal Window",
+      "kind": "custom",
+      "refersTo": "terminal-window",
+      "description": "Square black surface for commands and plan diagnostics.",
+      "html": "<div class=\"ds-terminal\"><div class=\"ds-terminal-bar\"><span class=\"dots\"><i></i><i></i><i></i></span><span>branchcut / planner</span><b>READY</b></div><code>$ branchcut --stats</code></div>",
+      "css": ".ds-terminal { overflow:hidden; border:1px solid #2c3a32; border-radius:0; color:#f2faf6; background:#030605; box-shadow:0 30px 80px -44px rgb(0 0 0 / .94); font-family:'Fragment Mono',monospace; } .ds-terminal-bar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; min-height:46px; padding:0 16px; border-bottom:1px solid #2c3a32; color:#98aca2; font-size:10px; } .ds-terminal-bar b { justify-self:end; color:#9cffc2; font-weight:400; } .ds-terminal .dots { display:flex; gap:6px; } .ds-terminal .dots i { width:7px; height:7px; background:#ffb32d; } .ds-terminal .dots i:nth-child(2) { background:#c9ff55; } .ds-terminal .dots i:nth-child(3) { background:#57ef97; } .ds-terminal > code { display:block; padding:18px 16px; color:#c8dbd3; font-size:11px; }"
+    },
+    {
+      "name": "Benchmark Row",
+      "kind": "custom",
+      "refersTo": "benchmark-accent",
+      "description": "Measured comparison row with tool, bar, and exact timing.",
+      "html": "<div class=\"ds-bench\"><strong>Branchcut</strong><span class=\"track\"><i></i></span><output>64.39 ms</output></div>",
+      "css": ".ds-bench { display:grid; grid-template-columns:130px 1fr 80px; align-items:center; gap:16px; min-height:60px; color:#d4e4da; font-family:Archivo,sans-serif; } .ds-bench strong { font-size:13px; } .ds-bench .track { height:18px; border-left:1px solid #668575; background:linear-gradient(to right,#2a362f 1px,transparent 1px); background-size:20% 100%; } .ds-bench .track i { display:block; width:12%; height:100%; background:linear-gradient(90deg,#57ef97,#c9ff55); } .ds-bench output { color:#57ef97; font:11px 'Fragment Mono',monospace; text-align:right; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "button-secondary",
+      "description": "Compact square navigation bar with search and theme control.",
+      "html": "<nav class=\"ds-nav\"><strong>≋ Branchcut</strong><a>Docs</a><a>Benchmarks</a><button>Search</button></nav>",
+      "css": ".ds-nav { display:flex; min-height:56px; align-items:center; gap:24px; border-bottom:1px solid #2a362f; border-radius:0; padding:0 24px; color:#f7fff9; background:#080b09; font:600 13px/1.4 Archivo,sans-serif; } .ds-nav strong { margin-right:auto; } .ds-nav a:hover { color:#57ef97; } .ds-nav button { min-height:36px; border:1px solid #2a362f; border-radius:0; padding:0 14px; color:#a6b8ad; background:transparent; } .ds-nav button:focus-visible { outline:2px solid #57ef97; outline-offset:2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Filesystem Diagnostic Desk",
+    "overview": "Branchcut looks like an instrument for understanding work that has already happened: a query enters one side, a filesystem tree moves through the middle, and measured evidence leaves the other. The interface is square, direct, and information-dense without feeling cramped. It should feel alert and engineered, not like a generic developer-tool dashboard. Dark surfaces are the default because the page is often open beside a terminal, but the palette avoids a single muddy green field. Neutral near-black establishes focus; luminous mint identifies the selected route; chartreuse marks decisive evidence; cyan separates comparison tools; orange marks pruned work.",
+    "keyCharacteristics": [
+      "Zero-radius geometry everywhere.",
+      "Graph-paper structure tied to filesystem traversal.",
+      "Dark-first surfaces with high-energy signal colors.",
+      "Honest data visualization and visible system boundaries.",
+      "Monospace reserved for commands, paths, and measurements."
+    ],
+    "rules": [
+      { "name": "The Functional Signal Rule", "body": "Green means Branchcut or a viable path. Cyan means another measured tool. Amber means work removed or requiring attention. Do not reuse those colors decoratively.", "section": "colors" },
+      { "name": "The Signal Type Rule", "body": "Use monospace when the text is code, a filesystem path, a unit, a version, or measured data. Never use it to imitate technical atmosphere.", "section": "typography" },
+      { "name": "The Hard Rule Rule", "body": "A visible section boundary uses a 1px rule. Do not replace it with a shadow or a rounded container.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep every corner at 0px, including dialogs, inputs, tabs, and badges.",
+      "Do use color as a functional signal and preserve the green-cyan-amber distinctions.",
+      "Do label synthetic traversal geometry and workload-specific benchmarks explicitly.",
+      "Do use visible rules and grid intersections to structure the page.",
+      "Do keep keyboard focus and reduced-motion behavior visible and complete."
+    ],
+    "donts": [
+      "Don't tint every dark surface with green; neutral darkness provides the contrast the signal colors require.",
+      "Don't add pill buttons, rounded cards, glow halos, or soft corners.",
+      "Don't use gradients outside measured data visualization.",
+      "Don't introduce a second icon family or a stronger display typeface.",
+      "Don't turn plan data into unsupported product claims."
+    ]
+  }
+}

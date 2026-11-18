@@ -34,6 +34,33 @@ npm run build
 
 `prebuild` runs the same documentation sync, so the production build always consumes the root documentation tree.
 
+## Deploy to GitHub Pages
+
+The site is a static Next.js export. The [`pages.yml`](../.github/workflows/pages.yml)
+workflow builds it on every relevant push to `master` and deploys
+`website/out` through GitHub Pages.
+
+For this repository's project URL, set:
+
+```text
+NEXT_PUBLIC_BASE_PATH=/branchcut
+NEXT_PUBLIC_SITE_URL=https://codex-mohan.github.io/branchcut
+```
+
+The workflow already supplies both values. In the repository settings, choose
+**GitHub Actions** as the Pages source. A custom domain deployment should clear
+`NEXT_PUBLIC_BASE_PATH` and set `NEXT_PUBLIC_SITE_URL` to that origin.
+
+To reproduce the deployment build locally:
+
+```powershell
+$env:NEXT_PUBLIC_BASE_PATH = "/branchcut"
+$env:NEXT_PUBLIC_SITE_URL = "https://codex-mohan.github.io/branchcut"
+npm run build
+```
+
+The static output is written to `website/out`.
+
 ## Deploy to Vercel
 
 Import the repository into Vercel and use these settings:
@@ -46,7 +73,7 @@ Import the repository into Vercel and use these settings:
 | Install Command | `npm install` |
 | Build Command | `npm run build` |
 
-Set `NEXT_PUBLIC_SITE_URL` to the production origin, for example `https://branchcut.example.com`. This produces correct canonical metadata and social-card URLs.
+Set `NEXT_PUBLIC_SITE_URL` to the production origin, for example `https://branchcut.example.com`. This produces correct canonical metadata and social-card URLs. Leave `NEXT_PUBLIC_BASE_PATH` unset for a root-domain deployment.
 
 The included `vercel.json` supplies the framework, install, and build defaults. Vercel still needs the project Root Directory set to `website` so it finds this application.
 
@@ -62,4 +89,8 @@ repository/
     └── src/              Fumadocs UI and routes
 ```
 
-The site also exposes Fumadocs search, per-page Open Graph images, and `llms.txt`/`llms-full.txt` routes. Visual styling is intentionally Branchcut-specific: graphite surfaces, signal green and mint, diagnostic amber, subtle gridlines, soft light blooms, and the horizontal Branchcut icon.
+The site also exposes static Fumadocs search, per-page Open Graph images, and
+`llms.txt`/`llms-full.txt` routes. Visual styling is intentionally
+Branchcut-specific: dark-first forest surfaces, signal green and chartreuse,
+orange pruning signals, square graph-paper geometry, and the horizontal
+Branchcut icon. Every visible surface uses a 0px border radius.

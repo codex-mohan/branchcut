@@ -4,8 +4,13 @@ import { baseOptions } from '@/lib/layout.shared';
 
 export default function Layout({ children }: LayoutProps<'/docs'>) {
   return (
-    <DocsLayout tree={source.getPageTree()} {...baseOptions()}>
-      {children}
-    </DocsLayout>
+    <>
+      <a className="bc-skip-link" href="#nd-page">
+        Skip to documentation content
+      </a>
+      <DocsLayout tree={source.getPageTree()} {...baseOptions()}>
+        {children}
+      </DocsLayout>
+    </>
   );
 }

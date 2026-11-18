@@ -1,154 +1,155 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { LiveTerminal } from '@/components/live-terminal';
-import { CopyInstall } from '@/components/copy-install';
+import { ArrowRight, GitBranch } from 'lucide-react';
+import { BenchmarkLab } from '@/components/benchmark-lab';
+import { InstallTabs } from '@/components/install-tabs';
+import { ScrollReveal } from '@/components/scroll-reveal';
+import { WorkflowTabs } from '@/components/workflow-tabs';
+import { withBasePath } from '@/lib/base-path';
+
+const repositoryUrl = 'https://github.com/codex-mohan/branchcut';
 
 export default function HomePage() {
   return (
-    <main className="branchcut-home branchcut-home-v2">
-      <section className="hero-grid hero-live">
-        <div className="hero-copy">
-          <div className="eyebrow"><span /> ZERO CRATES · ONE RUST FILE</div>
-          <div className="hero-brand">
-            <Image src="/branchcut-icon.svg" alt="" width={88} height={48} priority />
-            <span>branchcut</span>
-          </div>
-          <h1>Compile the query.<br /><em>Cut the tree.</em></h1>
+    <main className="bc-landing">
+      <section className="bc-hero" aria-labelledby="hero-title">
+        <div className="bc-hero-copy">
+          <h1 id="hero-title">
+            Find the files.
+            <span>Skip the work.</span>
+          </h1>
           <p>
-            One filesystem query engine that plans the walk, shares glob states,
-            and cuts irrelevant directories before opening them.
+            Branchcut compiles globs, exclusions, ignore rules, filters, and
+            limits into one traversal plan. It opens the directories that can
+            contribute, streams native paths, and shows you the work it avoided.
           </p>
-          <div className="hero-actions">
-            <Link className="primary-action" href="/docs/getting-started/quick-start">Get started <span>→</span></Link>
-            <Link className="secondary-action" href="/docs">Read the docs</Link>
+          <div className="bc-hero-actions">
+            <Link className="bc-primary-action" href="/docs/getting-started/installation">
+              Install Branchcut <ArrowRight aria-hidden="true" />
+            </Link>
+            <Link className="bc-secondary-action" href="/docs/getting-started/quick-start">
+              Read the quick start
+            </Link>
           </div>
-          <CopyInstall />
         </div>
 
-        <LiveTerminal />
-      </section>
-
-      <section className="proof-strip proof-live" aria-label="Project facts">
-        <div><strong>0</strong><span>third-party crates</span></div>
-        <div><strong>1</strong><span>Rust source file</span></div>
-        <div><strong>**</strong><span>component-aware globstar</span></div>
-        <div><strong>0</strong><span>per-entry metadata calls</span></div>
-      </section>
-
-      <section className="feature-intro">
-        <p className="section-kicker">THE QUERY BECOMES THE WALK</p>
-        <h2>Watch the planner do less.</h2>
-        <p>Every feature changes traversal—not merely the filtering performed afterward.</p>
-      </section>
-
-      <section className="feature-lab" aria-label="Branchcut features">
-        <article className="feature-widget feature-wide">
-          <div className="widget-copy">
-            <span className="widget-number">01 / QUERY COMPILER</span>
-            <h3>Four patterns.<br />One shared program.</h3>
-            <p>Common path segments compile once and stay shared while patterns diverge at the leaf.</p>
-            <Link href="/docs/concepts/query-compiler">Inside the compiler →</Link>
-          </div>
-          <div className="compiler-widget" aria-label="Patterns combining into a shared query program">
-            <div className="pattern-inputs">
-              <code>src/**/*.rs</code>
-              <code>src/**/*.toml</code>
-              <code>src/**/test*.rs</code>
-              <code>src/components/**/*.css</code>
+        <div className="bc-install-stage">
+          <div className="bc-install-window">
+            <div className="bc-install-window-bar">
+              <span className="bc-window-controls" aria-hidden="true"><i /><i /><i /></span>
+              <span>install · branchcut</span>
+              <b>ready</b>
             </div>
-            <div className="compile-spine"><span>COMPILE</span></div>
-            <div className="compiled-tree">
-              <code><b>src/</b></code>
-              <code className="tree-indent"><b>└── **/</b></code>
-              <code className="tree-indent-2">├── *.rs</code>
-              <code className="tree-indent-2">├── *.toml</code>
-              <code className="tree-indent-2">├── test*.rs</code>
-              <code className="tree-indent-2">└── components/**/*.css</code>
+            <InstallTabs />
+            <div className="bc-install-facts">
+              <span>Rust 2024</span>
+              <span>Windows · Linux · macOS</span>
+              <span>Zero core crates</span>
             </div>
           </div>
-        </article>
-
-        <article className="feature-widget">
-          <div className="widget-copy compact">
-            <span className="widget-number">02 / PRUNING</span>
-            <h3>Cut before opening.</h3>
-            <p>Excluded and impossible subtrees never become a full walk.</p>
-          </div>
-          <div className="prune-widget" aria-label="Filesystem tree with pruned directories">
-            <div><span>◆</span> repository/</div>
-            <div className="keep"><span>├─</span> src/ <b>OPEN</b></div>
-            <div className="keep child"><span>│ └─</span> main.rs <b>MATCH</b></div>
-            <div className="cut cut-one"><span>├─</span> target/ <b>╳ CUT</b></div>
-            <div className="cut cut-two"><span>├─</span> node_modules/ <b>╳ CUT</b></div>
-            <div className="cut cut-three"><span>└─</span> dist/ <b>╳ CUT</b></div>
-          </div>
-        </article>
-
-        <article className="feature-widget">
-          <div className="widget-copy compact">
-            <span className="widget-number">03 / STREAMING</span>
-            <h3>Stop when the query is done.</h3>
-            <p>Matches arrive immediately. <code>--limit</code> becomes a traversal condition.</p>
-          </div>
-          <div className="stream-widget" aria-label="A query stopping after three streamed matches">
-            <div className="stream-head"><span>--limit 3</span><b>3 / 3</b></div>
-            <div className="stream-row row-one"><i /> src/main.rs <b>01</b></div>
-            <div className="stream-row row-two"><i /> src/query.rs <b>02</b></div>
-            <div className="stream-row row-three"><i /> src/walk.rs <b>03</b></div>
-            <div className="stream-stop"><span>■</span> traversal stopped</div>
-          </div>
-        </article>
-
-        <article className="feature-widget feature-wide metadata-feature">
-          <div className="widget-copy">
-            <span className="widget-number">04 / COST AWARENESS</span>
-            <h3>Do not ask the filesystem<br />questions you do not need.</h3>
-            <p>Type information comes from directory entries. Metadata work stays out of the hot path unless the query requires it.</p>
-            <Link href="/docs/concepts/traversal-and-pruning">Traversal architecture →</Link>
-          </div>
-          <div className="metadata-widget">
-            <div className="metadata-query"><span>QUERY</span><code>**/*.rs</code></div>
-            <div className="metadata-wire"><i /><i /><i /><i /><i /></div>
-            <div className="metadata-readout">
-              <span>per-entry metadata</span>
-              <strong>0</strong>
-              <small>NOT REQUIRED</small>
-            </div>
-          </div>
-        </article>
+        </div>
       </section>
 
-      <section className="comparison-section">
-        <div className="comparison-heading">
-          <p className="section-kicker">THE DIFFERENCE</p>
-          <h2>Filtering late versus planning early.</h2>
+      <section className="bc-performance-section" id="performance" aria-label="Performance comparison">
+        <BenchmarkLab />
+      </section>
+
+      <section className="bc-feature-section" id="features" aria-label="Feature showcase">
+        <WorkflowTabs />
+      </section>
+
+      <section className="bc-boundary-section" aria-labelledby="boundary-title">
+        <div className="bc-boundary-intro" data-reveal="left">
+          <h2 id="boundary-title">Useful, with the boundary drawn.</h2>
+          <p>
+            Branchcut is a filesystem query engine. It is not a file-content
+            search tool, an index, or a universal replacement for every glob API.
+            The supported surface is documented and tested.
+          </p>
+          <Link href="/docs/reference/feature-status">
+            Complete feature status <ArrowRight aria-hidden="true" />
+          </Link>
         </div>
-        <div className="comparison-grid">
-          <div className="comparison-card conventional">
-            <span>CONVENTIONAL PIPELINE</span>
-            <div className="work-meter"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
-            <code>walk → match → ignore → filter</code>
-            <strong>Everything enters the pipeline.</strong>
+
+        <div className="bc-boundary-table" role="table" aria-label="Branchcut boundaries" data-reveal="right">
+          <div role="row" className="bc-boundary-row bc-boundary-header">
+            <span role="columnheader">Built for</span>
+            <span role="columnheader">Branchcut</span>
+            <span role="columnheader">Use another tool when</span>
           </div>
-          <div className="comparison-arrow">→</div>
-          <div className="comparison-card planned">
-            <span>BRANCHCUT PLAN</span>
-            <div className="work-meter"><i /><i /><i className="off" /><i className="off" /><i className="off" /><i className="off" /><i className="off" /><i className="off" /><i className="off" /><i className="off" /></div>
-            <code>compile → prune → stream</code>
-            <strong>Impossible work never begins.</strong>
+          <div role="row" className="bc-boundary-row">
+            <span role="cell">Filename selection</span>
+            <strong role="cell">Globs, literals, type, extension, depth, size, time</strong>
+            <span role="cell">You already have a mature ecosystem-specific glob API</span>
+          </div>
+          <div role="row" className="bc-boundary-row">
+            <span role="cell">Ignored trees</span>
+            <strong role="cell">Nested, repository and global ignores; explicit override files</strong>
+            <span role="cell">You need every Git config condition or environment override</span>
+          </div>
+          <div role="row" className="bc-boundary-row">
+            <span role="cell">Automation</span>
+            <strong role="cell">Native paths, JSON Lines, NUL output, shell-free commands</strong>
+            <span role="cell">You need a shell interpreter rather than explicit argv</span>
+          </div>
+          <div role="row" className="bc-boundary-row">
+            <span role="cell">Content or structure</span>
+            <strong role="cell">Filesystem metadata and path semantics</strong>
+            <span role="cell">You need text search, parsing, indexing, or a service protocol</span>
           </div>
         </div>
       </section>
 
-      <section className="docs-cta">
-        <Image src="/branchcut-icon.svg" alt="" width={88} height={48} />
-        <p className="section-kicker">READY TO CUT THE TREE?</p>
-        <h2>Start with one query.</h2>
-        <div className="hero-actions">
-          <Link className="primary-action" href="/docs/getting-started/quick-start">Quick start <span>→</span></Link>
-          <Link className="secondary-action" href="/docs/reference/cli">CLI reference</Link>
+      <section className="bc-close" aria-labelledby="close-title">
+        <div className="bc-close-mark" aria-hidden="true">
+          <Image
+            src={withBasePath('/branchcut-icon.svg')}
+            alt=""
+            width={88}
+            height={48}
+          />
+        </div>
+        <div>
+          <h2 id="close-title">Point Branchcut at the tree.</h2>
+          <p>Start with one filename or compile the whole query.</p>
+        </div>
+        <div className="bc-close-actions">
+          <Link className="bc-primary-action" href="/docs/getting-started/installation">
+            Install <ArrowRight aria-hidden="true" />
+          </Link>
+          <a className="bc-secondary-action" href={repositoryUrl}>
+            <GitBranch aria-hidden="true" /> Source
+          </a>
         </div>
       </section>
+
+      <footer className="bc-footer">
+        <div className="bc-footer-brand">
+          <Image src={withBasePath('/branchcut-icon.svg')} alt="" width={88} height={48} />
+          <strong>Branchcut</strong>
+          <p>Compile the query. Cut the tree.</p>
+        </div>
+        <nav aria-label="Documentation">
+          <strong>Learn</strong>
+          <Link href="/docs/getting-started/installation">Installation</Link>
+          <Link href="/docs/getting-started/quick-start">Quick start</Link>
+          <Link href="/docs/reference/cli">CLI reference</Link>
+          <Link href="/docs/reference/glob-syntax">Glob syntax</Link>
+        </nav>
+        <nav aria-label="Project">
+          <strong>Project</strong>
+          <a href={repositoryUrl}>Source on GitHub</a>
+          <a href={`${repositoryUrl}/issues`}>Report an issue</a>
+          <Link href="/docs/evidence/cli-comparison">Benchmarks</Link>
+          <a href={`${repositoryUrl}/blob/master/LICENSE`}>MIT license</a>
+        </nav>
+        <p className="bc-footer-note">
+          Core engine and ordinary CLI: Rust standard library only. Optional
+          integrations may carry dependencies without entering the core graph.
+        </p>
+      </footer>
+
+      <ScrollReveal />
     </main>
   );
 }

@@ -18,12 +18,13 @@ if (!outputDir.startsWith(`${generatedRoot}${path.sep}`)) {
 
 rmSync(outputDir, { recursive: true, force: true });
 
+const documentationAssets = new Set(['', '.md', '.mdx', '.json', '.png', '.jpg', '.jpeg', '.webp', '.svg']);
+
 cpSync(sourceDir, outputDir, {
   recursive: true,
   filter(source) {
     if (source === sourceDir) return true;
-    const extension = path.extname(source).toLowerCase();
-    return extension === '' || extension === '.md' || extension === '.mdx' || extension === '.json';
+    return documentationAssets.has(path.extname(source).toLowerCase());
   },
 });
 

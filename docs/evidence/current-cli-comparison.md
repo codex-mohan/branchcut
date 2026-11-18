@@ -102,4 +102,3 @@ node scripts/compare-cli.mjs --binary target/release/branchcut.exe --zlob PATH_T
 ```
 
 Install pinned development-only Node oracles and make `rg` and `fd` available as described in the [benchmarking guide](../contributing/benchmarking.md). Use platform-appropriate binary paths. The memory flag currently requires Windows PowerShell. The [preflight run](../../benchmarks/results/2026-11-18-gap-closure-preflight-cli.json) is retained separately; it preceded the last correctness corrections and is not the final result.
-
