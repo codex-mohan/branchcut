@@ -573,7 +573,9 @@ fn preserves_non_utf8_unix_paths() {
 
     let fixture = Fixture::new();
     let name = OsString::from_vec(b"invalid-\xff.rs".to_vec());
-    fs::write(fixture.0.join(&name), b"").unwrap();
+    if !native_fixture::write(fixture.0.join(&name), b"") {
+        return;
+    }
     let options = Options {
         cwd: fixture.0.clone(),
         positive: vec!["**/*.rs".to_owned()],
@@ -608,3 +610,6 @@ fn parallel_traversal_matches_sequential_results() {
     assert_eq!(parallel, sequential.output);
     assert_eq!(stats.matches as usize, parallel.len());
 }
+#[cfg(unix)]
+#[path = "../tests/support/native_fixture.rs"]
+mod native_fixture;

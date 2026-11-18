@@ -1,4 +1,7 @@
 use std::fs;
+#[cfg(unix)]
+#[path = "support/native_fixture.rs"]
+mod native_fixture;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -58,7 +61,9 @@ fn plain_output_preserves_non_utf8_filename_bytes() {
 
     let fixture = Fixture::new();
     let name = OsString::from_vec(b"bad-\xff.rs".to_vec());
-    fixture.write(&name);
+    if !native_fixture::write(fixture.0.join(&name), b"") {
+        return;
+    }
 
     let output = fixture.run(&["--glob", "**/*.rs", "--sort"]);
 
@@ -92,7 +97,9 @@ fn print0_output_preserves_non_utf8_filename_bytes() {
 
     let fixture = Fixture::new();
     let name = OsString::from_vec(b"bad-\xff.rs".to_vec());
-    fixture.write(&name);
+    if !native_fixture::write(fixture.0.join(&name), b"") {
+        return;
+    }
 
     let output = fixture.run(&["--glob", "**/*.rs", "--sort", "--print0"]);
 
@@ -111,7 +118,10 @@ fn sorted_limit_uses_native_path_order_for_unusual_names() {
     #[cfg(unix)]
     {
         use std::os::unix::ffi::OsStringExt;
-        names.push(OsString::from_vec(b"bad-\xff.rs".to_vec()));
+        let name = OsString::from_vec(b"bad-\xff.rs".to_vec());
+        if native_fixture::write(fixture.0.join(&name), b"") {
+            names.push(name);
+        }
     }
     #[cfg(windows)]
     {
@@ -145,7 +155,9 @@ fn json_output_includes_reversible_bytes_for_non_utf8_filename() {
 
     let fixture = Fixture::new();
     let name = OsString::from_vec(b"bad-\xff.rs".to_vec());
-    fixture.write(&name);
+    if !native_fixture::write(fixture.0.join(&name), b"") {
+        return;
+    }
 
     let output = fixture.run(&["--glob", "**/*.rs", "--json", "--sort"]);
 

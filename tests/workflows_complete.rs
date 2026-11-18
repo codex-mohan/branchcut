@@ -310,7 +310,9 @@ fn formatting_and_execution_preserve_non_utf8_native_names() {
     use std::os::unix::ffi::OsStringExt;
     let fixture = Fixture::new();
     let name = OsString::from_vec(b"bad\xff.rs".to_vec());
-    fs::write(fixture.0.join(name), b"").unwrap();
+    if !native_fixture::write(fixture.0.join(name), b"") {
+        return;
+    }
     let output = fixture.run(&["--glob", "*.rs", "--format", "{/}"]);
     assert!(output.status.success());
     assert_eq!(output.stdout, b"bad\xff.rs\n");
@@ -319,3 +321,6 @@ fn formatting_and_execution_preserve_non_utf8_native_names() {
     assert!(preview.contains("\"argv_native\""), "{preview}");
     assert!(preview.contains("626164ff2e7273"), "{preview}");
 }
+#[cfg(unix)]
+#[path = "support/native_fixture.rs"]
+mod native_fixture;

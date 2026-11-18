@@ -25,6 +25,8 @@ Required checks are `cargo fmt -- --check`, `cargo test --locked`, `cargo clippy
 
 Windows tests run natively. Linux tests run in Fedora under WSL with an independent Linux Rust toolchain and a Linux target directory. This exercises Unix symlinks, file types, permissions, raw filenames and Git behavior, but is not a native macOS run or a Linux performance claim.
 
+The first hosted matrix exposed fixture assumptions: Git resolves Windows short-name aliases before testing conditional includes, and the macOS fixture filesystem rejects invalid UTF-8 names with EILSEQ. Conditional-include fixtures now use a canonical Git directory. Native-byte filesystem assertions run where such names can be created; the helper permits only that specific macOS creation failure, and all other creation failures remain test errors. Pure matcher byte-path tests still run independently of filesystem filename restrictions. These corrections do not change production behavior or the measured binary.
+
 The supported-semantics differential suite uses pinned `fast-glob@3.3.3` as a development-only oracle. Git is used only by the independent ignore tests; production ignore handling does not launch Git.
 
 The expanded runner checks 28 result-equivalent cases in sequential and parallel modes and retains one explicit negated-extglob dialect difference. Branchcut and Bash match `aaa.rs` for `a!(a).rs`; fast-glob/micromatch does not. That case is not counted as compatibility with fast-glob.

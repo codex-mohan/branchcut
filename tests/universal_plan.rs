@@ -1,4 +1,7 @@
 use branchcut::{CaseMode, EntryType, Query, SearchTarget, Stats, Visitor};
+#[cfg(unix)]
+#[path = "support/native_fixture.rs"]
+mod native_fixture;
 use std::fs;
 use std::io;
 use std::ops::ControlFlow;
@@ -35,11 +38,10 @@ impl Fixture {
         {
             use std::ffi::OsString;
             use std::os::unix::{ffi::OsStringExt, fs::symlink};
-            fs::write(
+            native_fixture::write(
                 root.join(OsString::from_vec(b"native-\xff.rs".to_vec())),
                 b"native",
-            )
-            .unwrap();
+            );
             symlink("src", root.join("alias")).unwrap();
         }
         Self(root)

@@ -1,3 +1,7 @@
+#[cfg(unix)]
+#[path = "support/native_fixture.rs"]
+mod native_fixture;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -532,7 +536,7 @@ fn unconditional_config_include_is_relative_to_its_config_file() {
 #[test]
 fn conditional_gitdir_and_onbranch_includes_match_git() {
     let fixture = Fixture::new();
-    let repo = fixture.init_repo("repo");
+    let repo = fs::canonicalize(fixture.init_repo("repo")).unwrap();
     let excludes = fixture.root.join("rules");
     fs::write(&excludes, b"private.rs\n").unwrap();
     fs::write(
@@ -545,7 +549,9 @@ fn conditional_gitdir_and_onbranch_includes_match_git() {
     .unwrap();
     fixture.write(&repo, "private.rs", b"");
     fixture.write(&repo, "visible.rs", b"");
-    let gitdir = repo.join(".git").to_string_lossy().replace('\\', "/");
+    let gitdir_path = fs::canonicalize(repo.join(".git")).unwrap();
+    let gitdir = gitdir_path.to_string_lossy().replace('\\', "/");
+    let gitdir = gitdir.strip_prefix("//?/").unwrap_or(&gitdir);
     for condition in [
         format!("gitdir:{gitdir}"),
         format!("gitdir/i:{}", gitdir.to_uppercase()),
@@ -642,11 +648,12 @@ fn non_utf8_ignore_patterns_preserve_native_filename_bytes() {
     let fixture = Fixture::new();
     let repo = fixture.init_repo("repo");
     fixture.write(&repo, ".gitignore", b"hidden-\xff.rs\n");
-    fs::write(
+    if !native_fixture::write(
         repo.join(std::ffi::OsString::from_vec(b"hidden-\xff.rs".to_vec())),
         b"",
-    )
-    .unwrap();
+    ) {
+        return;
+    }
     fixture.write(&repo, "visible.rs", b"");
     for threads in ["1", "4"] {
         let output = fixture.run_branchcut(
