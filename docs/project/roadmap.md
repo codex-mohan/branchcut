@@ -20,7 +20,7 @@ Branchcut preserves the tagged competition submission while developing a maintai
 | Parallel traversal | Implemented | Bounded workers, streaming coordinator, sequential compatibility fallback |
 | Performance work | Measured on Windows | Raw results and losses retained; broader platforms remain separate evidence |
 | Cross-platform confidence | Native CI passes | [Windows, Linux and Intel macOS](https://github.com/codex-mohan/branchcut/actions/runs/44349839187); release artifact builds remain separate gates |
-| Release artifacts and packaging | Planned | One-command source install exists; prebuilt distribution is not claimed |
+| Release artifacts and packaging | Published | [v0.2.1](https://github.com/codex-mohan/branchcut/releases/tag/v0.2.1) provides four prebuilt archives and SHA-256 checksums |
 
 ## Completed foundations
 
@@ -36,7 +36,6 @@ Branchcut preserves the tagged competition submission while developing a maintai
 
 The active phase is release quality and onboarding:
 
-- publish prebuilt binaries for supported targets;
 - validate everyday, developer, and power-user workflows with real users;
 - expand public-repository and cross-platform benchmark evidence;
 - keep tutorials and installation paths synchronized with tested behavior.

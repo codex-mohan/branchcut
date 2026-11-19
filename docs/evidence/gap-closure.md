@@ -16,7 +16,7 @@ This record describes the development tree reviewed on 18 November 2026. It does
 | 4. Filters | Entry-type unions; empty/executable selection; Unix numeric ownership/group and special types; required terms; exact fractional sizes; offset/fractional timestamps | Candidate-first metadata checks and public-API integration regressions |
 | 5. Workflows | Metadata JSON; formatting/component placeholders; quiet exit status; bounded child concurrency; lossless command preview; terminal decorations isolated from machine output | CLI integration tests, failure propagation and native-name regressions |
 | 6. Rust APIs | PathMatcher, MatchOptions, escape_path_pattern; MultiRootQuery; EntryRecord visitors; CancellationToken | External-consumer tests; metadata-rich visits explicitly request metadata |
-| 7. Distribution | Source bootstrap installers; four-shell completion generation; four-platform release/archive/checksum workflow | Release automation is prepared; actual prebuilt assets and package-manager publication require a release |
+| 7. Distribution | Source bootstrap installers, four-shell completions and four prebuilt archives | [v0.2.1 release build](https://github.com/codex-mohan/branchcut/actions/runs/44356821678) passed. Downloaded archives match their published checksums. |
 | 8. Documentation and evidence | General project README; current references; benchmark scope and coverage labels corrected; dated raw comparisons retained | New measurements apply only to their recorded source manifest; earlier snapshots remain historical |
 
 ## Validation
@@ -41,7 +41,7 @@ The expanded runner checks 28 result-equivalent cases in sequential and parallel
 - Windows plain/NUL text cannot preserve every unpaired surrogate; native APIs, command arguments and JSON companion fields provide lossless alternatives.
 - Filename regexes, captures, custom filesystem adapters, foreign-language bindings, and POSIX/glibc ABI compatibility are not implemented. These are not implied by glob support or CLI timing results.
 - Content search, indexing, watchers, GUI/TUI and service protocols remain separate product work. The ripgrep benchmark measures `rg --files`, not content search.
-- A tagged prebuilt release and package-manager publication remain release gates. The regular native macOS gate uses Intel runners following an ARM hosted-runner capacity failure; release automation retains separate Intel and ARM targets. ARM release builds have not been published.
+- Package-manager publication and native Apple Silicon execution testing remain open. The Apple Silicon release archive was cross-built using Apple's SDK and passed architecture and signature verification. The regular native macOS checks use Intel runners.
 
 ## Benchmark scope
 

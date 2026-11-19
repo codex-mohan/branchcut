@@ -56,7 +56,7 @@ An alternative is useful only within its stated boundary. These do not establish
 | Captures and filename regexes | Globs, literal terms, AND filters, native library matching, or a separate regex-capable finder | Captured substrings and a regex engine are not implemented |
 | Cross-platform ownership/device boundaries | Numeric ownership and filesystem IDs on Unix; explicit unsupported errors elsewhere | Windows ownership and exact one-filesystem enforcement need a separately approved platform implementation |
 | Bindings, virtual filesystem adapters, POSIX glob ABI | Invoke the executable or Rust API | JavaScript/C/Zig bindings, custom filesystem adapters, and POSIX/glibc API compatibility are not shipped |
-| Prebuilt/package-manager installation | Source installers and Cargo installation; prepared release workflow | Release assets require a version tag and passing platform builds; package-manager submissions are not published |
+| Package-manager installation | [GitHub release archives](https://github.com/codex-mohan/branchcut/releases/latest), source installers and Cargo installation | Package-manager submissions remain open |
 
 Content search, indexing, GUI/TUI, watchers, and service/agent protocols remain outside the agreed product scope. They are not prerequisites for dependable filename and filesystem selection.
 

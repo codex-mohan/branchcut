@@ -81,9 +81,9 @@ Expand reproducible workloads before choosing optimization work. Measure shared 
 
 The owner also authorized closing filesystem-search gaps. Bounded richer braces, component-local extglobs, Git-oracle ignore corrections, explicit sequential frames, and bounded parallel streaming have been implemented after the initial Phase 7 snapshot. See [feature status](docs/reference/feature-status.md) for remaining gaps; these additions do not imply full Unicode or Git compatibility. Performance records identify their measured source manifests rather than attributing old results to later builds.
 
-**Status: implementation prepared; publication remains open.** The [filesystem gap-closure record](docs/evidence/gap-closure.md) tracks the subsequent ignore, matcher, traversal, filter, workflow and library work. Shell completions, source installers and a four-platform release/archive/checksum workflow are implemented. Native release CI, actual prebuilt assets and package-manager publication remain release gates.
+**Status: v0.2.1 published.** The [filesystem gap-closure record](docs/evidence/gap-closure.md) tracks the ignore, matcher, traversal, filter, workflow and library work. Shell completions and source installers are available. The [GitHub release](https://github.com/codex-mohan/branchcut/releases/tag/v0.2.1) provides four prebuilt archives with SHA-256 checksums. The Apple Silicon archive was cross-built on Intel macOS and passed architecture and signature checks.
 
-Publish prebuilt binaries, straightforward upgrade instructions, shell completion, and practical recipes. Validate everyday, developer, and power-user workflows with users. Let repeated friction guide follow-on features.
+Validate everyday, developer and power-user workflows with users. Package-manager publication and native Apple Silicon execution testing remain open.
 
 **Exit gate:** a new user can install, run a useful search, interpret its result, and upgrade without needing to build the project from source.
 

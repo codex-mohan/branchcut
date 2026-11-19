@@ -37,16 +37,16 @@ Download the archive for your operating system and CPU architecture together wit
 On Linux, verify the downloaded archives with:
 
 ```sh
-sha256sum --check SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
 ```
 
 On macOS:
 
 ```sh
-shasum -a 256 --check SHA256SUMS
+shasum -a 256 branchcut-v0.2.1-aarch64-apple-darwin.tar.gz
 ```
 
-On Windows PowerShell, compare the archive hash with its matching line in `SHA256SUMS`:
+On macOS, compare that output with the matching filename's line in `SHA256SUMS`; replace the filename above for an Intel archive. On Windows PowerShell, compare the archive hash with its matching line:
 
 ```powershell
 (Get-FileHash .\branchcut-v0.2.1-x86_64-pc-windows-msvc.zip -Algorithm SHA256).Hash.ToLowerInvariant()
