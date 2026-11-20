@@ -4,7 +4,10 @@ use super::exec::{
     render_template, validate_batch_template,
 };
 use crate::error::{AppError, Result};
-use crate::{CheckOutcome, CompiledQuery, PathExplanation, Stats, Visitor};
+use crate::{
+    CaseMode, CheckOutcome, CompiledQuery, ContentMatch, ContentQuery, PathExplanation, Stats,
+    Visitor,
+};
 use std::borrow::Cow;
 use std::collections::BinaryHeap;
 use std::ffi::OsStr;
@@ -271,6 +274,45 @@ pub(crate) fn print_explain(plan: &CompiledQuery, options: &Options) {
         println!("  evaluation: after type, name, extension, and glob checks");
         println!("  relative time boundaries: resolved when each execution starts");
     }
+    if !options.content.is_empty() {
+        let insensitive = match options.case_mode {
+            CaseMode::Insensitive => true,
+            CaseMode::Sensitive => false,
+            CaseMode::Smart => !options
+                .content
+                .iter()
+                .any(|pattern| pattern.chars().any(char::is_uppercase)),
+        };
+        println!("\nCONTENT SEARCH");
+        println!("  patterns: {}", options.content.len());
+        for pattern in &options.content {
+            println!("  pattern: {pattern}");
+        }
+        println!(
+            "  case: {}",
+            if insensitive {
+                "insensitive"
+            } else {
+                "sensitive"
+            }
+        );
+        println!(
+            "  binary files: {}",
+            if options.content_text {
+                "read as text"
+            } else {
+                "skipped when a NUL byte appears in the first 8192 bytes"
+            }
+        );
+        println!(
+            "  output: path:line:column:text{}",
+            if options.files_with_matches {
+                " (paths only)"
+            } else {
+                ""
+            }
+        );
+    }
     println!(
         "\nTERMINATION\n  {}",
         match options.limit {
@@ -350,6 +392,11 @@ pub(crate) fn print_stats(stats: &Stats, elapsed: Duration) {
     eprintln!("entries inspected       {}", stats.entries_seen);
     eprintln!("candidate files         {}", stats.candidate_files);
     eprintln!("metadata calls          {}", stats.metadata_calls);
+    if stats.content_files > 0 || stats.content_binary_skipped > 0 {
+        eprintln!("content files           {}", stats.content_files);
+        eprintln!("content bytes           {}", stats.content_bytes);
+        eprintln!("binary files skipped    {}", stats.content_binary_skipped);
+    }
     eprintln!("filesystem errors       {}", stats.errors);
     eprintln!(
         "elapsed                 {:.3}ms",
@@ -364,6 +411,11 @@ pub(crate) struct Output<W: Write> {
     pub(crate) matched: u64,
     pub(crate) stopped: bool,
     pub(crate) metadata_calls: u64,
+    pub(crate) content_files: u64,
+    pub(crate) content_bytes: u64,
+    pub(crate) content_binary_skipped: u64,
+    pub(crate) content_errors: u64,
+    content: Option<ContentQuery>,
     options: Options,
     command: Option<Vec<String>>,
     batch_command: Option<Vec<String>>,
@@ -416,14 +468,21 @@ impl<W: Write> Output<W> {
             && !options.exec_preview;
         let decorate =
             |mode| plain && (mode == Decoration::Always || mode == Decoration::Auto && terminal);
+        let content = options.content_query()?;
+        let content_mode = content.is_some();
         Ok(Self {
             writer,
             output: Vec::new(),
-            selection: (options.sort && !options.count && options.limit.is_some())
+            selection: (options.sort && !options.count && options.limit.is_some() && !content_mode)
                 .then(BinaryHeap::new),
             matched: 0,
             stopped: false,
             metadata_calls: 0,
+            content_files: 0,
+            content_bytes: 0,
+            content_binary_skipped: 0,
+            content_errors: 0,
+            content,
             options: options.clone(),
             command,
             batch_command,
@@ -433,9 +492,10 @@ impl<W: Write> Output<W> {
             batch_base_bytes,
             line_buffer: Vec::new(),
             command_pool: CommandPool::new(options.exec_jobs),
-            color: decorate(options.color)
+            color: !content_mode
+                && decorate(options.color)
                 && (options.color == Decoration::Always || std::env::var_os("NO_COLOR").is_none()),
-            hyperlink: decorate(options.hyperlink),
+            hyperlink: !content_mode && decorate(options.hyperlink),
         })
     }
 
@@ -615,18 +675,29 @@ impl<W: Write> Output<W> {
 
     pub(crate) fn finish(&mut self) -> io::Result<()> {
         if self.options.sort && !self.options.count {
-            if let Some(selection) = self.selection.take() {
-                self.output = selection.into_sorted_vec();
-            } else {
+            if self.content.is_some() {
                 self.output.sort_unstable();
+                let paths = std::mem::take(&mut self.output);
+                for path in &paths {
+                    if self.scan_content(path)?.is_break() {
+                        break;
+                    }
+                }
+                self.output = paths;
+            } else {
+                if let Some(selection) = self.selection.take() {
+                    self.output = selection.into_sorted_vec();
+                } else {
+                    self.output.sort_unstable();
+                }
+                self.matched = self.output.len() as u64;
+                let paths = std::mem::take(&mut self.output);
+                for path in &paths {
+                    let path = self.output_path(path);
+                    self.selected_path(&path)?;
+                }
+                self.output = paths;
             }
-            self.matched = self.output.len() as u64;
-            let paths = std::mem::take(&mut self.output);
-            for path in &paths {
-                let path = self.output_path(path);
-                self.selected_path(&path)?;
-            }
-            self.output = paths;
         }
         self.flush_batch()?;
         self.command_pool.finish()?;
@@ -635,14 +706,157 @@ impl<W: Write> Output<W> {
         }
         self.writer.flush()
     }
+
+    /// Read one selected file and emit its matching lines. Non-file entries are
+    /// skipped: content search applies to regular files only.
+    fn scan_content(&mut self, path: &Path) -> io::Result<ControlFlow<()>> {
+        let Some(query) = self.content.clone() else {
+            return Ok(ControlFlow::Continue(()));
+        };
+        let absolute = if path.is_absolute() {
+            path.to_owned()
+        } else {
+            self.options.cwd.join(path)
+        };
+        let metadata = match fs::metadata(&absolute) {
+            Ok(metadata) => metadata,
+            Err(error) => {
+                self.content_errors += 1;
+                self.error(path, &error)?;
+                return Ok(ControlFlow::Continue(()));
+            }
+        };
+        self.metadata_calls += 1;
+        if !metadata.is_file() {
+            return Ok(ControlFlow::Continue(()));
+        }
+        let limit = self.options.limit.map(|limit| limit as u64);
+        let remaining = limit.map(|limit| limit.saturating_sub(self.matched));
+        if remaining == Some(0) {
+            self.stopped = true;
+            return Ok(ControlFlow::Break(()));
+        }
+        let files_only = self.options.files_with_matches;
+        let quiet = self.options.quiet;
+        let count = self.options.count;
+        let scan_limit = if files_only || quiet {
+            Some(1)
+        } else {
+            remaining
+        };
+        let display = self.output_path(path).into_owned();
+        let mut emitted = 0u64;
+        let mut write_error = None;
+        let scanned = query.scan_file(&absolute, scan_limit, |found| {
+            if files_only || quiet {
+                emitted = 1;
+                return Ok(ControlFlow::Break(()));
+            }
+            if !count && let Err(error) = self.write_content_match(&display, &metadata, found) {
+                write_error = Some(error);
+                return Ok(ControlFlow::Break(()));
+            }
+            self.matched += 1;
+            emitted += 1;
+            if limit.is_some_and(|limit| self.matched >= limit) {
+                return Ok(ControlFlow::Break(()));
+            }
+            Ok(ControlFlow::Continue(()))
+        });
+        if let Some(error) = write_error {
+            return Err(error);
+        }
+        let stats = match scanned {
+            Ok(stats) => stats,
+            Err(error) => {
+                self.content_errors += 1;
+                self.error(path, &error)?;
+                return Ok(ControlFlow::Continue(()));
+            }
+        };
+        self.content_files += 1;
+        self.content_bytes = self.content_bytes.saturating_add(stats.bytes_read);
+        if stats.binary_skipped {
+            self.content_binary_skipped += 1;
+        }
+        if files_only {
+            if emitted == 0 {
+                return Ok(ControlFlow::Continue(()));
+            }
+            self.matched += 1;
+            self.selected_path(&display)?;
+            return Ok(self.finish_match());
+        }
+        if quiet {
+            if emitted == 0 {
+                return Ok(ControlFlow::Continue(()));
+            }
+            self.matched += 1;
+        }
+        Ok(self.finish_match())
+    }
+
+    fn write_content_match(
+        &mut self,
+        display: &Path,
+        metadata: &fs::Metadata,
+        found: ContentMatch<'_>,
+    ) -> io::Result<()> {
+        let mut record = Vec::with_capacity(found.line.len() + 64);
+        if self.options.json {
+            write_path(&mut record, true, false, display)?;
+            // Drop the closing brace and newline written by write_path.
+            record.truncate(record.len() - 2);
+            write!(
+                &mut record,
+                ",\"line\":{},\"column\":{}",
+                found.line_number, found.column
+            )?;
+            record.extend_from_slice(b",\"text\":\"");
+            record.extend_from_slice(json_escape(&String::from_utf8_lossy(found.line)).as_bytes());
+            record.push(b'"');
+            if self.options.json_metadata {
+                write!(
+                    &mut record,
+                    ",\"type\":\"file\",\"size\":{},\"readonly\":{}",
+                    metadata.len(),
+                    metadata.permissions().readonly()
+                )?;
+                if let Ok(modified) = metadata.modified() {
+                    let milliseconds = match modified.duration_since(std::time::UNIX_EPOCH) {
+                        Ok(age) => age.as_millis() as i128,
+                        Err(error) => -(error.duration().as_millis() as i128),
+                    };
+                    write!(&mut record, ",\"modified_unix_ms\":{milliseconds}")?;
+                }
+            }
+            record.extend_from_slice(b"}\n");
+        } else {
+            write_path(&mut record, false, false, display)?;
+            // Replace the trailing newline with the result separator.
+            record.pop();
+            write!(&mut record, ":{}:{}:", found.line_number, found.column)?;
+            record.extend_from_slice(found.line);
+            record.push(b'\n');
+        }
+        self.writer.write_all(&record)
+    }
 }
 impl<W: Write> Visitor for Output<W> {
     fn requires_path(&self) -> bool {
-        !self.options.quiet
-            && (!self.options.count || self.command.is_some() || self.batch_command.is_some())
+        self.content.is_some()
+            || (!self.options.quiet
+                && (!self.options.count || self.command.is_some() || self.batch_command.is_some()))
     }
 
     fn matched(&mut self, path: &Path) -> io::Result<ControlFlow<()>> {
+        if self.content.is_some() {
+            if self.options.sort && !self.options.count {
+                self.output.push(path.to_owned());
+                return Ok(ControlFlow::Continue(()));
+            }
+            return self.scan_content(path);
+        }
         self.matched += 1;
         if self.options.sort && !self.options.count {
             if let Some(selection) = &mut self.selection {
@@ -670,6 +884,9 @@ impl<W: Write> Visitor for Output<W> {
     }
 
     fn matched_child(&mut self, parent: &Path, name: &OsStr) -> io::Result<ControlFlow<()>> {
+        if self.content.is_some() {
+            return self.matched(&parent.join(name));
+        }
         if self.options.sort
             || self.options.json
             || self.absolute_root.is_some()

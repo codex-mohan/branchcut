@@ -1,6 +1,9 @@
 use super::config;
 use crate::error::{AppError, Result};
-use crate::{CaseMode, EntryType, ModifiedBefore, Query, SearchTarget, SizeFilter, parse_duration};
+use crate::{
+    CaseMode, ContentQuery, EntryType, ModifiedBefore, Query, SearchTarget, SizeFilter,
+    parse_duration,
+};
 use std::collections::HashSet;
 use std::env;
 use std::ffi::OsString;
@@ -28,6 +31,9 @@ pub(crate) struct Options {
     pub(crate) owner: Option<u32>,
     pub(crate) group: Option<u32>,
     pub(crate) and_terms: Vec<String>,
+    pub(crate) content: Vec<String>,
+    pub(crate) content_text: bool,
+    pub(crate) files_with_matches: bool,
     pub(crate) unicode: bool,
     pub(crate) escape_patterns: bool,
     pub(crate) follow_symlinks: bool,
@@ -84,6 +90,9 @@ impl Default for Options {
             owner: None,
             group: None,
             and_terms: Vec::new(),
+            content: Vec::new(),
+            content_text: false,
+            files_with_matches: false,
             unicode: false,
             escape_patterns: false,
             follow_symlinks: false,
@@ -170,6 +179,69 @@ impl Options {
             modified_before: self.modified_before,
         }
     }
+
+    /// Compile literal content patterns with the selected case policy.
+    /// Smart case inspects the content patterns themselves.
+    pub(crate) fn content_query(&self) -> Result<Option<ContentQuery>> {
+        if self.content.is_empty() {
+            return Ok(None);
+        }
+        let case_insensitive = match self.case_mode {
+            CaseMode::Insensitive => true,
+            CaseMode::Sensitive => false,
+            CaseMode::Smart => !self
+                .content
+                .iter()
+                .any(|pattern| pattern.chars().any(char::is_uppercase)),
+        };
+        ContentQuery::from_strings(&self.content, case_insensitive, self.content_text)
+            .map(Some)
+            .map_err(|error| AppError(error.to_string()))
+    }
+}
+
+fn validate_content(options: &Options) -> Result<()> {
+    if options.content.is_empty() {
+        if options.content_text {
+            return Err(AppError("--text requires --content".to_owned()));
+        }
+        if options.files_with_matches {
+            return Err(AppError(
+                "--files-with-matches requires --content".to_owned(),
+            ));
+        }
+        return Ok(());
+    }
+    if options.content.iter().any(String::is_empty) {
+        return Err(AppError("content patterns cannot be empty".to_owned()));
+    }
+    if options.exec.is_some() || options.exec_batch.is_some() || options.exec_preview {
+        return Err(AppError(
+            "--content cannot be combined with command execution or preview".to_owned(),
+        ));
+    }
+    if options.print0 {
+        return Err(AppError(
+            "--content cannot be combined with --print0".to_owned(),
+        ));
+    }
+    if options.format.is_some() {
+        return Err(AppError(
+            "--content cannot be combined with --format".to_owned(),
+        ));
+    }
+    if options.files_with_matches && options.count {
+        return Err(AppError(
+            "--files-with-matches cannot be combined with --count".to_owned(),
+        ));
+    }
+    if !options.entry_types.is_empty() && !options.entry_types.contains(&EntryType::File) {
+        return Err(AppError(
+            "--content searches regular files; include --type file or remove the type filter"
+                .to_owned(),
+        ));
+    }
+    Ok(())
 }
 pub(crate) fn parse_args() -> Result<Options> {
     let arguments: Vec<OsString> = env::args_os().skip(1).collect();
@@ -249,6 +321,9 @@ pub(crate) fn parse_args() -> Result<Options> {
                 options.group = group;
             }
             "--and" => options.and_terms.push(next_utf8(&mut args, "--and")?),
+            "--content" | "--grep" => options.content.push(next_utf8(&mut args, "--content")?),
+            "-a" | "--text" => options.content_text = true,
+            "-l" | "--files-with-matches" => options.files_with_matches = true,
             "--unicode" => options.unicode = true,
             "--escaped-globs" => options.escape_patterns = true,
             "--follow" => options.follow_symlinks = true,
@@ -527,6 +602,7 @@ pub(crate) fn parse_args() -> Result<Options> {
     if let Some(format) = &options.format {
         super::exec::validate_format(format)?;
     }
+    validate_content(&options)?;
     resolve_workers(&mut options);
     if options.threads_explicit
         && options.threads > 1
@@ -667,6 +743,8 @@ SEARCH OPTIONS:
   --executable            Select executable regular files
   --owner UID[:GID]       Select numeric ownership (Unix)
   --and TEXT              Require an additional literal search term (repeatable)
+  --content PATTERN       Search inside selected files for a literal pattern (repeatable; alias --grep)
+  -a, --text              Search binary files as text (with --content)
   -i, --ignore-case       Match without case distinctions
   -s, --case-sensitive    Match with case distinctions (default)
   --smart-case            Ignore case unless the query has uppercase letters
@@ -692,6 +770,7 @@ OUTPUT OPTIONS:
   --limit N               Stop after N matches
   --sort                  Sort all matches before applying limits
   --count                 Print only the match count
+  -l, --files-with-matches  Print only paths containing a content match
   -q, --quiet             Print nothing; exit 0 for a match, 1 for no match
   --json                  Stream matching paths as JSON Lines
   --json-metadata         Add type, size, readonly, and modification time to JSON Lines

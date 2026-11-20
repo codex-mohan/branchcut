@@ -13,6 +13,7 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 pub mod cli;
+mod content;
 mod diagnostic;
 mod entries;
 mod error;
@@ -26,6 +27,7 @@ mod pattern;
 mod query;
 mod stats;
 mod walk;
+pub use content::{BINARY_PROBE, ContentMatch, ContentQuery, ScanStats};
 pub use diagnostic::{CheckOutcome, PathCheck, PathExplanation};
 pub use entries::{CancellationToken, EntryRecord};
 pub use error::QueryError;

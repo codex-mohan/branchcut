@@ -1,6 +1,6 @@
 use crate::error::{AppError, Result};
 
-const FLAGS: &str = "--glob --exclude --extension --type --empty --executable --owner --and --ignore-case --case-sensitive --smart-case --unicode --escaped-globs --full-path --filename --size --modified-within --modified-before --min-depth --max-depth --cwd --search-path --hidden --follow --one-file-system --max-open --contents-first --first --limit --sort --count --quiet --has-results --json --json-metadata --print0 --absolute --format --color --hyperlink --exec --exec-batch --batch-size --exec-jobs --exec-preview --stats --explain --why --config --profile --gitignore --ignore --ignore-file --threads --strict --completions --help --version";
+const FLAGS: &str = "--glob --exclude --extension --type --empty --executable --owner --and --content --grep --text --files-with-matches --ignore-case --case-sensitive --smart-case --unicode --escaped-globs --full-path --filename --size --modified-within --modified-before --min-depth --max-depth --cwd --search-path --hidden --follow --one-file-system --max-open --contents-first --first --limit --sort --count --quiet --has-results --json --json-metadata --print0 --absolute --format --color --hyperlink --exec --exec-batch --batch-size --exec-jobs --exec-preview --stats --explain --why --config --profile --gitignore --ignore --ignore-file --threads --strict --completions --help --version";
 
 /// Emit sourceable completion definitions without reading project files.
 pub(crate) fn print(shell: &str) -> Result<()> {

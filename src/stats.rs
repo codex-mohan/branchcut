@@ -13,6 +13,9 @@ pub struct Stats {
     pub metadata_calls: u64,
     pub matches: u64,
     pub errors: u64,
+    pub content_files: u64,
+    pub content_bytes: u64,
+    pub content_binary_skipped: u64,
 }
 
 impl Stats {
@@ -29,5 +32,8 @@ impl Stats {
         self.metadata_calls += other.metadata_calls;
         self.matches += other.matches;
         self.errors += other.errors;
+        self.content_files += other.content_files;
+        self.content_bytes += other.content_bytes;
+        self.content_binary_skipped += other.content_binary_skipped;
     }
 }

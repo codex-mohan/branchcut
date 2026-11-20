@@ -43,6 +43,10 @@ pub(crate) fn execute<W: Write>(
     sink.finish()?;
     stats.matches = sink.matched;
     stats.metadata_calls += sink.metadata_calls;
+    stats.errors += sink.content_errors;
+    stats.content_files += sink.content_files;
+    stats.content_bytes += sink.content_bytes;
+    stats.content_binary_skipped += sink.content_binary_skipped;
     Ok(stats)
 }
 struct RootOutput<'a, W: Write> {
