@@ -53,3 +53,17 @@ Case-sensitive matching remains the default. `-i` / `--ignore-case` folds ASCII 
 Simple terms search the basename by default. `--full-path` searches the path relative to `--cwd`; `--filename` selects the basename explicitly. These flags affect literal terms only, not globs. On Windows, full-path matching treats `/` and `\` as separators, while output preserves native paths. Case-insensitive glob queries search from cwd instead of narrowing to a literal prefix, because casing differences can identify different directories on case-sensitive filesystems.
 
 Use `--explain` to see the selected case mode, search target, depth bounds, metadata requirements, and whether prefix narrowing was disabled. Use `--stats` to inspect the traversal counters, including directories pruned by the maximum depth.
+
+## Search inside selected files
+
+```bash
+branchcut --glob '**/*.rs' --exclude '**/target/**' --content 'TODO'
+branchcut --glob '**/*.log' --content ERROR --content WARN -l
+branchcut --glob '**/*.toml' --content 'edition = "2024"' --count
+```
+
+`--content` (alias `--grep`) runs after the path query has selected its files. Globs, exclusions, ignore rules, type, extension, size, and time filters all narrow what is read, so content work stays inside the compiled plan. Repeating the option ORs literal patterns. Output is `path:line:column:text`, where `column` is a one-based byte offset and trailing CRLF is removed.
+
+Default matching is case-sensitive; `-i` folds ASCII and `--smart-case` folds unless a content pattern contains uppercase ASCII. A file is treated as binary when a NUL byte appears in its first 8 KiB and is skipped unless `--text` is passed. `--count` counts matching lines, `-l` prints each matching path once, and `--limit`/`--first` stop after the requested number of matching lines. `--json` emits `path`, `line`, `column`, and `text`; `--json-metadata` adds file fields. Content search requires regular files and cannot be combined with `--exec`, `--exec-batch`, `--exec-preview`, `--print0`, or `--format`.
+
+This is not a general-purpose grep replacement: patterns are literal and line-oriented, with no regular expressions, captures, multiline matching, or replacement. Use the path query when selection is the hard part and a literal content condition is enough; reach for a regex-capable tool when the pattern itself is complex.

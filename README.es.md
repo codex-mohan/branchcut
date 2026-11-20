@@ -155,6 +155,7 @@ Para selecciones grandes, `--exec-batch` agrupa las rutas en invocaciones de tam
 
 - **Búsqueda con globs.** Admite `*`, `?`, `**`, clases de caracteres, llaves anidadas, rangos acotados y extglobs limitados a un componente de ruta.
 - **Consultas compuestas.** Combina varios patrones positivos, exclusiones, selección por extensión y tipo, profundidad, términos literales y filtros de metadatos en una sola consulta.
+- **Búsqueda en contenido.** Búsqueda opcional de texto literal dentro de los archivos seleccionados con `--content` (alias `--grep`), patrones repetidos combinados con OR, salida `ruta:línea:columna:texto`, `-l`, `--count`, modos de mayúsculas, omisión automática de binarios con `--text` y parada temprana. Sin expresiones regulares ni modos multilínea.
 - **Reglas de omisión.** Las rutas ocultas se excluyen por defecto. Puedes habilitar las reglas de omisión de Git, `.ignore` o archivos de reglas explícitos.
 - **Controles de recorrido.** Salida en flujo continuo, `--first`, `--limit`, ordenación, selección del número de hilos de trabajo, seguimiento de enlaces simbólicos, recorrido limitado a un sistema de archivos en Unix y límite de directorios abiertos.
 - **Filtros de metadatos.** Umbrales exactos de tamaño de archivo en unidades decimales o binarias e intervalos de fecha de modificación. Se evita consultar metadatos cuando la consulta no los requiere.
@@ -245,7 +246,7 @@ Branchcut se centra en las consultas al sistema de archivos. La compatibilidad c
 - Los umbrales de tamaño decimales son exactos y deben corresponder a un número entero de bytes. Las fechas de modificación admiten fechas en UTC, desfases horarios y fracciones según RFC3339 e instantes Unix con el formato `@seconds`.
 - El seguimiento de enlaces simbólicos a directorios se habilita explícitamente. Al seguir enlaces, el recorrido es secuencial y detecta ciclos. `--one-file-system` solo está disponible en Unix.
 - Un valor finito de `--max-open` limita el número de directorios abiertos dejando las entradas pendientes en memoria y retomando los directorios almacenados. Esto aumenta el uso de memoria a cambio de mantener menos directorios abiertos.
-- El proyecto se limita a consultar el sistema de archivos. Quedan fuera la búsqueda en el contenido, el mantenimiento de índices, la vigilancia de cambios y la interfaz gráfica.
+- Branchcut selecciona rutas y lee metadatos del sistema de archivos. La búsqueda opcional de texto literal dentro de los archivos seleccionados está disponible con `--content` (alias `--grep`): admite patrones repetidos combinados con OR, emite `ruta:línea:columna:texto`, omite archivos binarios salvo con `--text` y no lee contenido en consultas que no la solicitan. No implementa expresiones regulares, capturas ni coincidencias multilínea. Branchcut tampoco mantiene índices, vigila cambios ni ofrece interfaz gráfica.
 
 - Sin `--strict`, se informa de los errores del sistema de archivos y el recorrido continúa. La ordenación completa el recorrido antes de emitir resultados. Las consultas ordinarias sin ordenación emiten las rutas a medida que las encuentran.
 

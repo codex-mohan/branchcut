@@ -25,6 +25,7 @@ Branchcut intentionally implements a focused filesystem-query surface. It is not
 - optional global sorting, counting, JSON Lines, and command execution;
 - native NUL-delimited output, absolute path output, and bounded batch command execution;
 - bounded parallel traversal;
+- opt-in literal content search with path, line, column, and line text; binary skipping, `--text`, count, and `-l` output;
 - symlink following with cycle detection, Unix one-filesystem traversal, contents-first directory output, and bounded open-directory handling;
 - explicit named saved-query profiles;
 - planner explanations, candidate-path explanations with ignore provenance, and real traversal statistics.
@@ -33,6 +34,7 @@ Branchcut intentionally implements a focused filesystem-query surface. It is not
 
 - prefix/suffix negated extglobs and every shell-specific repetition edge case;
 - captures and watch mode;
+- regular-expression, multiline, capture, and replacement content matching (the shipped `--content` mode is literal and line-oriented);
 - full Unicode case folding or normalization (the opt-in Unicode mode uses simple lowercase conversion);
 - every advanced Git ignore escaping edge case;
 - grapheme matching; `--unicode` counts Unicode scalar values for wildcard matching, while default matching is byte-oriented;
@@ -56,6 +58,7 @@ Branchcut intentionally implements a focused filesystem-query surface. It is not
 - `--gitignore` loads Git ignore sources, including repository/global excludes and hierarchical `.gitignore`; `--ignore` additionally loads hierarchical `.ignore`; repeatable `--ignore-file` sources override both. Precedence is Git sources < `.ignore` < explicit files. `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_NOSYSTEM` are honored; `GIT_CONFIG_SYSTEM` is read only when explicitly set. Git `-c` and `GIT_CONFIG_COUNT` overrides are not read. Unsupported `includeIf hasconfig:` conditions are reported. An implicit Windows system config path is not guessed.
 - `--one-file-system` is currently Unix-only. Following directory symlinks and contents-first output use sequential traversal. `--max-open` bounds open directory handles; spilled frames store pending entries in memory and reopen later, trading memory and I/O for fewer open handles.
 - The sequential walker uses explicit directory frames, tested at 600 components. Operating-system handle/path limits still apply; parallel queue-overflow fallback remains recursive.
+- `--content` runs after selection: globs, ignores, type, extension, size, and time filters decide which files are read. Patterns are byte literals and combine with OR; smart-case inspects the content patterns. Output is `path:line:column:text`, where column is a one-based byte offset and trailing CRLF is removed. Binary files are skipped when a NUL byte appears in the first 8 KiB unless `--text` is passed. `--count` counts matching lines; `-l` prints each matching path once; `--limit` and `--first` bound matching lines (or matching files with `-l`). Content search requires regular files and rejects `--exec`, `--exec-batch`, `--exec-preview`, `--print0`, and `--format`.
 
 See [feature status and replacements](feature-status.md) for the full implemented surface and remaining gaps. The supported ignore subset includes excluded-parent semantics, checked against Git; advanced Git configuration and escaping behavior remains outside the compatibility claim.
 

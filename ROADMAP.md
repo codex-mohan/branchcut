@@ -87,6 +87,14 @@ Validate everyday, developer and power-user workflows with users. Package-manage
 
 **Exit gate:** a new user can install, run a useful search, interpret its result, and upgrade without needing to build the project from source.
 
+## Phase 9 — Opt-in content search
+
+**Status: literal content search shipped.** `--content`/`--grep` scans regular files after path selection and streams matching lines as `path:line:column:text`. It supports repeatable OR patterns, case modes, binary auto-detection with `--text`, `-l`, `--count`, sorted limits, JSON output, and early stop. Content work is integrated into the existing compiled plan and adds no reads to queries that do not request it.
+
+**Remaining evaluation:** regex, captures, multiline matching, and replacement stay demand-driven. Compare content-search throughput and memory on representative workloads and retain losses before claiming performance.
+
+**Exit criteria met:** content reads happen only when requested; filename and metadata queries keep their semantics; the core and ordinary CLI remain std-only.
+
 ## Scope guardrails
 
 - Preserve the zero-third-party-crate core and the std-only ordinary CLI.
@@ -94,5 +102,5 @@ Validate everyday, developer and power-user workflows with users. Package-manage
 - Ship one package and a library boundary before considering a multi-package workspace.
 - Do not combine semantic changes with the library extraction.
 - Treat global sorting as a full-result operation unless an algorithm proves the requested top-N result; document its cost.
-- Keep advanced glob compatibility, watchers, a GUI, and specialized integrations demand-driven.
+- Keep advanced glob compatibility, indexing, watchers, a GUI, and specialized integrations demand-driven.
 - Keep documentation, compatibility claims, and published benchmarks tied to tested behavior.

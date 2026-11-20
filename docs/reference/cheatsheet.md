@@ -47,6 +47,18 @@ An exclusion removes matches. A safely covered subtree can be pruned before it i
 
 Different filter families combine with AND. Metadata is requested only after cheap name, type, extension, and glob checks.
 
+## Search inside selected files
+
+| Goal | Command |
+|---|---|
+| Find a literal string | `branchcut --glob '**/*.rs' --content TODO` |
+| Match any of several terms | `branchcut --content ERROR --content WARN -l` |
+| Case-insensitive content | `branchcut -i --content todo` |
+| Scan binary-looking files too | `branchcut --glob '**/*.log' --content crash --text` |
+| Stop after N matching lines | `branchcut --glob '**/*.rs' --content TODO --limit 20` |
+
+Content search runs after path selection, so globs, exclusions, ignores, type, extension, size, and time filters all narrow what is read. Patterns are literal bytes and combine with OR. Output is `path:line:column:text`, or each path once with `-l`. `--count` counts matching lines; with `-l`, `--limit` and `--first` bound matching files. `--content` is incompatible with `--exec`, `--exec-batch`, `--exec-preview`, `--print0`, and `--format`.
+
 ## Stop and order
 
 | Goal | Option |
@@ -110,7 +122,7 @@ branchcut --config .branchcut-queries --profile source
 - Matching is byte-oriented by default, with opt-in Unicode scalar matching and simple lowercase comparison for valid UTF-8 names; no normalization or multi-character case folding is performed.
 - Default case options fold ASCII only. With `--unicode`, smart-case detection and lowercase matching also use Unicode scalars; invalid native byte names fall back to byte matching.
 - `--gitignore` loads supported Git sources and nested `.gitignore`; `--ignore` adds `.ignore`; explicit ignore files have higher precedence. Advanced Git configuration and escaping boundaries remain documented.
-- Content search, indexing, watchers, a GUI/TUI, and service protocols remain outside the current scope.
+- `--content` is literal and line-oriented: no regular expressions, captures, multiline matching, or replacement. Binary files are skipped when a NUL byte appears in the first 8 KiB unless `--text` is passed.
 - Prefix/suffix negated extglobs and Unicode case folding are unsupported.
 
 See the [CLI reference](cli) and [glob syntax](glob-syntax) for exact constraints.

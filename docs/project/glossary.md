@@ -70,6 +70,14 @@ One native path followed by a zero byte. It is the preferred general-purpose Uni
 
 Each result is joined to the resolved query root rather than emitted relative to it.
 
+**Content match**
+
+One line of a selected regular file that contains a requested literal pattern. A match reports the file path, one-based line number, one-based byte column, and the line bytes without its line ending.
+
+**Binary skip**
+
+The default content-search policy of not scanning a file when a NUL byte appears in its first 8 KiB. `--text` disables this skip.
+
 ## Evidence
 
 **Oracle**

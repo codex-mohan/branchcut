@@ -20,6 +20,7 @@ Files are the default result type. Hidden paths are excluded, traversal uses ada
 | `--glob PATTERN` | Add a positive glob. Repeatable. |
 | `--exclude PATTERN` | Add an exclusion. Repeatable. |
 | `--and TEXT` | Require an additional literal search term; repeatable. |
+| `--content PATTERN`, `--grep PATTERN` | Search selected regular files for a literal pattern; repeatable patterns combine with OR. See [Content search](#content-search). |
 | positional glob | Shorthand when the argument contains glob syntax. |
 | positional text | Literal filename containment search; case behavior is controlled by the case-mode options. |
 | `--cwd PATH` | Set the filesystem root. Output remains relative to it. |
@@ -72,6 +73,23 @@ Metadata predicates run after type, name, extension, and glob checks and share o
 
 Type aliases `f`, `d`, `directory`, `l`, and `link` are accepted.
 
+## Content search
+
+`--content PATTERN` (alias `--grep`) reads the regular files already selected by globs, exclusions, ignores, type, extension, size, and time filters. It never widens the selection and does not read content for queries that omit it.
+
+```bash
+branchcut --glob '**/*.rs' --content 'TODO'
+branchcut --glob 'package.json' --content '"version"'
+branchcut --glob '**/*.log' --content ERROR --content WARN -l
+```
+
+- Patterns are literal byte strings, not regular expressions. Repeating the option ORs the patterns; each matching line is reported once, at the earliest matching pattern.
+- Default case is sensitive. `-i` folds ASCII; `--smart-case` folds unless a content pattern contains uppercase ASCII.
+- Output is `path:line:column:text`. `line` is one-based, `column` is a one-based byte offset, and trailing `\n` or `\r\n` is not printed. Invalid UTF-8 bytes are preserved in plain output.
+- Binary detection treats a NUL byte in the first 8 KiB as binary and skips the file. `--text` scans it anyway.
+- `--count` counts matching lines; `-l` prints each matching path once; `--limit` and `--first` count matching lines (or matching files with `-l`) and stop scanning early. `--sort` sorts files before scanning, so a sorted limit returns results in path order.
+- Content search requires regular files. It is incompatible with `--exec`, `--exec-batch`, `--exec-preview`, `--print0`, and `--format`. With `--json`, records contain `path`, `line`, `column`, and `text`; `--json-metadata` adds the file fields.
+
 ## Termination and execution
 
 | Option | Meaning |
@@ -88,6 +106,8 @@ Explicit worker counts support `--limit` and `--first` with exact coordinator ca
 
 | Option | Meaning |
 |---|---|
+| `-a`, `--text` | Read binary-looking files as text during `--content` search instead of skipping them. |
+| `-l`, `--files-with-matches` | With `--content`, print each matching path once instead of matching lines. |
 | `--sort` | Global native-path order; sorted limits retain at most N paths while scanning all candidates. |
 | `--count` | Print only the match count. |
 | `--json` | Emit one JSON object per line. |

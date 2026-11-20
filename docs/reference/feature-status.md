@@ -16,6 +16,7 @@ This describes the current development tree, including post-competition work. It
 | Entry types | Regular files by default; repeatable file/directory/symlink union; Unix sockets/FIFOs/devices; empty/executable filters and numeric Unix ownership/group filters |
 | Case | Sensitive by default; ASCII-insensitive/smart modes; opt-in Unicode scalar wildcards/classes and single-scalar lowercase comparisons; native invalid-UTF-8 fallback |
 | Extension | Repeatable extension filters, optional leading dot, selected case mode |
+| Content search | Opt-in literal byte matching over selected regular files; repeatable OR patterns; `path:line:column:text`; case modes; binary auto-skip with `--text`; `-l` path-only; `--count` matching lines; early stop through `--limit`/`--first`; JSON and JSON-metadata records |
 | Depth | Inclusive minimum/maximum depth measured from cwd; maximum depth also bounds descent |
 | Size | Equality and ordered comparisons; decimal/binary units; exact decimal fractions that resolve to whole bytes; regular files only |
 | Time | Inclusive modified-within; strict modified-before; fixed durations, RFC3339 offsets/fractions, UTC dates, signed Unix instants; clock captured per execution |
@@ -31,7 +32,7 @@ This describes the current development tree, including post-competition work. It
 | Batching | One whole `{}` argument expands into selected paths; default 128-path batches; configurable count and conservative 28 KiB command budget; child failures fail the query |
 | Parallel traversal | Bounded workers/channels; iterative overflow traversal; handle-budget spilling; post-order directories; sequential policy fallback for symlink-following, filesystem boundaries, post-order, and tight handle budgets |
 | Errors | Invalid query diagnostics; reported best-effort traversal errors; strict failure mode; failing commands fail the query; broken output pipes end quietly |
-| Statistics | Matches, opened/considered/pruned directories, entries, candidates, metadata calls, filesystem errors, elapsed time |
+| Statistics | Matches, opened/considered/pruned directories, entries, candidates, metadata calls, filesystem errors, content files/bytes/binary skips, elapsed time |
 | Library | Typed reusable queries; path/metadata visitors; sequential/parallel/cancellable execution; multi-root unions; filesystem-independent PathMatcher with matching input IDs; path escaping; reports and candidate explanations |
 | Structure | One Cargo package; focused library modules and thin binary; no third-party production crates |
 | Planner | Shared pattern states; case-sensitive common-literal-root narrowing; positive/exclusion/ignore/depth pruning; type/extension/name checks before requested metadata |
@@ -54,11 +55,12 @@ An alternative is useful only within its stated boundary. These do not establish
 | Very large CLI pattern lists | Saved query files or the typed Rust query API avoid operating-system command-line length limits | No dedicated response-file flag is implemented |
 | Full fast-glob API compatibility | Use the supported glob subset and the Rust query API | This is a filesystem query tool, not an npm API replacement |
 | Captures and filename regexes | Globs, literal terms, AND filters, native library matching, or a separate regex-capable finder | Captured substrings and a regex engine are not implemented |
+| Regular-expression or multiline content search | Literal `--content` patterns, repeatable OR terms, and path selection in front of another tool | No regex, captures, lookaround, multiline, or replacement support; binary detection and byte-oriented encoding behavior are documented |
 | Cross-platform ownership/device boundaries | Numeric ownership and filesystem IDs on Unix; explicit unsupported errors elsewhere | Windows ownership and exact one-filesystem enforcement need a separately approved platform implementation |
 | Bindings, virtual filesystem adapters, POSIX glob ABI | Invoke the executable or Rust API | JavaScript/C/Zig bindings, custom filesystem adapters, and POSIX/glibc API compatibility are not shipped |
 | Package-manager installation | [GitHub release archives](https://github.com/codex-mohan/branchcut/releases/latest), source installers and Cargo installation | Package-manager submissions remain open |
 
-Content search, indexing, GUI/TUI, watchers, and service/agent protocols remain outside the agreed product scope. They are not prerequisites for dependable filename and filesystem selection.
+Opt-in literal content search is shipped through `--content`/`--grep`. It reads only files that already pass path selection and does not affect queries that omit it. Regex, captures, multiline matching, indexing, GUI/TUI, watchers, and service or agent protocols remain outside the current release.
 
 ## Recent reliability correction
 

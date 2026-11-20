@@ -47,7 +47,17 @@ Unlimited sorting collects all matches. With `--limit N` or `--first`, Branchcut
 branchcut --glob '**/*.rs' --count
 ```
 
-Count mode avoids path serialization. It is useful for measurement and automation.
+Count mode avoids path serialization. It is useful for measurement and automation. With `--content`, `--count` reports matching lines rather than files.
+
+## Content matches
+
+```bash
+branchcut --glob '**/*.rs' --content 'TODO'
+branchcut --glob '**/*.rs' --content 'TODO' -l
+branchcut --glob '**/*.rs' --content 'TODO' --count
+```
+
+Content output is `path:line:column:text`, one record per matching line. `column` is a one-based byte offset and line endings are trimmed. `-l` prints each matching path once, `--count` counts matching lines, and `--limit`/`--first` bound matching lines (or matching files with `-l`). `--sort` orders files before scanning. `--json` adds `line`, `column`, and `text` to each record; `--json-metadata` also adds file fields. Content mode is incompatible with `--print0`, `--format`, `--exec`, `--exec-batch`, and `--exec-preview`.
 
 ## JSON Lines
 

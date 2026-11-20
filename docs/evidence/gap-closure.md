@@ -40,7 +40,7 @@ The expanded runner checks 28 result-equivalent cases in sequential and parallel
 - Exact one-filesystem enforcement, ownership IDs and Unix special-file types report unsupported on platforms where the standard-library implementation cannot provide them.
 - Windows plain/NUL text cannot preserve every unpaired surrogate; native APIs, command arguments and JSON companion fields provide lossless alternatives.
 - Filename regexes, captures, custom filesystem adapters, foreign-language bindings, and POSIX/glibc ABI compatibility are not implemented. These are not implied by glob support or CLI timing results.
-- Content search, indexing, watchers, GUI/TUI and service protocols remain separate product work. The ripgrep benchmark measures `rg --files`, not content search.
+- Opt-in literal content search is shipped through `--content`/`--grep` and reads only selected regular files. Regex, captures, multiline matching, replacement, indexing, watchers, GUI/TUI and service protocols remain separate product work. The ripgrep benchmark measures `rg --files`, not content search.
 - Package-manager publication and native Apple Silicon execution testing remain open. The Apple Silicon release archive was cross-built using Apple's SDK and passed architecture and signature verification. The regular native macOS checks use Intel runners.
 
 ## Benchmark scope

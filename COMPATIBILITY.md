@@ -54,6 +54,9 @@ Composed negated extglobs use component-local language complement, consistent wi
 | `--exec` | Supported | Shell-free command templates; native path substitution; child cwd is the query root |
 | `--exec-batch`, `--batch-size` | Supported | Sorted or traversal-order batches with native argv expansion and a fixed size budget |
 | `--threads N` | Supported | Adaptive bounded parallel traversal by default; `1` forces sequential; explicit counts above one are incompatible with CLI `--limit` and `--exec` |
+| `--content PATTERN`, `--grep` | Supported | Opt-in literal content search over selected files; repeatable OR patterns; `path:line:column:text` output |
+| `-a`, `--text` | Supported | Scan binary-looking files as text instead of skipping them |
+| `-l`, `--files-with-matches` | Supported | Print each matching file once instead of matching lines |
 
 ## Deliberate gaps
 
@@ -62,6 +65,7 @@ Composed negated extglobs use component-local language complement, consistent wi
 - Brace expansion is capped at 256 results, eight expansion levels, and 1 MiB. Extended-glob components are capped at 4,096 bytes, 512 nodes, and 16 nesting levels.
 - No full `fast-glob` options/API compatibility.
 - No captures or watch mode.
+- Content search is literal only. It does not implement regular expressions, captures, multiline matching, lookaround, or replacement. Patterns are matched as bytes in line order; `--content` runs after glob, ignore, type, size, and time filters and reads only selected regular files. Binary files are skipped when a NUL byte appears in the first 8 KiB unless `--text` is given. CRLF endings are trimmed from emitted lines. `--content` is incompatible with `--exec`, `--exec-batch`, `--exec-preview`, `--print0`, and `--format`, and with type filters that exclude regular files.
 - Without `--unicode`, matching is byte-oriented. `--unicode` opts valid UTF-8 names into Unicode scalar wildcard matching and simple lowercase case matching; it does not implement full Unicode case folding, normalization, or grapheme matching. Invalid native byte names retain byte matching. Smart-case examines positive patterns and literal search terms, not exclusions. Ignore-file rules remain case-sensitive.
 - `--size` accepts exact decimal fractions when the unit conversion resolves to an integral byte threshold; sub-byte thresholds are rejected. `K`, `M`, `G`, `T` and `kB`/`KB` etc. are decimal; `KiB`, `MiB`, `GiB`, and `TiB` are binary. Size filters require regular-file selection.
 - Relative durations use fixed units `ms`, `s`, `m`, `h`, `d`, and `w`; calendar months and years are unsupported. `--modified-within` includes the exact cutoff, while `--modified-before` is strict. Absolute cutoffs are UTC dates (`YYYY-MM-DD`), RFC3339 timestamps with `Z` or numeric offsets and up to nine fractional digits, or signed Unix seconds using `@` notation. Calendar date forms are limited to years 1970–9999; Unix instants may precede the epoch when representable.

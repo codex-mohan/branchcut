@@ -8,13 +8,13 @@ The competition sections below remain historical context for the submission. Whe
 
 ### Current product and architecture rules
 
-- Keep the core engine and ordinary CLI free of third-party crates. Optional, separately built integrations may use dependencies when a concrete user need justifies them; keep integration dependencies out of the core dependency graph.
+- The core engine and ordinary CLI currently use only Rust's standard library. A dependency may be added when a concrete user need justifies it, but it must be disclosed in `Cargo.toml`, kept out of paths that do not need it, and never added silently. The zero-crate core remains the default, not a veto on shipping useful behavior.
 - End the single-source-file constraint. Use one Cargo package initially, with a library crate and a thin binary. Introduce modules according to stable responsibilities rather than splitting code mechanically.
 - Keep query compilation, matching, traversal, filtering, ignores, paths, and execution results independent from CLI parsing and presentation. Preserve streaming behavior and metadata avoidance when a query does not request metadata.
-- Preserve the simple filename-search experience while adding composable filters for people who need them.
+- Preserve the simple filename-search experience while adding composable filters and opt-in content search for people who need them.
 - Correctness and documented semantics come before new syntax or performance claims. Every confirmed regression needs a test. Benchmark every performance claim and retain representative losing results.
-- Do not copy third-party implementations. External projects may still serve as documented behavioral or benchmark references.
-- Do not expand into content search, indexing, a GUI, or other products until user evidence supports that scope.
+- Third-party implementations are references, not templates. Study their published behavior, APIs, and permissively licensed code to understand the problem, then reimplement the capability in Branchcut's own architecture and style. Copying an entire feature verbatim is not acceptable; if a specific permissively licensed fragment is reused, record its source and license in the commit and relevant documentation.
+- Opt-in literal file-content search is shipped. Keep filesystem-only queries free of content reads, and keep content work inside the same compile/prune/limit pipeline as path selection. Use concrete user workflows to evaluate regex, indexing, a GUI, and other product expansions separately.
 
 ### Post-competition sequence
 
@@ -26,6 +26,7 @@ The competition sections below remain historical context for the submission. Whe
 6. Improve selected-file workflows, including lossless pipeline output and well-defined command execution.
 7. Optimize measured bottlenecks on reproducible representative workloads.
 8. Improve distribution, examples, release quality, and contributor onboarding.
+9. Add opt-in literal content search inside the existing path-selection pipeline, with documented binary, encoding, and early-stop behavior. Keep regex and richer content modes demand-driven.
 
 The owner has authorized phases 4–7 after the foundation work. Follow the implementation and validation status in [ROADMAP.md](ROADMAP.md); planned features are not claims about shipped behavior. Keep [COMPATIBILITY.md](COMPATIBILITY.md) and user-facing documentation aligned with implementation status.
 
@@ -39,7 +40,7 @@ cargo test --locked
 cargo clippy --locked --all-targets -- -D warnings
 ```
 
-When a change touches matching, traversal, exclusions, ignore rules, output paths, or command execution, run its focused regression tests and the supported-semantics differential suite. Run the cross-platform CI matrix before declaring a platform-sensitive fix complete. Record any environment limitation plainly.
+When a change touches matching, traversal, exclusions, ignore rules, content scanning, output paths, or command execution, run its focused regression tests and the supported-semantics differential suite. Run the cross-platform CI matrix before declaring a platform-sensitive fix complete. Record any environment limitation plainly.
 
 Confirm the core remains free of third-party dependencies with `Cargo.toml` and `cargo tree -e normal`; development-only tools and separately built optional integrations must be identified as such. Keep benchmark methods and raw samples in the repository. Do not edit, stage, or remove unrelated user files.
 
@@ -1634,10 +1635,10 @@ Finalize:
 
 Every coding agent must obey:
 
-1. Rust `std` only.
-2. Never add a crate without explicit owner approval; expected answer is no.
-3. Never copy source from zlob, fast-glob, globset, fd, ripgrep, Wax, or other projects.
-4. Independent reimplementation of understood algorithms is allowed.
+1. Keep the core engine and ordinary CLI std-only unless a justified, disclosed dependency is approved.
+2. Add a crate only with explicit owner approval, a concrete user need, and a note in the dependency ledger.
+3. Study zlob, fast-glob, globset, fd, ripgrep, Wax, and other projects for behavior and permissively licensed ideas. Reimplement understood algorithms in Branchcut's architecture; do not paste whole features, and document any reused fragment.
+4. Independent reimplementation of understood algorithms is expected and encouraged.
 5. Correctness before optimization.
 6. Verify equivalence before benchmarking.
 7. Re-run regression tests after optimization.
@@ -1673,10 +1674,10 @@ Do not build:
 
 - npm/N-API bindings;
 - a GUI/TUI;
-- a generic regex engine;
+- a generic regex engine (the shipped content search is literal only);
 - a file watcher;
 - a full shell;
-- a search-content engine like ripgrep;
+- a general-purpose grep replacement with regex, captures, and multiline modes;
 - a database/index;
 - full `fast-glob` API compatibility;
 - every extglob variant;

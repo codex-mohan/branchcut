@@ -64,12 +64,13 @@ The product claim is not universal speed superiority. It is narrower and testabl
 - streaming output, exact limits, optional sorting, JSON Lines, NUL output, and native paths;
 - shell-free per-match and bounded batch command execution;
 - `--explain`, `--why`, and real `--stats` counters;
+- opt-in literal content search over selected files with line, column, and text output;
 - sequential and bounded parallel traversal;
 - a zero-third-party-crate Rust library and thin CLI.
 
-## What it does not do
+## Current scope
 
-Branchcut does not search file contents, build an index, watch a tree, provide a GUI/TUI, or claim full compatibility with every glob API. Content search belongs to a tool such as ripgrep. Branchcut can select the paths that another tool then reads or processes.
+Branchcut searches paths, filesystem metadata, and—when asked with `--content`—literal text inside selected files. Content search is line-oriented and intentionally narrower than a general-purpose grep tool: no regular expressions, captures, multiline matching, or replacement. Regex and richer matching remain [roadmap](project/roadmap.md) candidates.
 
 ## Current status
 

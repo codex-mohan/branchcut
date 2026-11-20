@@ -155,6 +155,7 @@ For large selections, `--exec-batch` groups paths into bounded invocations. Use 
 
 - **Glob search:** `*`, `?`, `**`, character classes, nested braces and bounded ranges, plus component-local extglobs.
 - **Composed queries:** multiple positive patterns, exclusions, extension and type selection, depth, literal terms, and metadata filters in one query.
+- **Content search:** opt-in literal search inside selected files with `--content` (alias `--grep`), repeatable OR patterns, `path:line:column:text` output, `-l`, `--count`, case modes, binary auto-skip with `--text`, and early stop. No regex or multiline modes.
 - **Ignore controls:** hidden paths are excluded by default; opt into Git ignore sources, `.ignore`, or explicit ignore files.
 - **Traversal controls:** streaming output, `--first`, `--limit`, sorting, worker selection, symlink following, one-filesystem traversal on Unix, and bounded open-directory handling.
 - **Metadata filters:** exact decimal or binary file-size thresholds and modified-time windows. Metadata is avoided when the query does not request it.
@@ -245,7 +246,7 @@ Branchcut is a focused filesystem query tool, not a drop-in replacement for the 
 - Decimal size thresholds are exact and must resolve to whole bytes. Modification dates support UTC dates, RFC3339 offsets/fractions, and Unix `@seconds` instants.
 - Directory symlinks are not followed unless requested. Following links uses sequential traversal with cycle detection. `--one-file-system` is Unix-only.
 - A finite `--max-open` bounds directory handles by spilling pending entries to memory and resuming buffered frames; this trades memory for fewer open handles.
-- The project does not search file contents, maintain an index, watch for changes, or provide a GUI.
+- Branchcut selects paths and reads filesystem metadata. Opt-in literal text search inside selected files is available through `--content` (alias `--grep`): repeated patterns combine with OR, output is `path:line:column:text`, binary files are skipped unless `--text` is passed, and queries that do not request it read no file contents. It does not implement regular expressions, captures, or multiline matching. Branchcut also does not maintain an index, watch for changes, or provide a GUI.
 
 - Without `--strict`, filesystem errors are reported while discovery continues. Sorting scans before output; ordinary unsorted queries stream.
 

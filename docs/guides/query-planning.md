@@ -62,6 +62,10 @@ Case-insensitive matching disables literal-prefix root narrowing because directo
 
 `--first` and `--limit` become traversal stop conditions in sequential mode. With `--sort`, the full result set must be collected before the limit is applied.
 
+### Content stage
+
+When `--content` is present, the plan adds a content stage after path selection. Globs, exclusions, ignores, type, extension, size, and time filters decide which files reach the scanner, so an excluded subtree is still pruned before any content read. The scanner reports matching lines in file order and stops at the requested limit; `--explain` prints the compiled content patterns, case mode, binary policy, and output shape.
+
 ### Strategy
 
 Sequential mode uses depth-first directory frames with positive and exclusion pruning. Ordinary CLI queries use adaptive bounded parallel traversal by default; limits, `--first`, and per-match execution default to one worker unless you explicitly request multiple workers. Symlink following, one-filesystem traversal, contents-first output, and a `--max-open` below 64 select sequential traversal. In parallel mode, a full work queue falls back to a worker's iterative local directory stack.

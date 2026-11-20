@@ -62,9 +62,13 @@ export default function HomePage() {
         <div className="bc-boundary-intro" data-reveal="left">
           <h2 id="boundary-title">Useful, with the boundary drawn.</h2>
           <p>
-            Branchcut is a filesystem query engine. It is not a file-content
-            search tool, an index, or a universal replacement for every glob API.
-            The supported surface is documented and tested.
+            Branchcut is a filesystem query engine. It compiles globs,
+            exclusions, ignores, filters, and limits into one traversal plan.
+            Opt-in literal content search with <code>--content</code> lets you
+            find text in the files that plan selects, while keeping content
+            reads out of ordinary path queries. Branchcut is not an index or a
+            universal replacement for every glob API. The supported surface is
+            documented and tested.
           </p>
           <Link href="/docs/reference/feature-status">
             Complete feature status <ArrowRight aria-hidden="true" />

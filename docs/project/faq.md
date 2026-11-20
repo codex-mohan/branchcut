@@ -18,7 +18,9 @@ The core engine and ordinary CLI depend only on Rust's standard library. The com
 
 ## Does Branchcut search inside files?
 
-No. Use a content-search tool such as ripgrep. A useful split is Branchcut for choosing paths and ripgrep or another program for reading their contents.
+Yes, opt-in. `--content PATTERN` (alias `--grep`) searches the regular files already selected by globs, ignores, type, extension, size, and time filters. Patterns are literal bytes and combine with OR. Matching lines print as `path:line:column:text`; `-l` prints paths once, and `--count` counts matching lines. Binary-looking files are skipped unless `--text` is passed.
+
+Content search is deliberately narrower than ripgrep: no regular expressions, captures, multiline matching, or replacement. Use `--content` when the path query is the hard part and the content condition is a literal; use ripgrep when the content pattern itself is complex.
 
 ## Why is `.gitignore` support opt-in?
 

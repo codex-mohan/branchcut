@@ -31,6 +31,7 @@ Branchcut preserves the tagged competition submission while developing a maintai
 5. Query explanations, candidate explanations, and named project profiles.
 6. Dependable pipeline output and shell-free command workflows.
 7. Measured sequential and parallel Rust-level optimization passes.
+8. Opt-in literal content search integrated with path selection, exclusions, filters, and early stop.
 
 ## Current adoption work
 
@@ -40,6 +41,12 @@ The active phase is release quality and onboarding:
 - expand public-repository and cross-platform benchmark evidence;
 - keep tutorials and installation paths synchronized with tested behavior.
 
+## Shipped: File-content search
+
+`--content PATTERN` (alias `--grep`) searches the regular files already selected by Branchcut's globs, ignore rules, type, extension, size, and time filters. It is literal and line-oriented: patterns combine with OR, output is `path:line:column:text`, `-l` prints paths once, `--count` counts matching lines, and `--limit`/`--first` stop scanning early. Smart-case inspects the content patterns; binary-looking files are skipped unless `--text` is passed.
+
+Filename and metadata queries keep their existing semantics and read no file contents. Regex, captures, multiline matching, and replacement remain demand-driven candidates rather than shipped behavior. See the [CLI reference](../reference/cli.md#content-search) and [compatibility](../reference/compatibility.md) for exact semantics.
+
 ## Demand-driven candidates
 
 These are not promises or current features:
@@ -47,6 +54,7 @@ These are not promises or current features:
 - captures and richer result explanations;
 - additional Git config conditions and advanced ignore escaping;
 - richer command templates;
+- indexing, watchers, or a GUI where a concrete workflow calls for them;
 - optional integration crates outside the zero-crate core;
 - specialized editor, harness, or agent adapters when a concrete service need exists.
 
@@ -56,6 +64,5 @@ The ordinary CLI remains a normal executable. Agents and scripts can consume its
 
 - Keep the core engine and ordinary CLI free of third-party crates.
 - Do not trade documented semantics for new syntax.
-- Do not add content search, indexing, a GUI, or a watcher without user evidence.
 - Keep losing benchmark results and environment limitations public.
 - Preserve simple filename search while adding advanced capability.

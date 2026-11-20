@@ -155,6 +155,7 @@ Pour les grandes sélections, `--exec-batch` regroupe les chemins en lots de tai
 
 - **Recherche par motifs glob.** `*`, `?`, `**`, classes de caractères, accolades imbriquées, plages bornées et extglobs limités à un composant du chemin.
 - **Requêtes composées.** Plusieurs motifs positifs, exclusions, sélection par extension et par type, profondeur, termes littéraux et filtres de métadonnées dans une même requête.
+- **Recherche dans le contenu.** Recherche optionnelle de texte littéral dans les fichiers sélectionnés avec `--content` (alias `--grep`), plusieurs motifs combinés avec OR, sortie `chemin:ligne:colonne:texte`, `-l`, `--count`, modes de casse, omission automatique des binaires avec `--text` et arrêt anticipé. Pas d’expressions régulières ni de modes multilignes.
 - **Chemins à ignorer.** Les chemins masqués sont exclus par défaut. Vous pouvez activer les sources de règles Git pour les chemins à ignorer, les fichiers `.ignore` ou des fichiers de règles indiqués explicitement.
 - **Options de parcours.** Sortie au fil du parcours, `--first`, `--limit`, tri, choix du nombre de threads de travail, suivi des liens symboliques, parcours limité à un seul système de fichiers sous Unix et limitation du nombre de répertoires ouverts.
 - **Filtres de métadonnées.** Seuils exacts de taille de fichier en unités décimales ou binaires et intervalles de date de modification. Les métadonnées sont lues uniquement si la requête l’exige.
@@ -245,7 +246,7 @@ Branchcut se concentre sur les requêtes sur le système de fichiers. La compati
 - Les seuils de taille décimaux sont exacts et doivent correspondre à un nombre entier d’octets. Les dates de modification acceptent les dates UTC, les décalages horaires et les fractions de seconde au format RFC3339, ainsi que les instants Unix au format `@seconds`.
 - Le suivi des liens symboliques vers des répertoires s’active explicitement. Lorsqu’il est activé, le parcours est séquentiel et détecte les cycles. `--one-file-system` est réservé à Unix.
 - Une valeur finie pour `--max-open` limite le nombre de répertoires ouverts simultanément en stockant les entrées restantes en mémoire pour reprendre leur parcours plus tard. Cela augmente la consommation de mémoire en échange d’un nombre plus faible de répertoires ouverts.
-- Le projet se limite aux requêtes sur le système de fichiers. La recherche de contenu, la maintenance d’un index, la surveillance des changements et l’interface graphique sont hors de son périmètre.
+- Branchcut sélectionne des chemins et lit les métadonnées du système de fichiers. La recherche optionnelle de texte littéral dans les fichiers sélectionnés est disponible avec `--content` (alias `--grep`) : plusieurs motifs se combinent avec OR, la sortie est `chemin:ligne:colonne:texte`, les fichiers binaires sont ignorés sauf avec `--text`, et les requêtes qui ne la demandent pas ne lisent aucun contenu. Elle n’implémente ni expressions régulières, ni captures, ni correspondances multilignes. Branchcut ne gère pas non plus d’index, ne surveille pas les changements et ne fournit pas d’interface graphique.
 
 - Sans `--strict`, le parcours se poursuit après le signalement des erreurs du système de fichiers. Le tri parcourt l’arborescence avant d’émettre les résultats. Les requêtes ordinaires sans tri émettent les résultats au fil du parcours.
 
