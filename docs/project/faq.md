@@ -18,7 +18,7 @@ The core engine and ordinary CLI depend only on Rust's standard library. The com
 
 ## Does Branchcut search inside files?
 
-No. Use a content-search tool such as ripgrep. A useful split is Branchcut for choosing paths and ripgrep or another program for reading their contents.
+With v0.2.1, use Branchcut to select files and a tool such as ripgrep to search inside them. Opt-in literal content search is in development. See the [file-content search milestone](./roadmap.md#file-content-search).
 
 ## Why is `.gitignore` support opt-in?
 
@@ -57,7 +57,7 @@ The source and CI matrix cover all three. `--one-file-system` currently requires
 
 ## Can I embed it in a Rust application?
 
-Yes. The library exposes typed queries, reusable compiled plans, standalone `PathMatcher`s, multi-root queries, path and metadata-record visitors, cooperative cancellation, filesystem diagnostics, and completion reports. See [Use Branchcut from Rust](../tutorials/rust-library).
+Yes. The library exposes typed queries, reusable compiled plans, standalone `PathMatcher`s, multi-root queries, path and metadata-record visitors, cooperative cancellation, filesystem diagnostics, and completion reports. See [Use Branchcut from Rust](../tutorials/rust-library.md).
 
 ## Does it ship shell completion, a GUI, or an index?
 

@@ -8,7 +8,7 @@ icon: Table2
 
 ---
 
-This is the **18 November 2026** Windows/NTFS snapshot for source commit `8035ad6e4551b7aade7d0cf77871521fdf02f1c3`. The [raw record](../../benchmarks/results/2026-11-18-gap-closure-cli.json) retains executable hashes, source manifest, versions, invocations, samples and coverage boundaries. The [12 November comparison](cli-comparison.md) remains historical; its timings are not mixed into this table.
+This is the **18 November 2026** Windows/NTFS snapshot for source commit `8035ad6e4551b7aade7d0cf77871521fdf02f1c3`. The [raw record](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-18-gap-closure-cli.json) retains executable hashes, source manifest, versions, invocations, samples and coverage boundaries. The [12 November comparison](./cli-comparison.md) remains historical; its timings are not mixed into this table.
 
 ## Method
 
@@ -101,4 +101,4 @@ cargo build --release --locked
 node scripts/compare-cli.mjs --binary target/release/branchcut.exe --zlob PATH_TO_ZLOB --oracle-dir target/oracle --output benchmarks/results/NEW_RECORD.json --sizes 100000 --warmups 3 --iterations 9 --memory-samples 3
 ```
 
-Install pinned development-only Node oracles and make `rg` and `fd` available as described in the [benchmarking guide](../contributing/benchmarking.md). Use platform-appropriate binary paths. The memory flag currently requires Windows PowerShell. The [preflight run](../../benchmarks/results/2026-11-18-gap-closure-preflight-cli.json) is retained separately; it preceded the last correctness corrections and is not the final result.
+Install pinned development-only Node oracles and make `rg` and `fd` available as described in the [benchmarking guide](../contributing/benchmarking.md). Use platform-appropriate binary paths. The memory flag currently requires Windows PowerShell. The [preflight run](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-18-gap-closure-preflight-cli.json) is retained separately; it preceded the last correctness corrections and is not the final result.

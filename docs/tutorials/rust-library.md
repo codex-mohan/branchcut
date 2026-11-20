@@ -181,6 +181,6 @@ Cancellation is cooperative and may allow already-running filesystem work to fin
 
 ## Next
 
-- Read [Library and modules](../concepts/library-and-modules).
-- Inspect [Parallel traversal](../concepts/parallelism).
-- Verify changes with [Verification](../contributing/verification).
+- Read [Library and modules](../concepts/library-and-modules.md).
+- Inspect [Parallel traversal](../concepts/parallelism.md).
+- Verify changes with [Verification](../contributing/verification.md).

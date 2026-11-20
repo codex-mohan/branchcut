@@ -87,6 +87,10 @@ Validate everyday, developer and power-user workflows with users. Package-manage
 
 **Exit gate:** a new user can install, run a useful search, interpret its result, and upgrade without needing to build the project from source.
 
+## Phase 9 — Opt-in file-content search
+
+Literal content search over selected files is in development. The goal is to reuse Branchcut's globs, ignores, and filters before reading file contents. Queries without a content predicate avoid content reads. Verify result limits, binary-file and encoding behavior, error handling, and cross-platform tests before publishing.
+
 ## Scope guardrails
 
 - Preserve the zero-third-party-crate core and the std-only ordinary CLI.

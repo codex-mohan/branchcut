@@ -53,7 +53,7 @@ On macOS, compare that output with the matching filename's line in `SHA256SUMS`;
 Get-Content .\SHA256SUMS
 ```
 
-Extract the archive and place `branchcut` (or `branchcut.exe`) in a directory on your `PATH`. The archive does not install or modify `PATH` automatically. For a source-built installation, use the [installation guide](../getting-started/installation).
+Extract the archive and place `branchcut` (or `branchcut.exe`) in a directory on your `PATH`. The archive does not install or modify `PATH` automatically. For a source-built installation, use the [installation guide](../getting-started/installation.md).
 
 ## Release checklist
 

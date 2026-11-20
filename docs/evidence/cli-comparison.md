@@ -10,7 +10,7 @@ This is the historical 12 November 2026 snapshot. Later builds have separate dat
 
 This comparison uses each project's official CLI or public package API. It does not use the development walker adapter for zlob. Every command searches the same generated 100,000-file tree and serializes the selected relative paths.
 
-The retained [raw record](../../benchmarks/results/2026-11-12-direct-cli-default-final.json) contains three warmups, nine measured samples per implementation, executable hashes, package versions, exact failure handling, and every raw timing.
+The retained [raw record](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-12-direct-cli-default-final.json) contains three warmups, nine measured samples per implementation, executable hashes, package versions, exact failure handling, and every raw timing.
 
 The fixture includes ordinary source, documentation, build-output, dependency, hidden, ignored, and brace-expanded cases. Filenames are ASCII and the filesystem cache is uncontrolled.
 

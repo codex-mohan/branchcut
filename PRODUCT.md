@@ -42,8 +42,8 @@ smart case, exact limits, sorting, plain/count/JSON Lines/NUL output, native
 command execution, explain/why diagnostics, statistics, and sequential and
 bounded parallel traversal. The core remains free of third-party crates;
 optional integrations may use dependencies only when a concrete need justifies
-them. Content search, indexing, a GUI/TUI, watchers, and agent protocols remain
-outside the agreed scope.
+them. Opt-in literal file-content search is in development. Indexing, a GUI/TUI,
+watchers, and agent protocols are separate product decisions.
 
 ## Brand Commitments
 

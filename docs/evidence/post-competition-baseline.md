@@ -30,7 +30,7 @@ Passing the initial test suite does not establish that the implementation is cor
 
 ## Inherited competition benchmark evidence
 
-The repository already publishes comparisons on a synthetic 16,000-file Windows workload using `fast-glob@3.3.3`, `tinyglobby@0.2.14`, and a zlob public API path. See [BENCHMARKS.md](../../BENCHMARKS.md) and [comparison notes](../../COMPARISON.md) for the original methodology and limitations.
+The repository already publishes comparisons on a synthetic 16,000-file Windows workload using `fast-glob@3.3.3`, `tinyglobby@0.2.14`, and a zlob public API path. See [BENCHMARKS.md](https://github.com/codex-mohan/branchcut/blob/master/BENCHMARKS.md) and [comparison notes](https://github.com/codex-mohan/branchcut/blob/master/COMPARISON.md) for the original methodology and limitations.
 
 Those documents describe competition-era measurements, not a reproducible post-competition benchmark run. The original synthetic-corpus generator was not checked in. Add a versioned generator, correctness-first runners, environment capture, and retained raw samples before publishing new performance claims. Do not replace historical results without keeping the methodology and losses visible.
 
@@ -55,4 +55,4 @@ The initial work queue above is retained as the starting record. Source-built re
 
 Cross-platform CI is configured to run Rust, native-path, oracle, and installer checks on Windows, Linux, and macOS. The Linux/macOS jobs were not executed from this Windows checkout; platform-wide completion remains contingent on those jobs.
 
-The reproducible module-extraction measurements and raw samples are linked from [BENCHMARKS.md](../../BENCHMARKS.md). Historical timing claims remain separate from these new records.
+The reproducible module-extraction measurements and raw samples are linked from [BENCHMARKS.md](https://github.com/codex-mohan/branchcut/blob/master/BENCHMARKS.md). Historical timing claims remain separate from these new records.

@@ -48,7 +48,7 @@ The run records binary hashes and per-source-file SHA-256 manifests. Both varian
 
 ## Accepted algorithm and tradeoff
 
-The retained [48-workload record](../../benchmarks/results/2026-11-11-phase7.json) was captured on 2026-11-11 on Windows/NTFS before the subsequent syntax and traversal gap-closure work. Each row below uses the median of nine fresh-process samples; memory is the median of three separate observed peak working-set samples.
+The retained [48-workload record](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-phase7.json) was captured on 2026-11-11 on Windows/NTFS before the subsequent syntax and traversal gap-closure work. Each row below uses the median of nine fresh-process samples; memory is the median of three separate observed peak working-set samples.
 
 | Corpus | Sorted selection | Before median | Candidate median | Before memory | Candidate memory |
 |---|---|---:|---:|---:|---:|
@@ -59,7 +59,7 @@ The retained [48-workload record](../../benchmarks/results/2026-11-11-phase7.jso
 
 On the 100,000-file first-ten selection, the observed ratio is 1.52× and observed memory falls by about 59%. Selecting half the matches is about 11% slower. These are workload-specific results, not evidence that Branchcut is the fastest filesystem search tool. Every before/after full selection passed the generator checks; all raw winning and losing samples are retained.
 
-The [A/A preflight record](../../benchmarks/results/2026-11-11-phase7-preflight.json) runs the same preserved binary on both sides with five samples. Its first resource probe could not read peak memory after process exit, so those memory fields are null and are not used in memory claims. The final probe samples while the process is alive.
+The [A/A preflight record](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-phase7-preflight.json) runs the same preserved binary on both sides with five samples. Its first resource probe could not read peak memory after process exit, so those memory fields are null and are not used in memory claims. The final probe samples while the process is alive.
 
 Sorted limits previously retained every matching path, sorted the full collection, and truncated it. They now maintain a max-heap of at most N native paths. A smaller candidate replaces the greatest retained path; final output sorts the retained selection. The algorithm completes the same full traversal, preserves native ordering and command selection, and bounds retained results by N. It does not make sorted limits an early-stop operation.
 
@@ -73,7 +73,7 @@ The regression was demonstrated failing before the fix, then passing in sequenti
 
 ## Rust-level follow-up
 
-A later [52-workload pass](rust-optimizations.md) measures pathless count delivery, borrowed output paths, reusable matcher scratch, shared ignore contexts, universal-plan short-circuiting, metadata-path avoidance, and parallel count batching. It reports a 1.166x fresh-process geometric mean and a 1.305x warm-engine geometric mean on the 100,000-file tree, with workload-specific losses retained. The default worker policy was subsequently changed to adaptive parallelism; the direct CLI comparison records the final default.
+A later [52-workload pass](./rust-optimizations.md) measures pathless count delivery, borrowed output paths, reusable matcher scratch, shared ignore contexts, universal-plan short-circuiting, metadata-path avoidance, and parallel count batching. It reports a 1.166x fresh-process geometric mean and a 1.305x warm-engine geometric mean on the 100,000-file tree, with workload-specific losses retained. The default worker policy was subsequently changed to adaptive parallelism; the direct CLI comparison records the final default.
 
 ## Remaining measurements and platform gates
 

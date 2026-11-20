@@ -58,4 +58,4 @@ Negation with a prefix or suffix, such as `!(foo).rs`, is rejected because its s
 - regex syntax;
 - portable backslash escaping.
 
-Matching is byte-oriented by default. With `--unicode`, valid UTF-8 names use Unicode scalar wildcard matching and simple lowercase conversion for case-insensitive comparison; no normalization or full case-fold expansion is performed. Invalid native byte names use byte matching. Neither mode counts grapheme clusters. `--ignore-case` and `--smart-case` select the case mode; case-sensitive matching is the default. See the [CLI reference](cli.md) for mode details.
+Matching is byte-oriented by default. With `--unicode`, valid UTF-8 names use Unicode scalar wildcard matching and simple lowercase conversion for case-insensitive comparison; no normalization or full case-fold expansion is performed. Invalid native byte names use byte matching. Neither mode counts grapheme clusters. `--ignore-case` and `--smart-case` select the case mode; case-sensitive matching is the default. See the [CLI reference](./cli.md) for mode details.

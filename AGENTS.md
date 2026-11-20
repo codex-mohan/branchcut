@@ -14,7 +14,7 @@ The competition sections below remain historical context for the submission. Whe
 - Preserve the simple filename-search experience while adding composable filters for people who need them.
 - Correctness and documented semantics come before new syntax or performance claims. Every confirmed regression needs a test. Benchmark every performance claim and retain representative losing results.
 - Do not copy third-party implementations. External projects may still serve as documented behavioral or benchmark references.
-- Do not expand into content search, indexing, a GUI, or other products until user evidence supports that scope.
+- Develop opt-in file-content search as described in [ROADMAP.md](ROADMAP.md). Keep filesystem-only queries free of content reads. Evaluate indexing, a GUI, and other product expansions separately against concrete user workflows.
 
 ### Post-competition sequence
 

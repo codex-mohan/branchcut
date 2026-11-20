@@ -110,7 +110,7 @@ branchcut --config .branchcut-queries --profile source
 - Matching is byte-oriented by default, with opt-in Unicode scalar matching and simple lowercase comparison for valid UTF-8 names; no normalization or multi-character case folding is performed.
 - Default case options fold ASCII only. With `--unicode`, smart-case detection and lowercase matching also use Unicode scalars; invalid native byte names fall back to byte matching.
 - `--gitignore` loads supported Git sources and nested `.gitignore`; `--ignore` adds `.ignore`; explicit ignore files have higher precedence. Advanced Git configuration and escaping boundaries remain documented.
-- Content search, indexing, watchers, a GUI/TUI, and service protocols remain outside the current scope.
+- v0.2.1 searches paths and metadata. Follow [file-content search](../project/roadmap.md#file-content-search) on the roadmap.
 - Prefix/suffix negated extglobs and Unicode case folding are unsupported.
 
-See the [CLI reference](cli) and [glob syntax](glob-syntax) for exact constraints.
+See the [CLI reference](./cli.md) and [glob syntax](./glob-syntax.md) for exact constraints.

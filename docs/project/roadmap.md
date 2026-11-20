@@ -1,10 +1,10 @@
 ---
 title: Roadmap
-description: What is implemented, what is being validated, and what remains demand-driven.
+description: Released features, work in development, and what comes next.
 icon: Map
 ---
 
-Branchcut preserves the tagged competition submission while developing a maintainable filesystem-query engine. This page describes the current development tree. See [Feature status](../reference/feature-status) for exact behavior and [Compatibility](../reference/compatibility) for deliberate gaps.
+The [feature reference](../reference/feature-status.md) covers the published CLI. This roadmap also includes features in development.
 
 ## Status at a glance
 
@@ -40,6 +40,12 @@ The active phase is release quality and onboarding:
 - expand public-repository and cross-platform benchmark evidence;
 - keep tutorials and installation paths synchronized with tested behavior.
 
+## File-content search
+
+Opt-in literal content search is in development. The implementation uses `--content PATTERN` to scan regular files selected by the existing globs, ignores, and filters. It reports the path, line, column, and matching text. Filename and metadata queries continue to work without reading file contents.
+
+Use ripgrep or another text-search tool with the published v0.2.1 binary. Before publishing Branchcut's content search, verify binary-file and encoding behavior, result limits, and errors on the supported platforms. Regex and multiline matching are separate candidates.
+
 ## Demand-driven candidates
 
 These are not promises or current features:
@@ -56,6 +62,5 @@ The ordinary CLI remains a normal executable. Agents and scripts can consume its
 
 - Keep the core engine and ordinary CLI free of third-party crates.
 - Do not trade documented semantics for new syntax.
-- Do not add content search, indexing, a GUI, or a watcher without user evidence.
 - Keep losing benchmark results and environment limitations public.
 - Preserve simple filename search while adding advanced capability.
