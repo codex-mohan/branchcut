@@ -833,6 +833,64 @@ html > body[data-scroll-locked] {
 .bc-home-shell #nd-nav a, .bc-home-shell #nd-nav button { color:var(--bc-muted); }
 .bc-home-shell #nd-nav a:hover, .bc-home-shell #nd-nav button:hover, .bc-home-shell .branchcut-lockup { color:var(--bc-ink); }
 .bc-home-shell .branchcut-lockup img { filter:drop-shadow(0 0 16px rgb(87 239 151/.14)); }
+
+@media (max-width: 1120px) {
+  .bc-home-shell #nd-nav {
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  /* Apply glass to the inner navigation so it also covers the open menu. */
+  .bc-home-shell #nd-nav > nav {
+    background: var(--bc-surface);
+    border-bottom-color: var(--bc-line-strong);
+    border-radius: 0;
+  }
+
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .bc-home-shell #nd-nav > nav {
+      background: color-mix(in srgb, var(--bc-surface) 88%, transparent);
+      -webkit-backdrop-filter: blur(24px) saturate(135%);
+      backdrop-filter: blur(24px) saturate(135%);
+    }
+  }
+
+  /* Fumadocs has separate breakpoints for its primary links and mobile menu.
+     Switch the complete header together at the landing page breakpoint. */
+  .bc-home-shell #nd-nav > nav > div:first-child > ul[class~="max-sm:hidden"],
+  .bc-home-shell #nd-nav > nav > div:first-child > div[class~="max-lg:hidden"] {
+    display: none;
+  }
+
+  .bc-home-shell #nd-nav > nav > div:first-child > div[class~="lg:hidden"] {
+    display: flex;
+  }
+
+  .bc-home-shell #nd-nav > nav > div:first-child > div[class~="lg:hidden"] > button {
+    min-width: 44px;
+    min-height: 44px;
+    color: var(--bc-ink);
+  }
+
+  .bc-home-shell #nd-nav > nav > div[class~="lg:hidden"]:not([hidden]) {
+    display: block;
+    max-height: calc(100dvh - 3.5rem);
+    overflow-y: auto;
+  }
+
+  .bc-home-shell #nd-nav > nav > div[class~="lg:hidden"] > div {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .bc-home-shell #nd-nav > nav > div[class~="lg:hidden"] a[class~="sm:hidden"] {
+    display: flex;
+    min-height: 44px;
+    color: var(--bc-ink);
+  }
+}
+
 .bc-landing {
   width:min(100%,1380px); margin-inline:auto; overflow:clip; border-inline:1px solid var(--bc-line);
   background:linear-gradient(90deg,transparent calc(50% - .5px),rgb(87 239 151/.045) 50%,transparent calc(50% + .5px)),var(--bc-canvas);
