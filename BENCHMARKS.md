@@ -23,6 +23,19 @@ Branchcut shares matching work across fixed patterns, borrows complete lines, an
 
 See the [runner](scripts/benchmark-content.mjs) and [raw samples](benchmarks/results/content-v0.3.0-windows.json) for commands, hashes, environment, and sample dispersion.
 
+### Batched newline counting after v0.3.0
+
+The content scanner now counts line endings in 128-byte batches when it skips a buffer with no candidate. Smaller accumulators let the compiler process more byte comparisons in parallel. Both Branchcut builds used the same `grep` syntax and the same compiler. The scan returned equivalent results on every timed run.
+
+| Search, eight workers | v0.3.0, runs 1 / 2 | Batched count, runs 1 / 2 | ripgrep, runs 1 / 2 |
+|---|---:|---:|---:|
+| Absent literal | 78.45 / 83.91 ms | 61.71 / 62.86 ms | 72.24 / 85.34 ms |
+| Sparse literal | 78.23 / 78.70 ms | 62.62 / 67.11 ms | 59.00 / 71.77 ms |
+| Eight literals | 94.77 / 98.95 ms | 60.31 / 73.37 ms | 69.07 / 68.71 ms |
+| Narrow shard | 81.86 / 57.77 ms | 63.78 / 56.35 ms | 89.11 / 59.71 ms |
+
+The three 96 MiB cases improved against v0.3.0 in both runs. The eight-literal gap versus ripgrep changed direction between runs. The narrow single-worker row was slightly slower in the first run and faster in the second. See [run 1](benchmarks/results/content-line-count-windows.json) and [run 2](benchmarks/results/content-line-count-windows-repeat.json) for every sample.
+
 ## Post-competition module extraction
 
 For the later 48-workload matrix and bounded sorted-selection tradeoff, see [Phase 7 measurements](docs/evidence/phase7.md). The first-ten result improves on the tested synthetic tree while large sorted selections lose time. These before/after records do not establish a competitor ranking.
