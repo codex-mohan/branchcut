@@ -2,11 +2,26 @@
 
 The competition-era results below are retained as historical evidence. Current development uses the checked-in [benchmark and oracle runners](docs/contributing/benchmarking.md). Raw post-competition records live in [benchmarks/results](benchmarks/results/).
 
-The [18 November 2026 CLI comparison](docs/evidence/current-cli-comparison.md) is the current six-tool snapshot for the gap-closure implementation. It separates default invocations from tuned worker settings and reports observed working set on the same query. Earlier records below retain their own source versions and are not current-build rankings.
+The [18 November 2026 CLI comparison](docs/evidence/current-cli-comparison.md) measures six tools on filesystem-selection workloads. It separates default invocations from tuned worker settings and reports observed working set on the same query.
 
 The [2026-11-11 native-tool investigation](docs/evidence/search-performance.md) includes fresh ripgrep/fd/fast-glob comparisons, equal-worker controls, and source references. That early snapshot preceded the adaptive-worker default and should not be used as the current out-of-box ranking.
 
 The historical [12 November direct CLI comparison](docs/evidence/cli-comparison.md) uses official `zlob`, `rg`, `fd`, fast-glob, and tinyglobby entry points without a lower-level walker adapter. It records all tested worker configurations and verifies every selected path set.
+
+## v0.3.0 literal content search
+
+These medians are process-inclusive wall-clock milliseconds on Windows 11 and NTFS. The fixture is 96 MiB across 96 log files, or one 8 MiB shard in the last row. The runner interleaves two warmups and seven timed samples per configuration. It checks the exact normalized path, line, byte column, and text from every invocation. Cache state was uncontrolled. Ripgrep 15.1.0 ran with `-F --no-mmap --no-encoding` on ASCII input. The Branchcut baseline is the original local literal implementation at `55bf549`, rebuilt with the same release compiler as `34923d9`.
+
+| Search | Branchcut baseline (1) | Branchcut v0.3.0 (1) | ripgrep (1) | Branchcut baseline (8) | Branchcut v0.3.0 (8) | ripgrep (8) |
+|---|---:|---:|---:|---:|---:|---:|
+| Absent literal | 115.89 | 95.75 | 61.21 | 120.44 | 47.49 | 40.87 |
+| Sparse literal | 94.58 | 71.17 | 47.19 | 94.74 | 32.82 | 34.76 |
+| Eight literals | 768.31 | 156.65 | 90.37 | 768.43 | 76.83 | 62.82 |
+| Narrow shard | 62.11 | 59.84 | 50.29 | 62.61 | 52.03 | 54.73 |
+
+Branchcut shares matching work across fixed patterns, borrows complete lines, and skips full lines in buffers with no candidate bytes. Ripgrep searches a buffered slice for a candidate before locating and confirming its line. Ripgrep led all single-worker rows and the eight-worker absent and eight-literal rows. [Ripgrep candidate-line implementation](https://github.com/BurntSushi/ripgrep/blob/15.1.0/crates/searcher/src/searcher/core.rs)
+
+See the [runner](scripts/benchmark-content.mjs) and [raw samples](benchmarks/results/content-v0.3.0-windows.json) for commands, hashes, environment, and sample dispersion.
 
 ## Post-competition module extraction
 
