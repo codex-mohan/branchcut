@@ -128,6 +128,26 @@ fn find_accepts_roots_and_keeps_the_legacy_literal_shortcut() {
 }
 
 #[test]
+fn grep_path_lists_compose_with_globs_and_keep_nul_output_lossless() {
+    let fixture = Fixture::new();
+    fixture.write("a file.log", b"error\n");
+    fixture.write("b.txt", b"error\n");
+    fixture.write("paths", b"a file.log\0b.txt\0a file.log\0");
+    let output = fixture.run(&[
+        "grep",
+        "-l",
+        "-0",
+        "--paths-from0",
+        "paths",
+        "--glob",
+        "*.log",
+        "error",
+    ]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(output.stdout, b"a file.log\0");
+}
+
+#[test]
 fn reports_path_line_column_and_text() {
     let fixture = Fixture::new();
     fixture.write("src/a.txt", b"alpha\nbeta needle\ngamma\n");
@@ -223,10 +243,18 @@ fn limit_and_first_stop_after_enough_lines() {
     fixture.write("b.txt", b"needle\n");
 
     let limited = fixture.run(&["--glob", "*.txt", "--content", "needle", "--limit", "2"]);
-    assert_eq!(stdout(&limited), "a.txt:1:1:needle\na.txt:2:1:needle\n");
+    assert!(limited.status.success(), "{}", stderr(&limited));
+    assert!(matches!(
+        stdout(&limited).as_str(),
+        "a.txt:1:1:needle\na.txt:2:1:needle\n" | "b.txt:1:1:needle\na.txt:1:1:needle\n"
+    ));
 
     let first = fixture.run(&["--glob", "*.txt", "--content", "needle", "--first"]);
-    assert_eq!(stdout(&first), "a.txt:1:1:needle\n");
+    assert!(first.status.success(), "{}", stderr(&first));
+    assert!(matches!(
+        stdout(&first).as_str(),
+        "a.txt:1:1:needle\n" | "b.txt:1:1:needle\n"
+    ));
 }
 
 #[test]

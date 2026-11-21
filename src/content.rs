@@ -118,6 +118,12 @@ pub trait ContentMatcher: Send + Sync {
         self.find_spans(input, false, &mut spans);
         !spans.is_empty()
     }
+
+    /// A conservative prefilter for a block containing complete lines.
+    /// Return false only if no line in the block can yield a span.
+    fn may_match_block(&self, _input: &[u8]) -> bool {
+        true
+    }
 }
 
 /// A compiled content query shared by the workers that scan selected files.
@@ -321,6 +327,8 @@ impl ContentQuery {
             }
         ];
         let mut line_number = 0;
+        let can_skip = self.options.mode == ContentBoolean::Any && !self.options.invert;
+        let mut checked_bytes = 0usize;
         loop {
             let bytes = match reader.fill_buf() {
                 Ok(bytes) => bytes,
@@ -331,8 +339,28 @@ impl ContentQuery {
             if eof && pending.is_empty() {
                 break;
             }
+            if can_skip && pending.is_empty() && checked_bytes == 0 && bytes.len() >= 4096 {
+                checked_bytes = bytes.len();
+                // Leave any trailing partial line for the ordinary scanner. A
+                // block no larger than the line limit cannot hide a long line.
+                if bytes.len() <= options.max_line_bytes
+                    && !self.matcher.may_match_block(bytes)
+                    && let Some(end) = bytes.iter().rposition(|&byte| byte == b'\n')
+                {
+                    let consumed = end + 1;
+                    line_number += bytes[..consumed]
+                        .iter()
+                        .filter(|&&byte| byte == b'\n')
+                        .count() as u64;
+                    stats.bytes_read = stats.bytes_read.saturating_add(consumed as u64);
+                    reader.consume(consumed);
+                    checked_bytes -= consumed;
+                    continue;
+                }
+            }
             let newline = literal::find_byte(bytes, b'\n');
             let consumed = newline.map_or(bytes.len(), |index| index + 1);
+            checked_bytes = checked_bytes.saturating_sub(consumed);
             if pending.len().saturating_add(consumed) > options.max_line_bytes + 2 {
                 return Err(line_limit_error(line_number + 1, options.max_line_bytes));
             }
@@ -765,6 +793,49 @@ mod tests {
                     "capacity {capacity}, input {input:?}"
                 );
             }
+        }
+    }
+
+    #[test]
+    fn block_prefilter_keeps_offsets_and_partial_lines() {
+        let prefix = b"abcd xyz\r\n".repeat(1023);
+        let mut input = prefix.clone();
+        input.extend_from_slice(b"before NEEDLE after\r\n");
+        input.extend(b"abcdefg\n".repeat(2049));
+        input.extend_from_slice(b"another TERM");
+        let query = ContentQuery::from_strings(&["needle", "term"], true, true).unwrap();
+        for capacity in [4096, 4097, prefix.len() + 9, 65536] {
+            let options = ContentScanOptions::default();
+            let mut matches = Vec::new();
+            let stats = query
+                .scan_borrowed_lines(
+                    &mut BufReader::with_capacity(capacity, input.as_slice()),
+                    &options,
+                    None,
+                    ScanStats::default(),
+                    &mut |record| {
+                        matches.push((
+                            record.line_number,
+                            record.byte_offset,
+                            record.line.to_vec(),
+                        ));
+                        Ok(ControlFlow::Continue(()))
+                    },
+                )
+                .unwrap();
+            assert_eq!(
+                matches,
+                vec![
+                    (1024, prefix.len() as u64, b"before NEEDLE after".to_vec()),
+                    (
+                        3074,
+                        (input.len() - b"another TERM".len()) as u64,
+                        b"another TERM".to_vec()
+                    ),
+                ],
+                "capacity {capacity}"
+            );
+            assert_eq!(stats.bytes_read, input.len() as u64);
         }
     }
 

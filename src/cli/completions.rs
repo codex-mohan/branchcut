@@ -12,31 +12,39 @@ pub(crate) fn print(shell: &str) -> Result<()> {
     COMPREPLY=( $(compgen -W '{FLAGS}' -- "$cur") )
   else
     COMPREPLY=()
+    if [[ $COMP_CWORD -eq 1 ]]; then
+      COMPREPLY+=( $(compgen -W 'find grep' -- "$cur") )
+    fi
     while IFS= read -r candidate; do
       COMPREPLY+=("$candidate")
     done < <(compgen -f -- "$cur")
   fi
 }}
-complete -F _branchcut_complete branchcut"#
+complete -F _branchcut_complete branchcut branchcut-regex"#
         ),
         "zsh" => {
-            println!("#compdef branchcut\n_branchcut() {{\n  local -a options\n  options=(");
+            println!(
+                "#compdef branchcut branchcut-regex\n_branchcut() {{\n  local -a options\n  if (( CURRENT == 2 )); then\n    _values 'search command' 'find[Search filenames]' 'grep[Search file contents]'\n  fi\n  options=("
+            );
             for flag in FLAGS.split_whitespace() {
                 println!("    '{flag}'");
             }
             println!(
-                "  )\n  _describe 'branchcut option' options\n  _files\n}}\ncompdef _branchcut branchcut"
+                "  )\n  _describe 'branchcut option' options\n  _files\n}}\ncompdef _branchcut branchcut branchcut-regex"
             );
         }
         "fish" => {
             println!("# Branchcut completions; save as branchcut.fish");
+            for command in ["branchcut", "branchcut-regex"] {
+                println!("complete -c {command} -n '__fish_use_subcommand' -a 'find grep'");
+            }
             for flag in FLAGS.split_whitespace() {
-                println!("complete -c branchcut -l {}", &flag[2..]);
+                println!("complete -c branchcut -c branchcut-regex -l {}", &flag[2..]);
             }
         }
         "powershell" | "pwsh" => {
             println!(
-                "Register-ArgumentCompleter -Native -CommandName branchcut -ScriptBlock {{\n  param($wordToComplete, $commandAst, $cursorPosition)\n  @("
+                "Register-ArgumentCompleter -Native -CommandName branchcut,branchcut-regex -ScriptBlock {{\n  param($wordToComplete, $commandAst, $cursorPosition)\n  @(\n    if ($commandAst.CommandElements.Count -le 2 -and $wordToComplete -notlike '-*') {{ 'find'; 'grep' }}"
             );
             for flag in FLAGS.split_whitespace() {
                 println!("    '{flag}'");

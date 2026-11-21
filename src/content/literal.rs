@@ -78,6 +78,14 @@ impl LiteralMatcher {
 }
 
 impl ContentMatcher for LiteralMatcher {
+    fn may_match_block(&self, input: &[u8]) -> bool {
+        let filter = match &self.program {
+            LiteralProgram::Single(filter) => filter,
+            LiteralProgram::Shared(program) => &program.first,
+        };
+        filter.candidates.len() > 4 || filter.find(input).is_some()
+    }
+
     fn find_spans(&self, line: &[u8], all: bool, out: &mut Vec<ContentSpan>) {
         let all = all || !self.allow_first;
         match &self.program {
