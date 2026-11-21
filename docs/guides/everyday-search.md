@@ -57,13 +57,13 @@ Use `--explain` to see the selected case mode, search target, depth bounds, meta
 ## Search inside selected files
 
 ```bash
-branchcut --glob '**/*.rs' --exclude '**/target/**' --content 'TODO'
-branchcut --glob '**/*.log' --content ERROR --content WARN -l
-branchcut --glob '**/*.toml' --content 'edition = "2024"' --count
+branchcut grep --glob '**/*.rs' --exclude '**/target/**' TODO
+branchcut grep --glob '**/*.log' -l -e ERROR -e WARN
+branchcut grep --glob '**/*.toml' --count 'edition = "2024"'
 ```
 
-`--content` (alias `--grep`) runs after the path query has selected its files. Globs, exclusions, ignore rules, type, extension, size, and time filters all narrow what is read, so content work stays inside the compiled plan. Repeating the option ORs literal patterns. Output is `path:line:column:text`, where `column` is a one-based byte offset and trailing CRLF is removed.
+`branchcut grep PATTERN [PATH...]` runs after the path query has selected its files. Globs, exclusions, ignore rules, type, extension, size, and time filters all narrow what is read. Use `-e PATTERN` for several literal patterns. Output is `path:line:column:text`, where column is a one-based decoded byte offset and trailing CRLF is removed.
 
-Default matching is case-sensitive; `-i` folds ASCII and `--smart-case` folds unless a content pattern contains uppercase ASCII. A file is treated as binary when a NUL byte appears in its first 8 KiB and is skipped unless `--text` is passed. `--count` counts matching lines, `-l` prints each matching path once, and `--limit`/`--first` stop after the requested number of matching lines. `--json` emits `path`, `line`, `column`, and `text`; `--json-metadata` adds file fields. Content search requires regular files and cannot be combined with `--exec`, `--exec-batch`, `--exec-preview`, `--print0`, or `--format`.
+Default matching is case-sensitive. `-i` folds ASCII, and `--unicode` enables Unicode-aware case behavior. `--content-mode all` requires every pattern on the same line, while `none` and `--invert-match` select nonmatching lines. `--context` adds surrounding lines. Use `--output jsonl`, `json`, `csv`, or `tsv` for structured results, and `--summary` for totals. File-list modes accept `--print0`; content text supports `--format` templates. Content search requires regular files and rejects command execution and preview.
 
-This is not a general-purpose grep replacement: patterns are literal and line-oriented, with no regular expressions, captures, multiline matching, or replacement. Use the path query when selection is the hard part and a literal content condition is enough; reach for a regex-capable tool when the pattern itself is complex.
+The optional `branchcut-regex` executable adds filename/path regex and line-oriented content regex. For example, `branchcut-regex grep -E 'TODO|FIXME' src/ --glob '**/*.rs'`. See the [content guide](content-search.md) for installation, stdin, path lists, encodings, spans, and resource bounds. Capture-group output, multiline matching, and replacement remain unsupported.

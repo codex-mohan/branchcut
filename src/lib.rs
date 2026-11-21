@@ -27,7 +27,11 @@ mod pattern;
 mod query;
 mod stats;
 mod walk;
-pub use content::{BINARY_PROBE, ContentMatch, ContentQuery, ScanStats};
+pub use content::{
+    BINARY_PROBE, ContentBoolean, ContentEncoding, ContentMatch, ContentMatchOptions,
+    ContentMatcher, ContentQuery, ContentRecord, ContentRecordKind, ContentScanOptions,
+    ContentSpan, ScanStats,
+};
 pub use diagnostic::{CheckOutcome, PathCheck, PathExplanation};
 pub use entries::{CancellationToken, EntryRecord};
 pub use error::QueryError;

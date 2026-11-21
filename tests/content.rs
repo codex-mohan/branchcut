@@ -1,6 +1,7 @@
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
@@ -27,8 +28,7 @@ impl Fixture {
 
     fn run(&self, args: &[&str]) -> Output {
         Command::new(env!("CARGO_BIN_EXE_branchcut"))
-            .arg("--cwd")
-            .arg(&self.0)
+            .current_dir(&self.0)
             .args(args)
             .output()
             .expect("run branchcut CLI")
@@ -47,6 +47,84 @@ fn stdout(output: &Output) -> String {
 
 fn stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
+}
+
+#[test]
+fn grep_takes_a_pattern_then_files_and_reports_grep_exit_codes() {
+    let fixture = Fixture::new();
+    fixture.write("src/a file.txt", b"start\nNeedle twice needle\nend\n");
+    fixture.write("src/other.txt", b"needle in a different file\n");
+    let output = fixture.run(&["grep", "-i", "-w", "-C", "1", "needle", "src/a file.txt"]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        "src/a file.txt-1-start\nsrc/a file.txt:2:1:Needle twice needle\nsrc/a file.txt-3-end\n"
+    );
+    let no_match = fixture.run(&["grep", "absent", "src/a file.txt"]);
+    assert_eq!(no_match.status.code(), Some(1), "{}", stderr(&no_match));
+    let missing = fixture.run(&["grep", "needle", "missing.txt"]);
+    assert_eq!(missing.status.code(), Some(2));
+    assert!(stderr(&missing).contains("missing.txt"));
+}
+
+#[test]
+fn grep_reads_multiple_patterns_and_counts_per_file() {
+    let fixture = Fixture::new();
+    fixture.write("patterns.txt", b"error\r\nwarning\n");
+    fixture.write("a.log", b"error; warning\nwarning\nother\n");
+    let patterns = fixture.0.join("patterns.txt");
+    let output = Command::new(env!("CARGO_BIN_EXE_branchcut"))
+        .current_dir(&fixture.0)
+        .args(["grep", "-c", "-e", "other", "-f"])
+        .arg(patterns)
+        .arg("a.log")
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "a.log:3\n");
+}
+
+#[test]
+fn grep_searches_utf16_and_reports_jsonl_from_stdin() {
+    let fixture = Fixture::new();
+    let mut child = Command::new(env!("CARGO_BIN_EXE_branchcut"))
+        .current_dir(&fixture.0)
+        .args(["grep", "--json", "--summary", "ERR", "-"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let encoded = "a\r\né ERR\r\n".encode_utf16().flat_map(u16::to_le_bytes);
+    let data: Vec<u8> = [0xff, 0xfe].into_iter().chain(encoded).collect();
+    child.stdin.take().unwrap().write_all(&data).unwrap();
+    let output = child.wait_with_output().unwrap();
+    assert!(output.status.success(), "{}", stderr(&output));
+    let text = stdout(&output);
+    assert!(
+        text.contains("\"path\":\"-\"") || text.contains("\"path\": \"-\""),
+        "{text}"
+    );
+    assert!(
+        text.contains("\"line\":2,\"column\":4,\"byte_offset\":3"),
+        "{text}"
+    );
+    assert!(
+        text.contains("\"kind\":\"summary\",\"matched\":1"),
+        "{text}"
+    );
+}
+
+#[test]
+fn find_accepts_roots_and_keeps_the_legacy_literal_shortcut() {
+    let fixture = Fixture::new();
+    fixture.write("src/config.json", b"");
+    fixture.write("other/config.json", b"");
+    fixture.write("find.txt", b"");
+    let output = fixture.run(&["find", "config.json", "src"]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "src/config.json\n");
+    assert_eq!(stdout(&fixture.run(&["find"])), "find.txt\n");
 }
 
 #[test]

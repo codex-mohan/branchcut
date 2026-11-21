@@ -1,17 +1,36 @@
 ---
 title: CLI reference
-description: Complete command-line reference for Branchcut 0.2.1.
+description: Complete command-line reference for Branchcut 0.3.0.
 icon: SquareTerminal
 ---
 
 ## Usage
 
 ```text
+branchcut find [OPTIONS] PATTERN [PATH...]
+branchcut grep [OPTIONS] PATTERN [PATH...]
+branchcut grep [OPTIONS] -e PATTERN... [PATH...]
 branchcut [PATTERN|SEARCH]
 branchcut [OPTIONS]
 ```
 
 Files are the default result type. Hidden paths are excluded, traversal uses adaptive bounded parallelism, and output streams in discovery order unless an option changes that behavior. Limits and per-match execution default to one worker; explicit worker counts can enable parallel limits or execution with an explicit child-job budget.
+
+## Command selection
+
+`find` searches filenames or root-relative paths, and `grep` searches contents. Both use literal patterns by default. The optional executable supports `branchcut-regex find -E PATTERN` and `branchcut-regex grep -E PATTERN`. `-F` explicitly selects literals. Paths default to the current directory.
+
+```sh
+branchcut find config src/
+branchcut grep TODO src/
+branchcut grep -e ERROR -e WARN logs/
+branchcut grep -f patterns.txt logs/
+branchcut grep ERROR -
+```
+
+`grep -e` (`--regexp`) and `-f` (`--pattern-file`) supply patterns explicitly. When either is present, all remaining positionals are paths. In `grep`, positional `-` reads standard input. `find` accepts an empty pattern to select all names, for example `branchcut find '' src/ --glob '**/*.rs'`. Use `branchcut grep --help` or `branchcut find --help` for focused help.
+
+Bare `branchcut grep` and `branchcut find` retain the original one-word filename shortcut. Use `branchcut -- grep find` to treat both words as ordinary literal search terms. The legacy flag-based interface remains available, including `--content` and `--regex`.
 
 ## Query inputs
 
@@ -20,7 +39,8 @@ Files are the default result type. Hidden paths are excluded, traversal uses ada
 | `--glob PATTERN` | Add a positive glob. Repeatable. |
 | `--exclude PATTERN` | Add an exclusion. Repeatable. |
 | `--and TEXT` | Require an additional literal search term; repeatable. |
-| `--content PATTERN`, `--grep PATTERN` | Search selected regular files for a literal pattern; repeatable patterns combine with OR. See [Content search](#content-search). |
+| `--content PATTERN`, `--grep PATTERN` | Search selected regular files. See [Content search](#content-search). |
+| `branchcut-regex find -E PATTERN [PATH...]` | Match a filename regex. `--full-path` selects slash-separated root-relative paths. |
 | positional glob | Shorthand when the argument contains glob syntax. |
 | positional text | Literal filename containment search; case behavior is controlled by the case-mode options. |
 | `--cwd PATH` | Set the filesystem root. Output remains relative to it. |
@@ -28,7 +48,7 @@ Files are the default result type. Hidden paths are excluded, traversal uses ada
 | `--config FILE` | Load a saved query profile file; its directory is the default query root. |
 | `--profile NAME` | Select a named profile from `--config`; the default profile is used when omitted. |
 
-Positional globs cannot be combined with `--glob` or simple search terms. Positional search terms cannot be combined with `--glob`.
+In the legacy interface, positional globs cannot be combined with `--glob` or simple search terms, and positional literal terms cannot be combined with `--glob`. The `find` and `grep` commands accept `--glob` as a path filter alongside their own patterns.
 
 An unrecognized option is an error. Put `--` before a literal term that begins with `-`; remaining arguments are treated as literal search terms. Those terms still cannot be combined with explicit globs.
 
@@ -36,7 +56,7 @@ An unrecognized option is an error. Put `--` before a literal term that begins w
 
 | Option | Meaning |
 |---|---|
-| `-e EXT`, `--extension EXT` | Match an extension; repeatable and follows the selected case mode. |
+| `--extension EXT` | Match an extension; repeatable and follows the selected case mode. `-e` is an extension alias outside `grep`; within `grep`, `-e` adds a content pattern. |
 | `--type TYPE` | Select `file` (default), `dir`, `symlink`, `socket`, `fifo`, `block-device`, or `char-device`; repeatable. Aliases include `f`, `d`, `l`, `s`, `p`, `b`, and `c`. |
 | `--hidden` | Include hidden path components. |
 | `--empty` | Select empty files or directories. |
@@ -75,20 +95,44 @@ Type aliases `f`, `d`, `directory`, `l`, and `link` are accepted.
 
 ## Content search
 
-`--content PATTERN` (alias `--grep`) reads the regular files already selected by globs, exclusions, ignores, type, extension, size, and time filters. It never widens the selection and does not read content for queries that omit it.
+Content reads apply only to selected regular files. Globs, exclusions, ignore rules, name/extension/type filters, sizes, and time filters decide which files reach the scanner. The [content search and regex guide](../guides/content-search.md) defines encodings, inputs, schemas, byte offsets, limits, and examples.
 
-```bash
-branchcut --glob '**/*.rs' --content 'TODO'
-branchcut --glob 'package.json' --content '"version"'
-branchcut --glob '**/*.log' --content ERROR --content WARN -l
-```
+| Option | Meaning |
+|---|---|
+| `PATTERN` | Positional literal pattern for `grep`. |
+| `-e PATTERN`, `--regexp PATTERN` | Add a pattern. Repeatable. Remaining positionals are paths. |
+| `-f FILE`, `--pattern-file FILE` | Add UTF-8 patterns, one per line. Remaining positionals are paths. |
+| `-E`, `--regex` | Interpret patterns as Rust regexes in `branchcut-regex`. |
+| `-F`, `--fixed-strings` | Interpret patterns literally. Default. |
+| `--content-mode any\|all\|none` | Select lines matching any pattern, every pattern, or no pattern. |
+| `-w`, `--word-regexp` | Require word boundaries. Also works with literal patterns. |
+| `-x`, `--line-regexp` | Require whole-line matches. |
+| `-v`, `--invert-match` | Invert final line selection. |
+| `-A N`, `--after-context N` | Add following context lines. |
+| `-B N`, `--before-context N` | Add preceding context lines. |
+| `-C N`, `--context N` | Add context on both sides. |
+| `-o`, `--only-matching` | Emit each nonempty matched span. |
+| `-l`, `--files-with-matches` | Emit files containing a selected line. |
+| `-L`, `--files-without-match` | Emit scanned text files with no selected lines. |
+| `-c`, `--count-per-file` | Emit `path:count`, including zero counts. |
+| `--encoding NAME` | `auto`, `utf-8`, `utf-16le`, `utf-16be`, `latin1`, `windows-1252`, or `raw`. |
+| `-a`, `--text` | Disable the bounded binary skip. |
+| `--max-line-bytes N` | Maximum decoded line length. Default 8 MiB, maximum 64 MiB. |
+| Positional `-` | Search standard input with `grep`. |
+| Positional `PATH` | Add a file or directory input with `find` or `grep`. |
+| `--paths-from FILE` | Read newline-delimited paths. `-` reads the list from stdin. |
+| `--paths-from0 FILE` | Read NUL-delimited paths. `-` reads the list from stdin. |
+| `--preprocess PROGRAM` | Search stdout from an executable invoked for each selected file. |
+| `--decompress` | Use external gzip, bzip2, xz, or zstd tools for supported compressed extensions. |
+| `--output FORMAT` | Content `text`, `jsonl`, `json`, `csv`, or `tsv`. |
+| `--explain-matches` | Add path-selection reasons to result records. |
+| `--summary` | Add totals to structured output or to stderr in text mode. |
 
-- Patterns are literal byte strings, not regular expressions. Repeating the option ORs the patterns; each matching line is reported once, at the earliest matching pattern.
-- Default case is sensitive. `-i` folds ASCII; `--smart-case` folds unless a content pattern contains uppercase ASCII.
-- Output is `path:line:column:text`. `line` is one-based, `column` is a one-based byte offset, and trailing `\n` or `\r\n` is not printed. Invalid UTF-8 bytes are preserved in plain output.
-- Binary detection treats a NUL byte in the first 8 KiB as binary and skips the file. `--text` scans it anyway.
-- `--count` counts matching lines; `-l` prints each matching path once; `--limit` and `--first` count matching lines (or matching files with `-l`) and stop scanning early. `--sort` sorts files before scanning, so a sorted limit returns results in path order.
-- Content search requires regular files. It is incompatible with `--exec`, `--exec-batch`, `--exec-preview`, `--print0`, and `--format`. With `--json`, records contain `path`, `line`, `column`, and `text`; `--json-metadata` adds the file fields.
+The ordinary CLI uses literal matching. Build the optional regex executable from a checkout with `cargo install --locked --path integrations/content-regex`. `branchcut-regex find -E PATTERN` selects names or paths, while `branchcut-regex grep -E PATTERN` selects content lines. The integration has its own declared dependency graph.
+
+Line numbers and columns are one-based. Columns count decoded UTF-8 bytes. Structured `byte_offset` and spans are zero-based decoded byte coordinates after BOM removal, and span ends are exclusive. `--json` aliases JSONL in content mode. `--json-metadata` adds file facts to JSON/JSONL records. `--format` accepts content fields including `{path}`, `{line}`, `{column}`, `{text}`, and `{spans}`.
+
+`--count` counts selected lines. `--first`/`--limit` count lines, or files with `-l`/`-L`. Context and repeated spans do not increase the count. Sorted content mode collects candidate paths, sorts them, and then scans contents. Limited content scans use sequential scanning for exact termination. File-list modes support `--print0`. Content search rejects command execution and preview. Context and span-only output cannot be combined with file/count/quiet modes, and context cannot be combined with span-only output. Per-file count requires unrestricted text output.
 
 ## Termination and execution
 
@@ -106,8 +150,8 @@ Explicit worker counts support `--limit` and `--first` with exact coordinator ca
 
 | Option | Meaning |
 |---|---|
-| `-a`, `--text` | Read binary-looking files as text during `--content` search instead of skipping them. |
-| `-l`, `--files-with-matches` | With `--content`, print each matching path once instead of matching lines. |
+| `-a`, `--text` | Read binary-looking files as text during `grep` search instead of skipping them. |
+| `-l`, `--files-with-matches` | With `grep`, print each matching path once instead of matching lines. |
 | `--sort` | Global native-path order; sorted limits retain at most N paths while scanning all candidates. |
 | `--count` | Print only the match count. |
 | `--json` | Emit one JSON object per line. |

@@ -1,24 +1,21 @@
-# Branchcut v0.2.1
+# Branchcut v0.3.0
 
-The first post-competition release turns Branchcut into a modular filesystem query engine with a reusable Rust library and a thin CLI. The core and ordinary CLI remain free of third-party crates.
+Branchcut can now search file contents after narrowing the search with the same glob, ignore, and metadata filters used for filesystem queries.
 
-This patch corrects the release architecture-check command. The `v0.2.0` tag is retained unchanged; its release job stopped before publishing assets. Engine functionality is unchanged from that tag.
+```sh
+branchcut config
+branchcut find config src/
+branchcut grep -i -C 2 'connection refused' logs/
+branchcut-regex find -E '^test_.*[.]py$' tests/
+branchcut-regex grep -E 'ERROR [0-9]+' logs/
+```
 
-## Highlights
+- `find` and `grep` take the pattern first and optional input paths after it. `grep` accepts `-` for stdin and returns 0 for a match, 1 for no match, and 2 for errors.
+- Search results include line and byte column, context, matched spans, per-file counts, and matching or nonmatching file lists. Use streaming JSON Lines, JSON, CSV, TSV, plain text templates, or NUL-delimited paths.
+- Search BOM-marked UTF-8 and UTF-16, Latin-1, Windows-1252, raw bytes, or a preprocessor's output. Compression support uses external decompressors.
+- Literal scans share work across patterns, borrow complete lines from the read buffer, and use bounded parallel file scanning where applicable.
+- The ordinary executable remains dependency-free. The separately built `branchcut-regex` executable adds regular expressions for filenames, paths, and individual content lines. Regex captures and multiline matches are outside this release.
 
-- Hierarchical and inherited Git ignores, repository/global excludes, linked worktrees, `.ignore`, explicit override files and rule provenance.
-- Richer braces, composed component-local extglobs, POSIX ASCII classes, opt-in pattern escaping and Unicode scalar matching.
-- Size/time/depth filters, entry-type unions, empty/executable selection and Unix ownership filters.
-- Symlink following with cycle checks, multi-root selection, handle budgets, post-order traversal and cooperative cancellation.
-- Streaming and exact limits, metadata JSON, formatting, command previews, bounded execution and shell completions.
-- Public matcher, metadata-record visitor and multi-root APIs, plus current feature and compatibility documentation.
+Download one of the Windows x64, Linux x64, macOS Intel, or macOS Apple Silicon archives. Each includes both executables and the optional regex build's license notices. Verify the archive with `SHA256SUMS`, extract it, and add the executables you use to your `PATH`.
 
-## Downloads
-
-Choose the archive for Windows x64, Linux x64, macOS Intel or macOS Apple Silicon. Every archive contains the executable, license and README files in English, Spanish, French, Simplified Chinese, Japanese and Hindi. Verify the downloaded archive against `SHA256SUMS`, extract it, and put the executable on your `PATH`. Running a prebuilt binary does not require Cargo.
-
-Windows, Linux and Intel macOS builds run their native regression suites. The Apple Silicon archive is cross-built on Intel macOS using Apple's SDK; its target source/tests are compile-checked and its Mach-O architecture is verified. Native Apple Silicon execution has not been tested for this release.
-
-Performance records identify their measured source and retain defaults, tuned configurations, memory samples and losing results. They do not establish universal superiority or full compatibility with other tools.
-
-The historical `submission-v1` tag is preserved unchanged. This release does not add content search, indexing or a service protocol.
+If an old command searched for `grep` or `find` alongside other positional terms, put `--` before those terms to force the original filename search. A single-word search such as `branchcut grep` still searches filenames.

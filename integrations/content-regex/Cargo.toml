@@ -1,0 +1,13 @@
+[package]
+name = "branchcut-regex"
+version = "0.3.0"
+edition = "2024"
+description = "Optional regular expression search for Branchcut"
+license = "MIT"
+publish = false
+
+[workspace]
+
+[dependencies]
+branchcut = { path = "../.." }
+regex = "1.13.2"

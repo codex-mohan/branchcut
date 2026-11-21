@@ -89,9 +89,9 @@ Validate everyday, developer and power-user workflows with users. Package-manage
 
 ## Phase 9 — Opt-in content search
 
-**Status: literal content search shipped.** `--content`/`--grep` scans regular files after path selection and streams matching lines as `path:line:column:text`. It supports repeatable OR patterns, case modes, binary auto-detection with `--text`, `-l`, `--count`, sorted limits, JSON output, and early stop. Content work is integrated into the existing compiled plan and adds no reads to queries that do not request it.
+**Status: implemented for v0.3.0.** `branchcut grep` scans selected regular files with any/all/none matching, word/line bounds, inversion, context, case modes, encoding detection, stdin and path lists, bounded workers, and exact line/file limits. Results support text, JSONL, JSON, CSV, TSV, templates, span provenance, explanations, and summaries. The separately built `branchcut-regex` executable adds filename/path regex and line-oriented content regex. The ordinary CLI and library retain an empty third-party dependency graph.
 
-**Remaining evaluation:** regex, captures, multiline matching, and replacement stay demand-driven. Compare content-search throughput and memory on representative workloads and retain losses before claiming performance.
+**Remaining evaluation:** capture-group output, multiline content matching, and replacement. Compare content-search throughput and memory on representative workloads and retain losses before claiming performance. Release status is established by the published tag and CI artifacts, separately from this implementation inventory.
 
 **Exit criteria met:** content reads happen only when requested; filename and metadata queries keep their semantics; the core and ordinary CLI remain std-only.
 

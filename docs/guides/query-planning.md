@@ -64,7 +64,7 @@ Case-insensitive matching disables literal-prefix root narrowing because directo
 
 ### Content stage
 
-When `--content` is present, the plan adds a content stage after path selection. Globs, exclusions, ignores, type, extension, size, and time filters decide which files reach the scanner, so an excluded subtree is still pruned before any content read. The scanner reports matching lines in file order and stops at the requested limit; `--explain` prints the compiled content patterns, case mode, binary policy, and output shape.
+For `branchcut grep`, the plan adds a content stage after path selection. Globs, exclusions, ignores, type, extension, size, and time filters decide which files reach the scanner, so an excluded subtree is pruned before content reads. The scanner reports selected lines in file order and stops at the requested limit. `--explain` shows the content patterns, case mode, binary policy, and output shape.
 
 ### Strategy
 

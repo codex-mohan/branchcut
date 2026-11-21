@@ -64,11 +64,11 @@ export default function HomePage() {
           <p>
             Branchcut is a filesystem query engine. It compiles globs,
             exclusions, ignores, filters, and limits into one traversal plan.
-            Opt-in literal content search with <code>--content</code> lets you
-            find text in the files that plan selects, while keeping content
-            reads out of ordinary path queries. Branchcut is not an index or a
-            universal replacement for every glob API. The supported surface is
-            documented and tested.
+            Opt-in content search adds context, encoding detection, and
+            structured results for the files that plan selects. The optional
+            <code>branchcut-regex</code> executable adds filename, path, and
+            line-oriented content regex. Supported behavior and remaining
+            limits are documented with the feature inventory.
           </p>
           <Link href="/docs/reference/feature-status">
             Complete feature status <ArrowRight aria-hidden="true" />

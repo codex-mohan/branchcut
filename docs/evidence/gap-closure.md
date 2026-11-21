@@ -39,8 +39,8 @@ The expanded runner checks 28 result-equivalent cases in sequential and parallel
 - `includeIf hasconfig` and some Git environment/system configuration discovery are unsupported and documented. Root/nested ignore support itself is implemented.
 - Exact one-filesystem enforcement, ownership IDs and Unix special-file types report unsupported on platforms where the standard-library implementation cannot provide them.
 - Windows plain/NUL text cannot preserve every unpaired surrogate; native APIs, command arguments and JSON companion fields provide lossless alternatives.
-- Filename regexes, captures, custom filesystem adapters, foreign-language bindings, and POSIX/glibc ABI compatibility are not implemented. These are not implied by glob support or CLI timing results.
-- Opt-in literal content search is shipped through `--content`/`--grep` and reads only selected regular files. Regex, captures, multiline matching, replacement, indexing, watchers, GUI/TUI and service protocols remain separate product work. The ripgrep benchmark measures `rg --files`, not content search.
+- As of this historical gap-closure pass, filename regexes were absent. v0.3.0 adds optional filename/path regex in `branchcut-regex`. Capture-group output, custom filesystem adapters, foreign-language bindings, and POSIX/glibc ABI compatibility remain outside the implementation. These are independent of CLI timing results.
+- The later v0.3.0 content expansion adds richer line selection, inputs, encodings, result formats, and optional line-oriented regex. See the [current content guide](../guides/content-search.md). The ripgrep benchmark in this gap-closure record measures `rg --files`.
 - Package-manager publication and native Apple Silicon execution testing remain open. The Apple Silicon release archive was cross-built using Apple's SDK and passed architecture and signature verification. The regular native macOS checks use Intel runners.
 
 ## Benchmark scope

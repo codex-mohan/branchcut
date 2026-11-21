@@ -20,7 +20,7 @@ Branchcut preserves the tagged competition submission while developing a maintai
 | Parallel traversal | Implemented | Bounded workers, streaming coordinator, sequential compatibility fallback |
 | Performance work | Measured on Windows | Raw results and losses retained; broader platforms remain separate evidence |
 | Cross-platform confidence | Native CI passes | [Windows, Linux and Intel macOS](https://github.com/codex-mohan/branchcut/actions/runs/44349839187); release artifact builds remain separate gates |
-| Release artifacts and packaging | Published | [v0.2.1](https://github.com/codex-mohan/branchcut/releases/tag/v0.2.1) provides four prebuilt archives and SHA-256 checksums |
+| Release artifacts and packaging | v0.3.0 release work | Four target archives with SHA-256 checksums, including the optional regex executable. Publication and platform checks are release gates. |
 
 ## Completed foundations
 
@@ -41,17 +41,17 @@ The active phase is release quality and onboarding:
 - expand public-repository and cross-platform benchmark evidence;
 - keep tutorials and installation paths synchronized with tested behavior.
 
-## Shipped: File-content search
+## v0.3.0 content search and regex
 
-`--content PATTERN` (alias `--grep`) searches the regular files already selected by Branchcut's globs, ignore rules, type, extension, size, and time filters. It is literal and line-oriented: patterns combine with OR, output is `path:line:column:text`, `-l` prints paths once, `--count` counts matching lines, and `--limit`/`--first` stop scanning early. Smart-case inspects the content patterns; binary-looking files are skipped unless `--text` is passed.
+`branchcut grep PATTERN [PATH...]` searches selected regular files with any/all/none selection, word/line bounds, inversion, context, case modes, encoding detection, stdin/path-list inputs, bounded workers, and exact limits. Results include text, JSONL, JSON, CSV, TSV, templates, match spans with pattern IDs, explanations, and summaries. The optional `branchcut-regex` executable adds filename/path regex and line-oriented content regex.
 
-Filename and metadata queries keep their existing semantics and read no file contents. Regex, captures, multiline matching, and replacement remain demand-driven candidates rather than shipped behavior. See the [CLI reference](../reference/cli.md#content-search) and [compatibility](../reference/compatibility.md) for exact semantics.
+Filename and metadata queries perform no content reads. The ordinary library and CLI retain a zero-crate dependency graph, while the regex executable declares its own dependencies. Capture-group output, multiline content matching, and replacement remain candidates. See [content search and regex](../guides/content-search.md) for exact semantics and bounds. Publication status is established by the release tag and completed artifacts.
 
 ## Demand-driven candidates
 
 These are not promises or current features:
 
-- captures and richer result explanations;
+- capture-group output, multiline content matching, and replacement;
 - additional Git config conditions and advanced ignore escaping;
 - richer command templates;
 - indexing, watchers, or a GUI where a concrete workflow calls for them;

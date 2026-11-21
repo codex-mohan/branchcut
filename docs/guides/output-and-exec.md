@@ -47,17 +47,17 @@ Unlimited sorting collects all matches. With `--limit N` or `--first`, Branchcut
 branchcut --glob '**/*.rs' --count
 ```
 
-Count mode avoids path serialization. It is useful for measurement and automation. With `--content`, `--count` reports matching lines rather than files.
+Count mode avoids path serialization. With `branchcut grep`, `--count` reports the total selected line count, while `-c` reports a separate count per input file.
 
 ## Content matches
 
 ```bash
-branchcut --glob '**/*.rs' --content 'TODO'
-branchcut --glob '**/*.rs' --content 'TODO' -l
-branchcut --glob '**/*.rs' --content 'TODO' --count
+branchcut grep --glob '**/*.rs' TODO
+branchcut grep --glob '**/*.rs' -l TODO
+branchcut grep --glob '**/*.rs' --count TODO
 ```
 
-Content output is `path:line:column:text`, one record per matching line. `column` is a one-based byte offset and line endings are trimmed. `-l` prints each matching path once, `--count` counts matching lines, and `--limit`/`--first` bound matching lines (or matching files with `-l`). `--sort` orders files before scanning. `--json` adds `line`, `column`, and `text` to each record; `--json-metadata` also adds file fields. Content mode is incompatible with `--print0`, `--format`, `--exec`, `--exec-batch`, and `--exec-preview`.
+Default content output is `path:line:column:text`. Columns count decoded bytes from 1, and line endings are trimmed. `-l`/`-L` select file-list output, `--count` counts selected lines, and `--count-per-file` prints individual file counts. Content results support JSONL, JSON, CSV, TSV, templates, context, matching spans with pattern IDs, explanations, and summaries. File-list modes accept `--print0`. Content mode rejects `--exec`, `--exec-batch`, and command preview. See [content search and regex](content-search.md) for schemas, offsets, and option interactions.
 
 ## JSON Lines
 

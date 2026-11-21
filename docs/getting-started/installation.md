@@ -221,7 +221,7 @@ PowerShell example:
 branchcut --cwd C:\path\to\project --glob "**/*.rs" --first
 ```
 
-The version command should print `branchcut 0.2.1`. The final command should print at most one matching Rust path and exit successfully.
+The version command should print `branchcut 0.3.0`. The final command should print at most one matching Rust path and exit successfully.
 
 ## Upgrade
 
@@ -356,3 +356,17 @@ cargo run -- --glob 'src/**/*.rs'
 ```
 
 Use the release build for performance measurements. Debug builds intentionally prioritize compilation speed and diagnostics over traversal throughput.
+
+## Optional regex executable
+
+The ordinary `branchcut` command uses a zero-crate core and literal content matching. The separately built `branchcut-regex` command adds filename/path and line-oriented content regex. It declares the `regex` crate in its own manifest and lockfile.
+
+From a source checkout, run the following command.
+
+```sh
+cargo install --locked --path integrations/content-regex
+branchcut-regex find -E '^test_.*\.rs$'
+branchcut-regex grep -E 'TODO|FIXME' src/ --glob '**/*.rs'
+```
+
+See the [content guide](../guides/content-search.md) for supported patterns, output schemas, encodings, inputs, and limits. Source bootstrap installers install the ordinary command. Consult the release archive contents for prebuilt optional executables.

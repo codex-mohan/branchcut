@@ -1,5 +1,5 @@
 {
   "title": "Guides",
   "icon": "BookOpen",
-  "pages": ["simple-search", "everyday-search", "globs-and-exclusions", "query-planning", "project-queries", "ignore-and-hidden", "output-and-exec"]
+  "pages": ["simple-search", "everyday-search", "content-search", "globs-and-exclusions", "query-planning", "project-queries", "ignore-and-hidden", "output-and-exec"]
 }

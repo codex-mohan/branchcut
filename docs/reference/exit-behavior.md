@@ -8,10 +8,11 @@ icon: CircleAlert
 
 | Code | Meaning |
 |---:|---|
-| `0` | Query completed successfully, including a clean broken output pipe. |
+| `0` | Successful filename query, a selected `grep` result, or a clean broken output pipe. |
+| `1` | `grep` selected no result, or a quiet filename query found no result. |
 | `2` | Invalid input, compilation failure, strict filesystem error, traversal failure, output failure, or unsuccessful child command. |
 
-No-match queries are successful and produce no path output. With `--count`, they print `0`.
+`branchcut grep` and `branchcut-regex grep` return 0 for a selected result, 1 for no result, and 2 for errors. With `--count` or `-c`, a zero result still returns 1. Ordinary filename queries succeed when the result is empty, while `--quiet` requests an existence status. Legacy flag-based content queries retain their previous exit-code behavior. Scan errors produce diagnostics and structured error records where applicable; `--strict` fails on any unreadable input.
 
 ## Best-effort filesystem behavior
 

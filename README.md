@@ -96,6 +96,19 @@ branchcut --glob '**/*.rs' --explain
 branchcut --glob '**/*.rs' --stats
 ```
 
+### Search file contents and use regex
+
+```sh
+branchcut grep TODO src/ --glob '**/*.rs' -C 2
+branchcut grep -e ERROR -e timeout logs/ --content-mode all --output jsonl --summary
+branchcut-regex find -E '^test_.*\.rs$'
+branchcut-regex grep -E 'TODO|FIXME' src/ --glob '**/*.rs' --output jsonl
+```
+
+`find` searches names and `grep` searches contents. Both accept paths after the pattern and use literals by default. `grep -e` adds repeatable patterns, `-f` reads a pattern file, and positional `-` reads stdin. `grep` returns 0 for a result, 1 for none, and 2 for errors. Use `branchcut grep --help` and `branchcut find --help` for focused examples.
+
+`branchcut` keeps a zero-crate core and ordinary CLI. Build the optional regex executable from a checkout with `cargo install --locked --path integrations/content-regex`. Its separately declared `regex` dependency stays outside the core dependency graph. See the [content-search guide](docs/guides/content-search.md) for inputs, encodings, schemas, and installation details.
+
 ### Everyday recipes and saved queries
 
 Search common source and config files while respecting ignore sources and including hidden paths:
@@ -155,7 +168,8 @@ For large selections, `--exec-batch` groups paths into bounded invocations. Use 
 
 - **Glob search:** `*`, `?`, `**`, character classes, nested braces and bounded ranges, plus component-local extglobs.
 - **Composed queries:** multiple positive patterns, exclusions, extension and type selection, depth, literal terms, and metadata filters in one query.
-- **Content search:** opt-in literal search inside selected files with `--content` (alias `--grep`), repeatable OR patterns, `path:line:column:text` output, `-l`, `--count`, case modes, binary auto-skip with `--text`, and early stop. No regex or multiline modes.
+- **Content search:** opt-in literal matching with any/all/none selection, word and whole-line modes, context, inversion, encoding detection, stdin and path-list inputs, and bounded workers. The optional `branchcut-regex` executable adds regex matching for filenames, paths, and file contents.
+- **Content results:** text, JSON Lines, JSON documents, CSV, TSV, templates, highlighted matches, byte spans with pattern IDs, selection explanations, and summaries. See [content search](docs/guides/content-search.md).
 - **Ignore controls:** hidden paths are excluded by default; opt into Git ignore sources, `.ignore`, or explicit ignore files.
 - **Traversal controls:** streaming output, `--first`, `--limit`, sorting, worker selection, symlink following, one-filesystem traversal on Unix, and bounded open-directory handling.
 - **Metadata filters:** exact decimal or binary file-size thresholds and modified-time windows. Metadata is avoided when the query does not request it.
@@ -246,7 +260,8 @@ Branchcut is a focused filesystem query tool, not a drop-in replacement for the 
 - Decimal size thresholds are exact and must resolve to whole bytes. Modification dates support UTC dates, RFC3339 offsets/fractions, and Unix `@seconds` instants.
 - Directory symlinks are not followed unless requested. Following links uses sequential traversal with cycle detection. `--one-file-system` is Unix-only.
 - A finite `--max-open` bounds directory handles by spilling pending entries to memory and resuming buffered frames; this trades memory for fewer open handles.
-- Branchcut selects paths and reads filesystem metadata. Opt-in literal text search inside selected files is available through `--content` (alias `--grep`): repeated patterns combine with OR, output is `path:line:column:text`, binary files are skipped unless `--text` is passed, and queries that do not request it read no file contents. It does not implement regular expressions, captures, or multiline matching. Branchcut also does not maintain an index, watch for changes, or provide a GUI.
+- Content reads are opt-in and apply only to selected regular files. The ordinary CLI uses literal patterns. The optional `branchcut-regex` executable uses Rust regex syntax for `find -E` and `grep -E`. Content matching is line-oriented. Capture-group output, multiline content matching, PCRE lookaround/backreferences, replacement, indexing, watchers, and a GUI remain outside this release.
+- Content offsets refer to decoded UTF-8 bytes after BOM removal. Limits count matching lines, or matching files in file-list modes. Context and matched-span output do not increase that count. Resource bounds and output interactions are documented in the [content guide](docs/guides/content-search.md).
 
 - Without `--strict`, filesystem errors are reported while discovery continues. Sorting scans before output; ordinary unsorted queries stream.
 

@@ -15,18 +15,18 @@ Branchcut's release workflow builds executables after an owner pushes a version 
 | macOS Intel | `macos-15-intel` | `branchcut-vVERSION-x86_64-apple-darwin.tar.gz` |
 | macOS Apple Silicon | `macos-15-intel` (cross-build) | `branchcut-vVERSION-aarch64-apple-darwin.tar.gz` |
 
-Each archive contains the executable, `LICENSE`, and English and translated README files. The release also includes `SHA256SUMS`. Windows, Linux and Intel macOS builds run natively. The Apple Silicon binary is cross-built on Intel macOS using Apple's SDK, compile-checked for its target, architecture-checked with `lipo`, and ad-hoc signed. Native ARM execution is not claimed. Rust documents this toolchain in its [Apple target reference](https://doc.rust-lang.org/rustc/platform-support/apple-darwin.html). Runner labels follow [GitHub's hosted-runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+Each archive contains `branchcut` and `branchcut-regex` executables, `LICENSE`, English and translated README files, optional-regex usage in `REGEX.md`, and `THIRD_PARTY_LICENSES.txt` for the separately built integration. The release also includes `SHA256SUMS`. Windows, Linux and Intel macOS builds run natively. The Apple Silicon binary is cross-built on Intel macOS using Apple's SDK, compile-checked for its target, architecture-checked with `lipo`, and ad-hoc signed. Native ARM execution is not claimed. Rust documents this toolchain in its [Apple target reference](https://doc.rust-lang.org/rustc/platform-support/apple-darwin.html). Runner labels follow [GitHub's hosted-runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
 ## Release a version
 
-Update the version in `Cargo.toml`, ensure the release commit passes the repository gates, and push a tag whose version exactly matches the package version. For example, if the package version is `0.2.1`:
+Update the version in `Cargo.toml`, ensure the release commit passes the repository gates, and push a tag whose version exactly matches the package version. For example, if the package version is `0.3.0`:
 
 ```sh
-git tag v0.2.1
-git push origin v0.2.1
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
-The workflow only runs for pushed `v*` tags. It rejects tags that do not match `Cargo.toml`, validates the native toolchain or the explicitly supported Intel-to-ARM macOS cross-build, and waits for all platform jobs to pass before publishing. The build matrix runs `cargo fmt -- --check`, `cargo test --locked`, and `cargo clippy --locked --all-targets -- -D warnings` before each release build; the ARM job also checks target-specific source and tests. The GitHub release is created with the four archives, checksums, and prepared release notes only after every build succeeds.
+The workflow only runs for pushed `v*` tags. It rejects tags that do not match `Cargo.toml`, validates the native toolchain or the explicitly supported Intel-to-ARM macOS cross-build, and waits for all platform jobs to pass before publishing. The build matrix runs `cargo fmt -- --check`, `cargo test --locked`, and `cargo clippy --locked --all-targets -- -D warnings` before each release build; the ARM job also checks target-specific source and tests. The optional regex package runs its own formatting, test, and Clippy checks, and both executables are built for each target. Native packaging jobs smoke-test literal and regex content search and regex filename selection before creating archives. The GitHub release is created with the four archives, checksums, and prepared release notes only after every build succeeds.
 
 Do not move or reuse a version tag. A transient runner or environment failure can be retried against the same tagged revision. Source or workflow corrections require a new version and tag; rerunning an old tag does not include later source changes.
 
@@ -43,22 +43,23 @@ sha256sum --check --ignore-missing SHA256SUMS
 On macOS:
 
 ```sh
-shasum -a 256 branchcut-v0.2.1-aarch64-apple-darwin.tar.gz
+shasum -a 256 branchcut-v0.3.0-aarch64-apple-darwin.tar.gz
 ```
 
 On macOS, compare that output with the matching filename's line in `SHA256SUMS`; replace the filename above for an Intel archive. On Windows PowerShell, compare the archive hash with its matching line:
 
 ```powershell
-(Get-FileHash .\branchcut-v0.2.1-x86_64-pc-windows-msvc.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+(Get-FileHash .\branchcut-v0.3.0-x86_64-pc-windows-msvc.zip -Algorithm SHA256).Hash.ToLowerInvariant()
 Get-Content .\SHA256SUMS
 ```
 
-Extract the archive and place `branchcut` (or `branchcut.exe`) in a directory on your `PATH`. The archive does not install or modify `PATH` automatically. For a source-built installation, use the [installation guide](../getting-started/installation).
+Extract the archive and place `branchcut` (or `branchcut.exe`) in a directory on your `PATH`. Put `branchcut-regex` (or `branchcut-regex.exe`) there as well to use optional filename/path and content regex. The archive does not install or modify `PATH` automatically. For a source-built installation, use the [installation guide](../getting-started/installation).
 
 ## Release checklist
 
 - Update `Cargo.toml` and `Cargo.lock` together when the package version changes.
 - Run the format, test, and Clippy gates locally.
 - Review `RELEASE_NOTES.md` before tagging and verify the published notes afterward.
-- Download an archive and its checksum file; verify the checksum and run `branchcut --version`.
+- Download an archive and its checksum file, verify the checksum, and run both executables.
+- Confirm the optional integration usage and third-party license notices are included.
 - Confirm the four target assets and `SHA256SUMS` appear in the release.

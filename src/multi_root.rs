@@ -33,6 +33,24 @@ impl Query {
     }
 }
 impl MultiRootQuery {
+    pub(crate) fn rebase<I, P>(plan: &CompiledQuery, roots: I) -> Result<Self, QueryError>
+    where
+        I: IntoIterator<Item = P>,
+        P: AsRef<Path>,
+    {
+        let plans = roots
+            .into_iter()
+            .map(|root| {
+                let absolute = std::path::absolute(plan.query().cwd.join(root))
+                    .map_err(|error| QueryError(error.to_string()))?;
+                plan.for_input(absolute)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        if plans.is_empty() {
+            return Err(QueryError("at least one search root is required".into()));
+        }
+        Ok(Self { plans })
+    }
     pub fn roots(&self) -> impl Iterator<Item = &Path> {
         self.plans.iter().map(|plan| plan.query().cwd.as_path())
     }

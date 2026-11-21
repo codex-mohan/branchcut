@@ -18,10 +18,12 @@ icon: Boxes
 | `rayon` | bounded `std::thread` workers |
 | `serde_json` | streaming JSON Lines escaping |
 | shell helpers | `std::process::Command` |
-| size / duration parsing crates | Checked whole-number and fixed-unit parsers in `src/metadata.rs` |
+| size / duration parsing crates | Exact decimal/binary byte thresholds and fixed-duration/timestamp parsers in `src/metadata.rs` |
 
 ## Boundary
 
 The documentation site has JavaScript dependencies because it is a separate Fumadocs application. Those packages are not linked into, invoked by, or required to distribute the Branchcut executable.
 
-The project does not pad this ledger with unimplemented substitutions. An async runtime and JSON arrays are not claimed.
+Content serialization implements schema-versioned JSONL, JSON documents, CSV, and TSV in `src/cli/content_format.rs`. The streaming decoder provides UTF BOM detection, UTF-16, Latin-1, Windows-1252, and raw input.
+
+`integrations/content-regex` is a separate package whose manifest declares `regex` and whose own lockfile pins the dependency graph. It adds filename/path and line-oriented content regex to the `branchcut-regex` executable. The core dependency graph is empty. See `STDLIB.md` in the repository and the [content guide](../guides/content-search.md).

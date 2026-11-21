@@ -14,6 +14,19 @@ cargo test --locked
 cargo clippy --locked --all-targets -- -D warnings
 ```
 
+## Optional regex integration gates
+
+Run the separate package gates for changes to regex matching or shared content APIs.
+
+```sh
+cargo fmt --manifest-path integrations/content-regex/Cargo.toml -- --check
+cargo test --locked --manifest-path integrations/content-regex/Cargo.toml
+cargo clippy --locked --manifest-path integrations/content-regex/Cargo.toml --all-targets -- -D warnings
+cargo tree --locked -e normal --manifest-path integrations/content-regex/Cargo.toml
+```
+
+The optional package declares its own dependency graph and lockfile. Verify filename/path and content regex through the executable, together with literal content, encoding, context, input, and serializer regressions in the ordinary package.
+
 ## Constraint proof
 
 ```bash

@@ -110,12 +110,28 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --locked --all-targets -- -D warnings
 
+      - name: Check optional regex integration formatting
+        run: cargo fmt --manifest-path integrations/content-regex/Cargo.toml -- --check
+
+      - name: Test optional regex integration
+        run: cargo test --locked --manifest-path integrations/content-regex/Cargo.toml
+
+      - name: Check optional regex integration with Clippy
+        run: cargo clippy --locked --manifest-path integrations/content-regex/Cargo.toml --all-targets -- -D warnings
+
       - name: Check cross-target source and tests
         if: matrix.cross
         run: cargo clippy --locked --all-targets --target ${{ matrix.target }} -- -D warnings
 
+      - name: Check cross-target regex integration source and tests
+        if: matrix.cross
+        run: cargo clippy --locked --manifest-path integrations/content-regex/Cargo.toml --all-targets --target ${{ matrix.target }} -- -D warnings
+
       - name: Build release binary
         run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Build optional regex integration binary
+        run: cargo build --release --locked --manifest-path integrations/content-regex/Cargo.toml --target-dir target --target ${{ matrix.target }}
 
       - name: Verify binary and prepare archive
         id: package
@@ -123,28 +139,71 @@ jobs:
         run: |
           $binaryName = if ($env:RUNNER_OS -eq 'Windows') { 'branchcut.exe' } else { 'branchcut' }
           $binary = Join-Path $env:GITHUB_WORKSPACE "target/$env:TARGET/release/$binaryName"
-          if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
-            throw "Release binary was not created: $binary"
+          $regexName = if ($env:RUNNER_OS -eq 'Windows') { 'branchcut-regex.exe' } else { 'branchcut-regex' }
+          $regexBinary = Join-Path $env:GITHUB_WORKSPACE "target/$env:TARGET/release/$regexName"
+          foreach ($executable in @($binary, $regexBinary)) {
+            if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
+              throw "Release binary was not created: $executable"
+            }
+            if ($env:CROSS_COMPILE -eq 'true') {
+              & lipo $executable -verify_arch arm64
+              if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon binary architecture verification failed.' }
+              & codesign --force --sign - $executable
+              if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon ad-hoc signing failed.' }
+              & codesign --verify --strict $executable
+              if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon signature verification failed.' }
+              & file $executable
+              if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the release binary.' }
+            } else {
+              $versionOutput = (& $executable --version | Out-String).Trim()
+              if ($LASTEXITCODE -ne 0 -or $versionOutput -cne "branchcut $env:VERSION") {
+                throw "Unexpected binary version output from ${executable}: $versionOutput"
+              }
+            }
           }
-          if ($env:CROSS_COMPILE -eq 'true') {
-            & lipo $binary -verify_arch arm64
-            if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon binary architecture verification failed.' }
-            & codesign --force --sign - $binary
-            if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon ad-hoc signing failed.' }
-            & codesign --verify --strict $binary
-            if ($LASTEXITCODE -ne 0) { throw 'Apple Silicon signature verification failed.' }
-            & file $binary
-          } else {
-            $versionOutput = (& $binary --version | Out-String).Trim()
-            if ($LASTEXITCODE -ne 0 -or $versionOutput -cne "branchcut $env:VERSION") {
-              throw "Unexpected binary version output: $versionOutput"
+
+          if ($env:CROSS_COMPILE -ne 'true') {
+            $fixture = Join-Path $env:RUNNER_TEMP 'branchcut-release-smoke'
+            New-Item -ItemType Directory -Path $fixture -Force | Out-Null
+            [IO.File]::WriteAllText((Join-Path $fixture 'example.txt'), "TODO 42`n", [Text.UTF8Encoding]::new($false))
+            $literalResult = (& $binary grep --cwd $fixture --glob '*.txt' --count TODO . | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0 -or $literalResult -cne '1') {
+              throw "Release literal content smoke test failed: $literalResult"
+            }
+            $regexResult = (& $regexBinary grep -E --cwd $fixture --glob '*.txt' --count 'TODO [0-9]+' . | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0 -or $regexResult -cne '1') {
+              throw "Release regex content smoke test failed: $regexResult"
+            }
+            $pathResult = (& $regexBinary find -E --cwd $fixture --count '^example[.]txt$' . | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0 -or $pathResult -cne '1') {
+              throw "Release regex filename smoke test failed: $pathResult"
             }
           }
 
           $dist = Join-Path $env:RUNNER_TEMP 'branchcut-release'
           New-Item -ItemType Directory -Path $dist -Force | Out-Null
           Copy-Item -LiteralPath $binary -Destination (Join-Path $dist $binaryName)
+          Copy-Item -LiteralPath $regexBinary -Destination (Join-Path $dist $regexName)
           Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'LICENSE') -Destination $dist
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'integrations/content-regex/README.md') -Destination (Join-Path $dist 'REGEX.md')
+          $dependencyJson = & cargo metadata --locked --format-version 1 --manifest-path integrations/content-regex/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { throw 'Could not read optional integration dependency metadata.' }
+          $dependencyMetadata = $dependencyJson | ConvertFrom-Json
+          $notices = [Text.StringBuilder]::new()
+          foreach ($package in ($dependencyMetadata.packages | Where-Object { $_.source } | Sort-Object name, version)) {
+            [void]$notices.AppendLine("$($package.name) $($package.version)")
+            [void]$notices.AppendLine("License expression: $($package.license)")
+            [void]$notices.AppendLine("Source: $($package.repository)")
+            $packageDirectory = Split-Path -Parent $package.manifest_path
+            $licenses = @(Get-ChildItem -LiteralPath $packageDirectory -File | Where-Object { $_.Name -match '^(LICENSE|COPYING)' } | Sort-Object Name)
+            if ($licenses.Count -eq 0) { throw "No license files found for $($package.name) $($package.version)." }
+            foreach ($license in $licenses) {
+              [void]$notices.AppendLine("--- $($license.Name) ---")
+              [void]$notices.AppendLine([IO.File]::ReadAllText($license.FullName))
+            }
+            [void]$notices.AppendLine()
+          }
+          [IO.File]::WriteAllText((Join-Path $dist 'THIRD_PARTY_LICENSES.txt'), $notices.ToString(), [Text.UTF8Encoding]::new($false))
           Get-ChildItem -Path (Join-Path $env:GITHUB_WORKSPACE 'README*.md') -File |
             Copy-Item -Destination $dist
           $archiveName = "branchcut-v$env:VERSION-$env:TARGET.$env:ARCHIVE_EXTENSION"

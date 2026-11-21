@@ -209,7 +209,7 @@ fn explain_path(
         );
     }
 
-    if plan.simple_terms.is_empty() && plan.and_terms.is_empty() {
+    if plan.simple_terms.is_empty() && plan.and_terms.is_empty() && !plan.has_path_matcher() {
         checks.push(PathCheck {
             label: "simple search",
             outcome: CheckOutcome::NotApplicable,
@@ -218,7 +218,11 @@ fn explain_path(
     } else {
         record(
             &mut checks,
-            "simple search",
+            if plan.has_path_matcher() {
+                "path regex"
+            } else {
+                "simple search"
+            },
             plan.simple_matches(&name, &relative),
             match plan.search_target {
                 SearchTarget::Name => "searched the entry name".to_owned(),

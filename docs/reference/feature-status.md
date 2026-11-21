@@ -16,7 +16,9 @@ This describes the current development tree, including post-competition work. It
 | Entry types | Regular files by default; repeatable file/directory/symlink union; Unix sockets/FIFOs/devices; empty/executable filters and numeric Unix ownership/group filters |
 | Case | Sensitive by default; ASCII-insensitive/smart modes; opt-in Unicode scalar wildcards/classes and single-scalar lowercase comparisons; native invalid-UTF-8 fallback |
 | Extension | Repeatable extension filters, optional leading dot, selected case mode |
-| Content search | Opt-in literal byte matching over selected regular files; repeatable OR patterns; `path:line:column:text`; case modes; binary auto-skip with `--text`; `-l` path-only; `--count` matching lines; early stop through `--limit`/`--first`; JSON and JSON-metadata records |
+| Content search | Opt-in literals over selected regular files; any/all/none patterns; word/line bounds; inversion; context; case modes; BOM and explicit encodings; stdin and path lists; bounded workers; exact limits |
+| Regex integration | Separate `branchcut-regex` executable with filename/path regex via `find -E` and line-oriented content regex via `grep -E` |
+| Content results | Text, JSONL, JSON, CSV, TSV, templates, matching-file/no-match-file lists, line counts, spans with pattern IDs, selection explanations, and summaries |
 | Depth | Inclusive minimum/maximum depth measured from cwd; maximum depth also bounds descent |
 | Size | Equality and ordered comparisons; decimal/binary units; exact decimal fractions that resolve to whole bytes; regular files only |
 | Time | Inclusive modified-within; strict modified-before; fixed durations, RFC3339 offsets/fractions, UTC dates, signed Unix instants; clock captured per execution |
@@ -54,13 +56,13 @@ An alternative is useful only within its stated boundary. These do not establish
 | Shell expressions in command templates | Invoke an explicit wrapper program when shell behavior is actually needed | Quoting, pipes, redirects, and expansion are not interpreted by Branchcut; paths must remain separate arguments |
 | Very large CLI pattern lists | Saved query files or the typed Rust query API avoid operating-system command-line length limits | No dedicated response-file flag is implemented |
 | Full fast-glob API compatibility | Use the supported glob subset and the Rust query API | This is a filesystem query tool, not an npm API replacement |
-| Captures and filename regexes | Globs, literal terms, AND filters, native library matching, or a separate regex-capable finder | Captured substrings and a regex engine are not implemented |
-| Regular-expression or multiline content search | Literal `--content` patterns, repeatable OR terms, and path selection in front of another tool | No regex, captures, lookaround, multiline, or replacement support; binary detection and byte-oriented encoding behavior are documented |
+| Capture-group output | Full-expression spans and zero-based pattern IDs in structured results | Individual capture-group serialization remains open |
+| Multiline content, PCRE lookaround/backreferences, and replacement | Line-oriented Rust regex in the optional executable, or a specialized external processor | Cross-line matches, PCRE-specific syntax, capture-group output, and rewriting files remain outside this release |
 | Cross-platform ownership/device boundaries | Numeric ownership and filesystem IDs on Unix; explicit unsupported errors elsewhere | Windows ownership and exact one-filesystem enforcement need a separately approved platform implementation |
 | Bindings, virtual filesystem adapters, POSIX glob ABI | Invoke the executable or Rust API | JavaScript/C/Zig bindings, custom filesystem adapters, and POSIX/glibc API compatibility are not shipped |
 | Package-manager installation | [GitHub release archives](https://github.com/codex-mohan/branchcut/releases/latest), source installers and Cargo installation | Package-manager submissions remain open |
 
-Opt-in literal content search is shipped through `--content`/`--grep`. It reads only files that already pass path selection and does not affect queries that omit it. Regex, captures, multiline matching, indexing, GUI/TUI, watchers, and service or agent protocols remain outside the current release.
+Content search reads only selected regular files. The ordinary CLI uses literals, and the optional `branchcut-regex` executable adds filename/path and line-oriented content regex. See the [content guide](../guides/content-search.md) for the complete input, encoding, result-schema, and resource-bound contract. Multiline matching, capture-group output, replacement, indexing, GUI/TUI, watchers, and service protocols remain outside this release.
 
 ## Recent reliability correction
 

@@ -1,15 +1,23 @@
+mod content;
+
+use self::content::{PendingContent, content_spans_needed};
 use super::args::{Decoration, Options};
+use super::content_format::{
+    ContentFormat, ContentFormatState, ContentSummary, FormatOptions, Row,
+};
+use super::content_inputs;
+use super::content_workers::{ContentEvent, ContentReceiver, ContentWorkers};
 use super::exec::{
     CommandPool, batch_arguments, command_arguments, command_batch_base_bytes, parse_command_line,
     render_template, validate_batch_template,
 };
 use crate::error::{AppError, Result};
 use crate::{
-    CaseMode, CheckOutcome, CompiledQuery, ContentMatch, ContentQuery, PathExplanation, Stats,
-    Visitor,
+    CheckOutcome, CompiledQuery, ContentQuery, ContentRecord, ContentRecordKind, PathExplanation,
+    ScanStats, Stats, Visitor,
 };
 use std::borrow::Cow;
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, VecDeque};
 use std::ffi::OsStr;
 use std::fs;
 use std::io::{self, IsTerminal, Write};
@@ -275,43 +283,33 @@ pub(crate) fn print_explain(plan: &CompiledQuery, options: &Options) {
         println!("  relative time boundaries: resolved when each execution starts");
     }
     if !options.content.is_empty() {
-        let insensitive = match options.case_mode {
-            CaseMode::Insensitive => true,
-            CaseMode::Sensitive => false,
-            CaseMode::Smart => !options
-                .content
-                .iter()
-                .any(|pattern| pattern.chars().any(char::is_uppercase)),
-        };
         println!("\nCONTENT SEARCH");
         println!("  patterns: {}", options.content.len());
-        for pattern in &options.content {
-            println!("  pattern: {pattern}");
+        for (index, pattern) in options.content.iter().enumerate() {
+            println!("  pattern {index}: {pattern:?}");
         }
         println!(
-            "  case: {}",
-            if insensitive {
-                "insensitive"
-            } else {
-                "sensitive"
-            }
+            "  case: {:?}, Unicode: {}",
+            options.case_mode, options.unicode
+        );
+        println!(
+            "  mode: {:?}, regex: {}",
+            options.content_options.matching.mode, options.content_options.regex
+        );
+        println!(
+            "  encoding: {}, output: {:?}",
+            options.content_options.scan.encoding,
+            options.content_format()
         );
         println!(
             "  binary files: {}",
             if options.content_text {
                 "read as text"
             } else {
-                "skipped when a NUL byte appears in the first 8192 bytes"
+                "non-UTF-16 files skipped when the binary probe finds NUL"
             }
         );
-        println!(
-            "  output: path:line:column:text{}",
-            if options.files_with_matches {
-                " (paths only)"
-            } else {
-                ""
-            }
-        );
+        println!("  paths only: {}", options.content_paths_only());
     }
     println!(
         "\nTERMINATION\n  {}",
@@ -416,6 +414,11 @@ pub(crate) struct Output<W: Write> {
     pub(crate) content_binary_skipped: u64,
     pub(crate) content_errors: u64,
     content: Option<ContentQuery>,
+    content_plan: Option<CompiledQuery>,
+    content_workers: Option<ContentWorkers>,
+    pending_content: VecDeque<PendingContent>,
+    content_format_state: ContentFormatState,
+    content_worker_count: usize,
     options: Options,
     command: Option<Vec<String>>,
     batch_command: Option<Vec<String>>,
@@ -461,7 +464,7 @@ impl<W: Write> Output<W> {
         };
         let terminal = io::stdout().is_terminal()
             && std::env::var_os("TERM").is_none_or(|term| term != "dumb");
-        let plain = !options.json
+        let plain = options.content_format() == ContentFormat::Text
             && !options.print0
             && !options.count
             && !options.quiet
@@ -470,6 +473,34 @@ impl<W: Write> Output<W> {
             |mode| plain && (mode == Decoration::Always || mode == Decoration::Auto && terminal);
         let content = options.content_query()?;
         let content_mode = content.is_some();
+        let parallel = options.threads > 1
+            && !options.content_options.stdin
+            && options.content_options.preprocess.is_none()
+            && !options.content_options.decompress
+            && !options.quiet
+            && options.limit.is_none();
+        // Each worker can own the current line and two pending records. Keep
+        // worst-case buffering bounded even with large requested worker counts.
+        let scan = &options.content_options.scan;
+        let estimated_worker_bytes = scan.max_line_bytes.saturating_mul(4).max(1);
+        let content_worker_count = options
+            .threads
+            .min(64)
+            .min((256 * 1024 * 1024 / estimated_worker_bytes).max(1))
+            .min(if scan.before_context > 0 { 4 } else { 64 });
+        let content_workers = if parallel && content_worker_count > 1 {
+            content
+                .as_ref()
+                .map(|query| {
+                    let mut scan = *scan;
+                    scan.all_spans = content_spans_needed(options, terminal);
+                    ContentWorkers::new(query.clone(), scan, content_worker_count)
+                })
+                .transpose()
+                .map_err(|error| AppError(error.to_string()))?
+        } else {
+            None
+        };
         Ok(Self {
             writer,
             output: Vec::new(),
@@ -483,6 +514,11 @@ impl<W: Write> Output<W> {
             content_binary_skipped: 0,
             content_errors: 0,
             content,
+            content_plan: None,
+            content_workers,
+            pending_content: VecDeque::new(),
+            content_format_state: ContentFormatState::default(),
+            content_worker_count,
             options: options.clone(),
             command,
             batch_command,
@@ -492,10 +528,9 @@ impl<W: Write> Output<W> {
             batch_base_bytes,
             line_buffer: Vec::new(),
             command_pool: CommandPool::new(options.exec_jobs),
-            color: !content_mode
-                && decorate(options.color)
+            color: decorate(options.color)
                 && (options.color == Decoration::Always || std::env::var_os("NO_COLOR").is_none()),
-            hyperlink: !content_mode && decorate(options.hyperlink),
+            hyperlink: decorate(options.hyperlink),
         })
     }
 
@@ -674,8 +709,8 @@ impl<W: Write> Output<W> {
     }
 
     pub(crate) fn finish(&mut self) -> io::Result<()> {
-        if self.options.sort && !self.options.count {
-            if self.content.is_some() {
+        if self.content.is_some() {
+            if self.options.sort && !self.options.count && !self.stopped {
                 self.output.sort_unstable();
                 let paths = std::mem::take(&mut self.output);
                 for path in &paths {
@@ -684,20 +719,25 @@ impl<W: Write> Output<W> {
                     }
                 }
                 self.output = paths;
-            } else {
-                if let Some(selection) = self.selection.take() {
-                    self.output = selection.into_sorted_vec();
-                } else {
-                    self.output.sort_unstable();
-                }
-                self.matched = self.output.len() as u64;
-                let paths = std::mem::take(&mut self.output);
-                for path in &paths {
-                    let path = self.output_path(path);
-                    self.selected_path(&path)?;
-                }
-                self.output = paths;
             }
+            while !self.pending_content.is_empty() && !self.stopped {
+                let _ = self.drain_content()?;
+            }
+            self.pending_content.clear();
+            self.content_workers.take();
+        } else if self.options.sort && !self.options.count {
+            if let Some(selection) = self.selection.take() {
+                self.output = selection.into_sorted_vec();
+            } else {
+                self.output.sort_unstable();
+            }
+            self.matched = self.output.len() as u64;
+            let paths = std::mem::take(&mut self.output);
+            for path in &paths {
+                let path = self.output_path(path);
+                self.selected_path(&path)?;
+            }
+            self.output = paths;
         }
         self.flush_batch()?;
         self.command_pool.finish()?;
@@ -705,141 +745,6 @@ impl<W: Write> Output<W> {
             writeln!(self.writer, "{}", self.matched)?;
         }
         self.writer.flush()
-    }
-
-    /// Read one selected file and emit its matching lines. Non-file entries are
-    /// skipped: content search applies to regular files only.
-    fn scan_content(&mut self, path: &Path) -> io::Result<ControlFlow<()>> {
-        let Some(query) = self.content.clone() else {
-            return Ok(ControlFlow::Continue(()));
-        };
-        let absolute = if path.is_absolute() {
-            path.to_owned()
-        } else {
-            self.options.cwd.join(path)
-        };
-        let metadata = match fs::metadata(&absolute) {
-            Ok(metadata) => metadata,
-            Err(error) => {
-                self.content_errors += 1;
-                self.error(path, &error)?;
-                return Ok(ControlFlow::Continue(()));
-            }
-        };
-        self.metadata_calls += 1;
-        if !metadata.is_file() {
-            return Ok(ControlFlow::Continue(()));
-        }
-        let limit = self.options.limit.map(|limit| limit as u64);
-        let remaining = limit.map(|limit| limit.saturating_sub(self.matched));
-        if remaining == Some(0) {
-            self.stopped = true;
-            return Ok(ControlFlow::Break(()));
-        }
-        let files_only = self.options.files_with_matches;
-        let quiet = self.options.quiet;
-        let count = self.options.count;
-        let scan_limit = if files_only || quiet {
-            Some(1)
-        } else {
-            remaining
-        };
-        let display = self.output_path(path).into_owned();
-        let mut emitted = 0u64;
-        let mut write_error = None;
-        let scanned = query.scan_file(&absolute, scan_limit, |found| {
-            if files_only || quiet {
-                emitted = 1;
-                return Ok(ControlFlow::Break(()));
-            }
-            if !count && let Err(error) = self.write_content_match(&display, &metadata, found) {
-                write_error = Some(error);
-                return Ok(ControlFlow::Break(()));
-            }
-            self.matched += 1;
-            emitted += 1;
-            if limit.is_some_and(|limit| self.matched >= limit) {
-                return Ok(ControlFlow::Break(()));
-            }
-            Ok(ControlFlow::Continue(()))
-        });
-        if let Some(error) = write_error {
-            return Err(error);
-        }
-        let stats = match scanned {
-            Ok(stats) => stats,
-            Err(error) => {
-                self.content_errors += 1;
-                self.error(path, &error)?;
-                return Ok(ControlFlow::Continue(()));
-            }
-        };
-        self.content_files += 1;
-        self.content_bytes = self.content_bytes.saturating_add(stats.bytes_read);
-        if stats.binary_skipped {
-            self.content_binary_skipped += 1;
-        }
-        if files_only {
-            if emitted == 0 {
-                return Ok(ControlFlow::Continue(()));
-            }
-            self.matched += 1;
-            self.selected_path(&display)?;
-            return Ok(self.finish_match());
-        }
-        if quiet {
-            if emitted == 0 {
-                return Ok(ControlFlow::Continue(()));
-            }
-            self.matched += 1;
-        }
-        Ok(self.finish_match())
-    }
-
-    fn write_content_match(
-        &mut self,
-        display: &Path,
-        metadata: &fs::Metadata,
-        found: ContentMatch<'_>,
-    ) -> io::Result<()> {
-        let mut record = Vec::with_capacity(found.line.len() + 64);
-        if self.options.json {
-            write_path(&mut record, true, false, display)?;
-            // Drop the closing brace and newline written by write_path.
-            record.truncate(record.len() - 2);
-            write!(
-                &mut record,
-                ",\"line\":{},\"column\":{}",
-                found.line_number, found.column
-            )?;
-            record.extend_from_slice(b",\"text\":\"");
-            record.extend_from_slice(json_escape(&String::from_utf8_lossy(found.line)).as_bytes());
-            record.push(b'"');
-            if self.options.json_metadata {
-                write!(
-                    &mut record,
-                    ",\"type\":\"file\",\"size\":{},\"readonly\":{}",
-                    metadata.len(),
-                    metadata.permissions().readonly()
-                )?;
-                if let Ok(modified) = metadata.modified() {
-                    let milliseconds = match modified.duration_since(std::time::UNIX_EPOCH) {
-                        Ok(age) => age.as_millis() as i128,
-                        Err(error) => -(error.duration().as_millis() as i128),
-                    };
-                    write!(&mut record, ",\"modified_unix_ms\":{milliseconds}")?;
-                }
-            }
-            record.extend_from_slice(b"}\n");
-        } else {
-            write_path(&mut record, false, false, display)?;
-            // Replace the trailing newline with the result separator.
-            record.pop();
-            write!(&mut record, ":{}:{}:", found.line_number, found.column)?;
-            record.extend_from_slice(found.line);
-            record.push(b'\n');
-        }
-        self.writer.write_all(&record)
     }
 }
 impl<W: Write> Visitor for Output<W> {
@@ -915,6 +820,14 @@ impl<W: Write> Visitor for Output<W> {
 
     fn error(&mut self, path: &Path, error: &io::Error) -> io::Result<()> {
         eprintln!("branchcut: cannot read {}: {error}", path.display());
+        if self.content.is_some() {
+            self.content_format_state.write_error(
+                &mut self.writer,
+                self.options.content_format(),
+                path,
+                error,
+            )?;
+        }
         Ok(())
     }
 }
@@ -950,7 +863,7 @@ fn native_argument_cost(path: &Path) -> usize {
     }
 }
 
-fn file_url(path: &Path) -> String {
+pub(crate) fn file_url(path: &Path) -> String {
     #[cfg(unix)]
     let bytes = path.as_os_str().as_bytes();
     #[cfg(not(unix))]

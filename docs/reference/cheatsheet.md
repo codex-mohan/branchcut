@@ -51,13 +51,18 @@ Different filter families combine with AND. Metadata is requested only after che
 
 | Goal | Command |
 |---|---|
-| Find a literal string | `branchcut --glob '**/*.rs' --content TODO` |
-| Match any of several terms | `branchcut --content ERROR --content WARN -l` |
-| Case-insensitive content | `branchcut -i --content todo` |
-| Scan binary-looking files too | `branchcut --glob '**/*.log' --content crash --text` |
-| Stop after N matching lines | `branchcut --glob '**/*.rs' --content TODO --limit 20` |
+| Find a literal string | `branchcut grep --glob '**/*.rs' TODO` |
+| Match any of several terms | `branchcut grep -l -e ERROR -e WARN` |
+| Case-insensitive content | `branchcut grep -i todo` |
+| Scan binary-looking files too | `branchcut grep --glob '**/*.log' --text crash` |
+| Stop after N matching lines | `branchcut grep --glob '**/*.rs' --limit 20 TODO` |
+| Show surrounding lines | `branchcut grep --context 2 TODO` |
+| Require every term | `branchcut grep --content-mode all -e ERROR -e timeout` |
+| Export spans and totals | `branchcut grep --output jsonl --summary TODO` |
+| Search with content regex | `branchcut-regex grep -E 'TODO|FIXME'` |
+| Find regex filenames | `branchcut-regex find -E '^test_.*\.rs$'` |
 
-Content search runs after path selection, so globs, exclusions, ignores, type, extension, size, and time filters all narrow what is read. Patterns are literal bytes and combine with OR. Output is `path:line:column:text`, or each path once with `-l`. `--count` counts matching lines; with `-l`, `--limit` and `--first` bound matching files. `--content` is incompatible with `--exec`, `--exec-batch`, `--exec-preview`, `--print0`, and `--format`.
+Content search runs after path selection. Repeated patterns default to OR. `--content-mode all` requires all patterns on one line. `--count` counts selected lines and file-list modes count files for limits. `-l --print0` emits native NUL-delimited paths. Templates use `--format`; structured formats use `--output`. Content mode rejects command execution and preview. See the [content guide](../guides/content-search.md).
 
 ## Stop and order
 
@@ -122,7 +127,7 @@ branchcut --config .branchcut-queries --profile source
 - Matching is byte-oriented by default, with opt-in Unicode scalar matching and simple lowercase comparison for valid UTF-8 names; no normalization or multi-character case folding is performed.
 - Default case options fold ASCII only. With `--unicode`, smart-case detection and lowercase matching also use Unicode scalars; invalid native byte names fall back to byte matching.
 - `--gitignore` loads supported Git sources and nested `.gitignore`; `--ignore` adds `.ignore`; explicit ignore files have higher precedence. Advanced Git configuration and escaping boundaries remain documented.
-- `--content` is literal and line-oriented: no regular expressions, captures, multiline matching, or replacement. Binary files are skipped when a NUL byte appears in the first 8 KiB unless `--text` is passed.
+- `branchcut grep` uses literal patterns. `branchcut-regex grep -E PATTERN` adds line-oriented regex, and `branchcut-regex find -E PATTERN` selects names or paths. Multiline content, capture-group output, and replacement are unsupported. BOMs and explicit encodings are supported, and binary detection is bounded to the first 8 KiB.
 - Prefix/suffix negated extglobs and Unicode case folding are unsupported.
 
 See the [CLI reference](cli) and [glob syntax](glob-syntax) for exact constraints.

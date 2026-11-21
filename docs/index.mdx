@@ -70,7 +70,7 @@ The product claim is not universal speed superiority. It is narrower and testabl
 
 ## Current scope
 
-Branchcut searches paths, filesystem metadata, and—when asked with `--content`—literal text inside selected files. Content search is line-oriented and intentionally narrower than a general-purpose grep tool: no regular expressions, captures, multiline matching, or replacement. Regex and richer matching remain [roadmap](project/roadmap.md) candidates.
+Branchcut searches paths and filesystem metadata, with opt-in content reads over selected regular files. Content mode includes context, encoding detection, explicit inputs, structured formats, spans, and summaries. The separately built `branchcut-regex` executable adds filename/path and line-oriented content regex. See [content search and regex](guides/content-search.md) for the contract and remaining limits.
 
 ## Current status
 

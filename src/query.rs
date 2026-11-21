@@ -156,6 +156,7 @@ pub struct CompiledQuery {
     pub(crate) positive_matches_all: bool,
     pub(crate) selection_all_non_root: bool,
     pub(crate) negative_program: PatternProgram,
+    path_matcher: Option<PathMatcher>,
     pub(crate) negatives: Vec<Pattern>,
     pub(crate) simple_terms: Vec<Vec<u8>>,
     pub(crate) extensions: Vec<Vec<u8>>,
@@ -183,7 +184,30 @@ pub struct CompiledQuery {
     pub(crate) metadata: MetadataFilters,
 }
 
+#[derive(Clone)]
+struct PathMatcher(std::sync::Arc<dyn crate::ContentMatcher>);
+
+impl std::fmt::Debug for PathMatcher {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("PathMatcher")
+            .finish_non_exhaustive()
+    }
+}
+
 impl CompiledQuery {
+    pub(crate) fn with_path_matcher(
+        mut self,
+        matcher: std::sync::Arc<dyn crate::ContentMatcher>,
+    ) -> Self {
+        self.path_matcher = Some(PathMatcher(matcher));
+        self.selection_all_non_root = false;
+        self
+    }
+
+    pub(crate) fn has_path_matcher(&self) -> bool {
+        self.path_matcher.is_some()
+    }
     pub(crate) fn cancelled(&self) -> bool {
         self.source_query
             .cancellation
@@ -195,7 +219,30 @@ impl CompiledQuery {
     pub fn for_root(&self, root: impl Into<PathBuf>) -> Result<Self> {
         let mut query = self.source_query.clone();
         query.cwd = root.into();
-        query.compile()
+        let plan = query.compile()?;
+        Ok(match &self.path_matcher {
+            Some(matcher) => plan.with_path_matcher(matcher.0.clone()),
+            None => plan,
+        })
+    }
+
+    /// Rebase a directory input or plan an explicitly named entry as a single
+    /// candidate. An explicit file still goes through glob and ignore checks.
+    pub(crate) fn for_input(&self, input: PathBuf) -> Result<Self> {
+        let metadata = if self.follow_symlinks {
+            fs::metadata(&input)
+        } else {
+            fs::symlink_metadata(&input)
+        };
+        if metadata.is_ok_and(|metadata| !metadata.is_dir())
+            && let (Some(parent), Some(name)) = (input.parent(), input.file_name())
+        {
+            let mut plan = self.for_root(parent)?;
+            plan.root_relative = PathBuf::from(name);
+            plan.root = input;
+            return Ok(plan);
+        }
+        self.for_root(input)
     }
 
     pub fn query(&self) -> &Query {
@@ -428,6 +475,7 @@ impl CompiledQuery {
             positive_matches_all,
             selection_all_non_root,
             negative_program,
+            path_matcher: None,
             gitignore: options.gitignore || options.ignore,
             dot_ignore: options.ignore,
             ignore_files: options
@@ -495,18 +543,37 @@ impl CompiledQuery {
     ) -> bool {
         (self.positive_matches_all || self.positive_program.states_match(positive))
             && !self.negative_program.states_match(negative)
-            && (self.simple_terms.is_empty() && self.and_terms.is_empty()
+            && (self.path_matcher.is_none()
+                && self.simple_terms.is_empty()
+                && self.and_terms.is_empty()
                 || self.search_target == SearchTarget::Name
-                    && with_os_bytes(name, |bytes| self.simple_bytes_match(bytes)))
+                    && self.simple_matches(name, Path::new("")))
     }
 
     pub(crate) fn simple_matches(&self, name: &OsStr, relative: &Path) -> bool {
         let target = match self.search_target {
             SearchTarget::Name => name,
-            SearchTarget::Path => relative.as_os_str(),
+            SearchTarget::Path if !relative.as_os_str().is_empty() => relative.as_os_str(),
+            SearchTarget::Path => name,
         };
-        self.simple_terms.is_empty() && self.and_terms.is_empty()
-            || with_os_bytes(target, |bytes| self.simple_bytes_match(bytes))
+        self.path_matcher.is_none() && self.simple_terms.is_empty() && self.and_terms.is_empty()
+            || with_os_bytes(target, |bytes| {
+                self.simple_bytes_match(bytes)
+                    && self.path_matcher.as_ref().is_none_or(|matcher| {
+                        if cfg!(windows)
+                            && self.search_target == SearchTarget::Path
+                            && bytes.contains(&b'\\')
+                        {
+                            let normalized: Vec<_> = bytes
+                                .iter()
+                                .map(|&byte| if byte == b'\\' { b'/' } else { byte })
+                                .collect();
+                            matcher.0.is_match(&normalized)
+                        } else {
+                            matcher.0.is_match(bytes)
+                        }
+                    })
+            })
     }
 
     fn simple_bytes_match(&self, bytes: &[u8]) -> bool {
