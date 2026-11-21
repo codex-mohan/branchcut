@@ -4,7 +4,7 @@ description: Implemented capabilities, dependable alternatives, and remaining fi
 icon: ListChecks
 ---
 
-This describes the current development tree, including post-competition work. It is not the feature list of the preserved `submission-v1` binary. See the [gap-closure record](../evidence/gap-closure.md) for validation and remaining release gates. Planned capabilities are not shipped claims.
+This page covers Branchcut v0.2.1. See the [roadmap](../project/roadmap.md) for work in development and the [validation record](../evidence/gap-closure.md) for platform checks.
 
 ## Complete implemented surface
 
@@ -39,7 +39,7 @@ This describes the current development tree, including post-competition work. It
 | Structure | One Cargo package; focused library modules and thin binary; no third-party production crates |
 | Planner | Shared pattern states; case-sensitive common-literal-root narrowing; positive/exclusion/ignore/depth pruning; type/extension/name checks before requested metadata |
 
-The [CLI reference](cli.md) describes option interactions. Ordinary name-only queries avoid per-entry metadata fetches; root/ancestor validation still uses metadata. Statistics count explicit metadata requests, not every operating-system call inside the standard library.
+The [CLI reference](./cli.md) describes option interactions. Ordinary name-only queries avoid per-entry metadata fetches; root/ancestor validation still uses metadata. Statistics count explicit metadata requests, not every operating-system call inside the standard library.
 
 ## Reliable alternatives for missing behavior
 
@@ -72,4 +72,4 @@ The gap-closure work expands this coverage to inherited/global/linked-worktree s
 
 ## Evidence and limits
 
-Every confirmed defect needs a regression. Performance changes need before/after measurements with equivalent selections and retained losses. See [Phase 7 evidence](../evidence/phase7.md) and [compatibility](compatibility.md). This list does not turn unresolved gaps into supported behavior.
+Every confirmed defect needs a regression. Performance changes need before/after measurements with equivalent selections and retained losses. See [Phase 7 evidence](../evidence/phase7.md) and [compatibility](./compatibility.md). This list does not turn unresolved gaps into supported behavior.

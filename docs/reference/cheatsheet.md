@@ -130,4 +130,4 @@ branchcut --config .branchcut-queries --profile source
 - `branchcut grep` uses literal patterns. `branchcut-regex grep -E PATTERN` adds line-oriented regex, and `branchcut-regex find -E PATTERN` selects names or paths. Multiline content, capture-group output, and replacement are unsupported. BOMs and explicit encodings are supported, and binary detection is bounded to the first 8 KiB.
 - Prefix/suffix negated extglobs and Unicode case folding are unsupported.
 
-See the [CLI reference](cli) and [glob syntax](glob-syntax) for exact constraints.
+See the [CLI reference](./cli.md) and [glob syntax](./glob-syntax.md) for exact constraints.

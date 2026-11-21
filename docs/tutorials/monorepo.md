@@ -112,12 +112,12 @@ branchcut --config path/to/.branchcut-queries --profile src --explain
 branchcut --config path/to/.branchcut-queries --profile src
 ```
 
-A profile is independent and does not inherit a `default` section. Command-line scalar options override profile values, while repeatable query options append. See [Saved project queries](../guides/project-queries) for every accepted line.
+A profile is independent and does not inherit a `default` section. Command-line scalar options override profile values, while repeatable query options append. See [Saved project queries](../guides/project-queries.md) for every accepted line.
 
 Keep generated query files under review like any other executable project configuration.
 
 ## Next
 
-- Add size and time filters in [Everyday search](../guides/everyday-search).
-- Explain a specific excluded file with [Query planning](../guides/query-planning).
-- Verify the result set before making performance claims with [Correctness](../evidence/correctness).
+- Add size and time filters in [Everyday search](../guides/everyday-search.md).
+- Explain a specific excluded file with [Query planning](../guides/query-planning.md).
+- Verify the result set before making performance claims with [Correctness](../evidence/correctness.md).

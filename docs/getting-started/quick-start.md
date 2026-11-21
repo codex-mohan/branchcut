@@ -6,7 +6,7 @@ icon: Zap
 
 ## 1. Install
 
-Use the complete platform command from [Installation](installation). The recommended Windows and Unix commands run the checked-in installer and verify the resulting executable.
+Use the complete platform command from [Installation](./installation.md). The recommended Windows and Unix commands run the checked-in installer and verify the resulting executable.
 
 Confirm the command before searching:
 

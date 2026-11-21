@@ -80,6 +80,6 @@ branchcut \
 
 ## Next
 
-- Build a reusable query in [Plan a monorepo search](monorepo).
-- Keep machine paths intact in [Automate a workflow](automation).
-- Embed the engine in [Use Branchcut from Rust](rust-library).
+- Build a reusable query in [Plan a monorepo search](./monorepo.md).
+- Keep machine paths intact in [Automate a workflow](./automation.md).
+- Embed the engine in [Use Branchcut from Rust](./rust-library.md).

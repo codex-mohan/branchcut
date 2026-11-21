@@ -1,77 +1,36 @@
 ---
 title: Branchcut
-description: Compile filesystem queries into one traversal plan, then stream matching native paths.
+description: Find files by name or path and search inside selected files.
 icon: GitBranch
 ---
 
-Branchcut is a filesystem query engine for people who need the right paths without paying for filesystem work that cannot contribute. It compiles patterns, exclusions, ignore policy, filters, metadata predicates, and termination into one plan.
+Branchcut combines globs, ignore rules, exclusions, and file filters into a single query. It can skip directories that cannot contain a match and stream the results as it finds them.
 
-![Comparison between walk-then-filter and compile-then-prune traversal](media/branchcut-query-planning.png)
-
-## Start with the job you have
+```sh
+branchcut config
+branchcut grep TODO src/
+branchcut --glob 'src/**/*.rs' --gitignore --limit 10
+```
 
 <Cards>
-  <Card title="I just installed it" description="Install, search, prune, explain, and confirm your first result." href="/docs/tutorials/first-query" />
-  <Card title="I need a project search" description="Narrow a monorepo root, exclude generated trees, and read the work counters." href="/docs/tutorials/monorepo" />
-  <Card title="I am scripting or using an agent" description="Keep native paths intact with JSON Lines, NUL output, and shell-free commands." href="/docs/tutorials/automation" />
-  <Card title="I am embedding the engine" description="Compile a reusable query and stream paths from a Rust application." href="/docs/tutorials/rust-library" />
+  <Card title="Install Branchcut" description="Download a prebuilt binary or install from source." href="/docs/getting-started/installation" />
+  <Card title="Run your first query" description="Find a file and see why it matched." href="/docs/tutorials/first-query" />
+  <Card title="Search file contents" description="Search files or stdin, show context, and export matches." href="/docs/guides/content-search" />
+  <Card title="Search a monorepo" description="Narrow the search and exclude generated directories." href="/docs/tutorials/monorepo" />
+  <Card title="Automate file selection" description="Use JSON Lines, NUL output, or command templates." href="/docs/tutorials/automation" />
 </Cards>
 
-## Who it is for
+## Find an option
 
-- **Everyday terminal users** who want a readable filename search without learning a pipeline of five tools.
-- **Developers** who repeatedly select files across source, test, generated, and dependency directories.
-- **Power users** who need exclusions, ignore policy, depth, metadata filters, exact limits, and machine-safe output.
-- **Rust applications** that need a reusable traversal engine rather than a terminal wrapper.
-- **Scripts and coding agents** that can call an ordinary executable and consume stable stdout, stderr, and exit behavior.
-
-## Choose the next step
-
-| You need | Start here |
+| Need | Reference |
 |---|---|
-| The complete command surface | [CLI reference](reference/cli) |
-| A quick answer while editing shell syntax | [Cheat sheet](reference/cheatsheet) |
-| The plumbing behind traversal and pruning | [Mental model](getting-started/mental-model) |
-| Exact supported behavior and gaps | [Feature status](reference/feature-status) |
-| Benchmark methods and raw evidence | [Benchmarks](evidence/benchmarks) |
-| Current delivery priorities | [Roadmap](project/roadmap) |
+| Copy a command | [Cheat sheet](./reference/cheatsheet.md) |
+| Look up a flag | [CLI reference](./reference/cli.md) |
+| Understand globs and ignores | [Glob syntax](./reference/glob-syntax.md) and [ignore rules](./guides/ignore-and-hidden.md) |
+| Reuse Branchcut from Rust | [Rust library tutorial](./tutorials/rust-library.md) |
 
-## What makes Branchcut different
+## Release status
 
-A conventional filesystem query often discovers too much and filters too late:
+The [release archives](https://github.com/codex-mohan/branchcut/releases) cover Windows x64, Linux x64, Intel Mac, and Apple Silicon. In v0.3.0, the ordinary `branchcut` executable supports literal content search. `branchcut-regex` adds regular expressions for filenames, paths, and content lines. See the [content search guide](./guides/content-search.md) for inputs, results, and examples.
 
-```text
-walk everything -> glob -> ignore -> stat -> filter -> collect
-```
-
-Branchcut moves useful decisions ahead of traversal:
-
-```text
-compile positives + exclusions + ignore policy + predicates + limits
-                                  |
-                                  v
-                    open only viable directories
-```
-
-The product claim is not universal speed superiority. It is narrower and testable: the whole query can avoid filesystem work before matching and filtering finish.
-
-## What it does today
-
-- Literal filename search and composed glob queries;
-- shared positive patterns and subtree-pruning exclusions;
-- type, extension, depth, size, modification-time, case, and hidden-path filters;
-- opt-in root and nested `.gitignore` handling;
-- streaming output, exact limits, optional sorting, JSON Lines, NUL output, and native paths;
-- shell-free per-match and bounded batch command execution;
-- `--explain`, `--why`, and real `--stats` counters;
-- opt-in literal content search over selected files with line, column, and text output;
-- sequential and bounded parallel traversal;
-- a zero-third-party-crate Rust library and thin CLI.
-
-## Current scope
-
-Branchcut searches paths and filesystem metadata, with opt-in content reads over selected regular files. Content mode includes context, encoding detection, explicit inputs, structured formats, spans, and summaries. The separately built `branchcut-regex` executable adds filename/path and line-oriented content regex. See [content search and regex](guides/content-search.md) for the contract and remaining limits.
-
-## Current status
-
-The post-competition development tree is modular. Windows verification passes locally; Linux and macOS confirmation remains an explicit CI gate. Performance records are tied to their datasets and environments and are not universal rankings. See [Feature status](reference/feature-status), [Compatibility](reference/compatibility), and [Roadmap](project/roadmap).
+See [how traversal works](./concepts/traversal-and-pruning.md) and the [measured timings and memory usage](./evidence/current-cli-comparison.md).

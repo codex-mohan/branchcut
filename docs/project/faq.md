@@ -59,7 +59,7 @@ The source and CI matrix cover all three. `--one-file-system` currently requires
 
 ## Can I embed it in a Rust application?
 
-Yes. The library exposes typed queries, reusable compiled plans, standalone `PathMatcher`s, multi-root queries, path and metadata-record visitors, cooperative cancellation, filesystem diagnostics, and completion reports. See [Use Branchcut from Rust](../tutorials/rust-library).
+Yes. The library exposes typed queries, reusable compiled plans, standalone `PathMatcher`s, multi-root queries, path and metadata-record visitors, cooperative cancellation, filesystem diagnostics, and completion reports. See [Use Branchcut from Rust](../tutorials/rust-library.md).
 
 ## Does it ship shell completion, a GUI, or an index?
 

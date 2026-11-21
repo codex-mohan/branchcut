@@ -20,19 +20,19 @@ These changes preserve matching, filtering, ignore, sorting, command, native-nam
 
 ## Record
 
-The retained [final 52-workload record](../../benchmarks/results/2026-11-11-rust-language-final.json) contains 26 workloads on each of the 10,000- and 100,000-file trees. It uses two warmups and seven measured samples per variant, alternating variant order. The [focused no-metadata record](../../benchmarks/results/2026-11-11-rust-no-metadata-path.json) uses three warmups and nine samples to isolate the final `DirEntry::path()` removal. The [focused losing-case recheck](../../benchmarks/results/2026-11-11-rust-loss-recheck.json) uses three warmups and nine samples.
+The retained [final 52-workload record](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-language-final.json) contains 26 workloads on each of the 10,000- and 100,000-file trees. It uses two warmups and seven measured samples per variant, alternating variant order. The [focused no-metadata record](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-no-metadata-path.json) uses three warmups and nine samples to isolate the final `DirEntry::path()` removal. The [focused losing-case recheck](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-loss-recheck.json) uses three warmups and nine samples.
 
 The earlier intermediate records are retained separately:
 
-- [Earlier full matrix](../../benchmarks/results/2026-11-11-rust-language-full.json)
-- [Matcher state and ignore components](../../benchmarks/results/2026-11-11-rust-state-ignore.json)
-- [Pathless count visitor](../../benchmarks/results/2026-11-11-rust-pathless.json)
-- [Borrowed output paths](../../benchmarks/results/2026-11-11-rust-output-paths.json)
-- [Buffered output line](../../benchmarks/results/2026-11-11-rust-output-buffer.json)
-- [Universal plan fast path](../../benchmarks/results/2026-11-11-rust-universal-plan.json)
-- [Parallel pathless counts](../../benchmarks/results/2026-11-11-rust-parallel-count.json)
-- [Reusable ignore state](../../benchmarks/results/2026-11-11-rust-ignore-scratch.json)
-- [Shared ignore context](../../benchmarks/results/2026-11-11-rust-ignore-shared.json)
+- [Earlier full matrix](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-language-full.json)
+- [Matcher state and ignore components](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-state-ignore.json)
+- [Pathless count visitor](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-pathless.json)
+- [Borrowed output paths](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-output-paths.json)
+- [Buffered output line](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-output-buffer.json)
+- [Universal plan fast path](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-universal-plan.json)
+- [Parallel pathless counts](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-parallel-count.json)
+- [Reusable ignore state](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-ignore-scratch.json)
+- [Shared ignore context](https://github.com/codex-mohan/branchcut/blob/master/benchmarks/results/2026-11-11-rust-ignore-shared.json)
 
 Filesystem cache state is uncontrolled. CLI measurements are fresh processes that include startup, planning, traversal, output, and pipe draining. Warm-engine measurements reuse one compiled plan.
 

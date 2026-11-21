@@ -41,10 +41,10 @@ filters, depth, size and modification-time predicates, hidden-path policy,
 smart case, exact limits, sorting, plain/count/JSON Lines/NUL output, native
 command execution, explain/why diagnostics, statistics, sequential and bounded
 parallel traversal, and opt-in literal content search over selected files. The
-core remains free of third-party crates; optional integrations may use
-dependencies only when a concrete need justifies them. Regex, captures,
-multiline content matching, indexing, a GUI/TUI, watchers, and agent protocols
-remain demand-driven.
+core uses Rust's standard library. The optional `branchcut-regex` binary adds
+regular expressions for filenames, full paths, and individual content lines.
+Capture output, multiline matching, indexing, a GUI/TUI, and watchers remain
+separate product decisions.
 
 ## Brand Commitments
 

@@ -81,6 +81,6 @@ A coding agent or harness can treat Branchcut as a normal system executable. Pre
 
 ## Next
 
-- Review every option in the [CLI reference](../reference/cli).
-- Use the one-page [Cheat sheet](../reference/cheatsheet).
-- Read the exact failure contract in [Exit behavior](../reference/exit-behavior).
+- Review every option in the [CLI reference](../reference/cli.md).
+- Use the one-page [Cheat sheet](../reference/cheatsheet.md).
+- Read the exact failure contract in [Exit behavior](../reference/exit-behavior.md).

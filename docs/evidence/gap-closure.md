@@ -45,9 +45,9 @@ The expanded runner checks 28 result-equivalent cases in sequential and parallel
 
 ## Benchmark scope
 
-The original [direct CLI comparison](cli-comparison.md) remains a historical Windows/NTFS snapshot. Missing cells mean the runner did not measure an equivalent invocation, not necessarily that the tool lacks the feature. A filesystem listing benchmark is not a full replacement assessment.
+The original [direct CLI comparison](./cli-comparison.md) remains a historical Windows/NTFS snapshot. Missing cells mean the runner did not measure an equivalent invocation, not necessarily that the tool lacks the feature. A filesystem listing benchmark is not a full replacement assessment.
 
-The final [current CLI comparison](current-cli-comparison.md) uses committed runtime source `8035ad6`, ten workloads and all six CLI/API targets. It reports default and tuned configurations separately and adds same-query observed working-set samples. The preflight is retained separately. Local validation passed 209 Windows tests and 226 Linux tests, including doctests, with Clippy on both toolchains. Both Apple targets passed all-target cross-checks; the linked native Intel macOS matrix subsequently passed as well.
+The final [current CLI comparison](./current-cli-comparison.md) uses committed runtime source `8035ad6`, ten workloads and all six CLI/API targets. It reports default and tuned configurations separately and adds same-query observed working-set samples. The preflight is retained separately. Local validation passed 209 Windows tests and 226 Linux tests, including doctests, with Clippy on both toolchains. Both Apple targets passed all-target cross-checks; the linked native Intel macOS matrix subsequently passed as well.
 
 Final review added regressions for config-relative override files, cached target metadata error handling/counting, and a Linux `--max-open 1` search under a four-descriptor process limit.
 

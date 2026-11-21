@@ -1,10 +1,10 @@
 ---
 title: Roadmap
-description: What is implemented, what is being validated, and what remains demand-driven.
+description: Released features, work in development, and what comes next.
 icon: Map
 ---
 
-Branchcut preserves the tagged competition submission while developing a maintainable filesystem-query engine. This page describes the current development tree. See [Feature status](../reference/feature-status) for exact behavior and [Compatibility](../reference/compatibility) for deliberate gaps.
+The [feature reference](../reference/feature-status.md) covers the published CLI. This roadmap also includes features in development.
 
 ## Status at a glance
 

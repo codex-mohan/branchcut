@@ -6,7 +6,7 @@ icon: Gauge
 
 Performance claims are tied to a documented synthetic corpus and verified match sets. They are not claims of universal superiority.
 
-This page preserves the earlier competition-era workload. For the 18 November 2026 gap-closure implementation, see the [current six-tool CLI comparison](current-cli-comparison.md), which separates defaults, tuned worker settings and same-query memory samples. Do not combine their timings into a single ranking.
+This page preserves the earlier competition-era workload. For the 18 November 2026 gap-closure implementation, see the [current six-tool CLI comparison](./current-cli-comparison.md), which separates defaults, tuned worker settings and same-query memory samples. Do not combine their timings into a single ranking.
 
 ## Environment
 
