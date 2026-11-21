@@ -348,10 +348,7 @@ impl ContentQuery {
                     && let Some(end) = bytes.iter().rposition(|&byte| byte == b'\n')
                 {
                     let consumed = end + 1;
-                    line_number += bytes[..consumed]
-                        .iter()
-                        .filter(|&&byte| byte == b'\n')
-                        .count() as u64;
+                    line_number += count_newlines(&bytes[..consumed]);
                     stats.bytes_read = stats.bytes_read.saturating_add(consumed as u64);
                     reader.consume(consumed);
                     checked_bytes -= consumed;
@@ -608,6 +605,24 @@ fn validate_scan_options(options: &ContentScanOptions) -> io::Result<()> {
     Ok(())
 }
 
+fn count_newlines(bytes: &[u8]) -> u64 {
+    // Count short batches with byte-sized accumulators so the optimizer can
+    // use more lanes per vector. A batch cannot overflow its accumulator.
+    let (batches, tail) = bytes.as_chunks::<128>();
+    let count = batches
+        .iter()
+        .map(|batch| {
+            u64::from(
+                batch
+                    .iter()
+                    .map(|&byte| u8::from(byte == b'\n'))
+                    .sum::<u8>(),
+            )
+        })
+        .sum::<u64>();
+    count + tail.iter().filter(|&&byte| byte == b'\n').count() as u64
+}
+
 fn trimmed_line(buffer: &[u8]) -> &[u8] {
     if let Some(line) = buffer.strip_suffix(b"\n") {
         line.strip_suffix(b"\r").unwrap_or(line)
@@ -713,6 +728,19 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     static NEXT: AtomicU64 = AtomicU64::new(0);
+
+    #[test]
+    fn newline_count_handles_full_batches_and_unterminated_tails() {
+        let dense = [b'\n'; 519];
+        let mixed: Vec<u8> = (0..519).map(|index| (index % 23) as u8).collect();
+        for input in [&dense[..], &mixed] {
+            for end in 0..=input.len() {
+                let input = &input[..end];
+                let expected = input.iter().filter(|&&byte| byte == b'\n').count() as u64;
+                assert_eq!(count_newlines(input), expected, "length {end}");
+            }
+        }
+    }
 
     #[test]
     fn borrowed_scanner_preserves_lines_spans_offsets_and_limits_across_refills() {

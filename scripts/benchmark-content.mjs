@@ -5,9 +5,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 
-const [baselinePath, branchcutPath, reportPath, filesystem] = process.argv.slice(2);
-if (!filesystem) {
-  throw new Error('Usage: node scripts/benchmark-content.mjs BEFORE BINARY REPORT.json FILESYSTEM');
+const [baselinePath, branchcutPath, reportPath, filesystem, baselineSyntax = 'legacy'] = process.argv.slice(2);
+if (!filesystem || !['legacy', 'grep'].includes(baselineSyntax)) {
+  throw new Error('Usage: node scripts/benchmark-content.mjs BEFORE BINARY REPORT.json FILESYSTEM [legacy|grep]');
 }
 const before = path.resolve(baselinePath);
 const branchcut = path.resolve(branchcutPath);
@@ -43,7 +43,7 @@ function args(scenario, { tool, threads }) {
   if (tool === 'ripgrep') {
     return ['--no-config', '--no-ignore', '--no-encoding', '--hidden', '--no-mmap', '--color', 'never', '--no-heading', '--with-filename', '--line-number', '--column', '-F', ...workers, '--glob', '*.log', ...scenario.terms.flatMap((term) => ['-e', term]), scenario.dir || '.'];
   }
-  const legacy = tool === 'branchcut-before';
+  const legacy = tool === 'branchcut-before' && baselineSyntax === 'legacy';
   return [...(legacy ? [] : ['grep']), '--hidden', ...workers, '--glob', glob, ...scenario.terms.flatMap((term) => [legacy ? '--content' : '-e', term])];
 }
 
@@ -51,7 +51,8 @@ function run(scenario, config) {
   const started = performance.now();
   const result = spawnSync(config.binary, args(scenario, config), { cwd: fixture, encoding: 'utf8', windowsHide: true });
   const milliseconds = performance.now() - started;
-  const expectedStatus = scenario.matches > 0 || config.tool === 'branchcut-before' ? 0 : 1;
+  const legacy = config.tool === 'branchcut-before' && baselineSyntax === 'legacy';
+  const expectedStatus = scenario.matches > 0 || legacy ? 0 : 1;
   if (result.status !== expectedStatus || result.error || result.stderr) {
     throw Error(`${scenario.id}/${config.tool}: ${result.error ?? (result.stderr || result.status)}`);
   }
@@ -91,5 +92,6 @@ writeFileSync(reportPath, JSON.stringify({
   binaries: { beforeSha256: sha256(readFileSync(before)), branchcutSha256: sha256(readFileSync(branchcut)) },
   rustc: command('rustc', ['--version']), ripgrep: command('rg', ['--version']),
   os: os.version(), kernel: os.release(), cpu: os.cpus()[0].model, logicalCpus: os.cpus().length,
+  baselineSyntax,
   totalMemoryBytes: os.totalmem(), filesystem, node: process.version, warmups, samples, reports,
 }, null, 2) + '\n');
