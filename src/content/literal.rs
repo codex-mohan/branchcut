@@ -238,10 +238,9 @@ impl ByteFilter {
 }
 
 fn find_word<const N: usize>(bytes: &[u8], candidates: [u8; N], words: [u64; N]) -> Option<usize> {
-    let chunks = bytes.chunks_exact(8);
-    let remainder = chunks.remainder();
-    for (index, chunk) in chunks.enumerate() {
-        let word = u64::from_ne_bytes(chunk.try_into().expect("eight-byte chunk"));
+    let (chunks, remainder) = bytes.as_chunks::<8>();
+    for (index, &chunk) in chunks.iter().enumerate() {
+        let word = u64::from_ne_bytes(chunk);
         if words.iter().any(|mask| has_zero_bytes(word ^ mask))
             && let Some(offset) = chunk.iter().position(|b| candidates.contains(b))
         {
